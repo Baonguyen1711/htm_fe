@@ -22,7 +22,7 @@ const Footer = () => {
             </ul>
           </div>
   
-          {/* Directional */}
+          {/* Developed by */}
           <div className="mb-6 md:mb-0">
             <h3 className="font-bold">Developed by</h3>
             <ul>

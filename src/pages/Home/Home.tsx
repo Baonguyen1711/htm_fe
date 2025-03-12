@@ -81,7 +81,7 @@ function Home() {
           {/* Nút bấm */}
           <div className="flex gap-4 mt-6 justify-center">
             <button className="px-4 py-2 bg-black text-white rounded-lg">Tham gia phòng thi</button>
-            <button className="px-4 py-2 border border-black rounded-lg">Đăng nhập</button>
+            <button className="px-4 py-2 border border-black rounded-lg">Luật chơi</button>
           </div>
         </div>
 
