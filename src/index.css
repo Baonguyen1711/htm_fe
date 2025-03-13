@@ -16,3 +16,57 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Animation cho chữ chào mừng (ẩn khi ảnh bắt đầu) */
+@keyframes welcomeFade {
+  0% {
+    opacity: 1;
+  }
+  10% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Animation cho ảnh */
+@keyframes imageSlide {
+  0% {
+    transform: translateX(-100%);
+    visibility: visible;
+    z-index: 1;
+  }
+  33.33% {
+    transform: translateX(0);
+    visibility: visible;
+    z-index: 1;
+  }
+  66.66% {
+    transform: translateX(0);
+    visibility: visible;
+    z-index: 1;
+  }
+  99.99% {
+    transform: translateX(100%);
+    visibility: visible;
+    z-index: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    visibility: hidden;
+    z-index: 0;
+  }
+}
+
+/* Áp dụng animation */
+.animate-welcomeFade {
+  animation: welcomeFade 6s infinite ease-in-out;
+}
+
+.animate-imageSlide {
+  animation: imageSlide 6s infinite ease-in-out;
+}

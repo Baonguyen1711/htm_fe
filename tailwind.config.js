@@ -5,7 +5,11 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}",  // Đảm bảo Tailwind quét đúng file
   ],
   theme: {
-    extend: {},
+    extend: {
+      borderRadius: {
+        '4rem': '4rem',
+      },
+    },
   },
   plugins: [],
 }

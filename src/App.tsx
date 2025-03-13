@@ -16,6 +16,8 @@ const HostRound2 = React.lazy(() => import('./pages/Host/Management/HostRound2')
 const HostRound3 = React.lazy(() => import('./pages/Host/Management/HostRound3'));
 const HostRound4 = React.lazy(() => import('./pages/Host/Management/HostRound4'));
 
+const Login = React.lazy(() => import('./pages/Login/Login'))
+
 function PlayComponent() {
   const [searchParams] = useSearchParams();
   const round = searchParams.get("round") || "1";
@@ -52,6 +54,7 @@ function App() {
           <Route path="/play" element={<PlayComponent />} />
           <Route path="/host/create_room" element={<CreateRoom />} />
           <Route path="/host" element={<HostComponent />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </Suspense>
     </>
