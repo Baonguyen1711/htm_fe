@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import Play from '../../layouts/Play'
+import { RoundBase } from '../../type';
 
 interface QuestionBoxProps {
     question: string;
     imageUrl?: string;
+    isHost?: boolean
 }
 
-const QuestionBox: React.FC<QuestionBoxProps> = ({ question, imageUrl }) => {
+const QuestionBox: React.FC<QuestionBoxProps> = ({ question, imageUrl, isHost = false }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -47,9 +49,12 @@ const QuestionBox: React.FC<QuestionBoxProps> = ({ question, imageUrl }) => {
 };
 
 
-function Round1() {
+const Round1: React.FC<RoundBase> = ({ isHost }) => {
     return (
-        <Play questionComponent={<QuestionBox question="Câu hỏi mẫu?" imageUrl="https://a.travel-assets.com/findyours-php/viewfinder/images/res70/474000/474240-Left-Bank-Paris.jpg" />} />
+        <Play
+            questionComponent={<QuestionBox question="Câu hỏi mẫu?" imageUrl="https://a.travel-assets.com/findyours-php/viewfinder/images/res70/474000/474240-Left-Bank-Paris.jpg" isHost={isHost} />}
+            isHost={isHost}
+        />
     );
 }
 
