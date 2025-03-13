@@ -70,3 +70,35 @@ code {
 .animate-imageSlide {
   animation: imageSlide 6s infinite ease-in-out;
 }
+
+.flash-correct {
+  background-color: rgba(0, 255, 0, 0.2); /* Light green */
+  animation: flash-correct-animation 0.5s alternate infinite;
+}
+
+.flash-incorrect {
+  background-color: rgba(255, 0, 0, 0.2); /* Light red */
+  animation: flash-incorrect-animation 0.5s alternate infinite;
+}
+
+@keyframes flash-correct-animation {
+  from {
+      background-color: rgba(0, 255, 0, 0.2);
+  }
+  to {
+      background-color: rgba(0, 255, 0, 0.6);
+  }
+}
+
+@keyframes flash-incorrect-animation {
+  from {
+      background-color: rgba(255, 0, 0, 0.2);
+  }
+  to {
+      background-color: rgba(255, 0, 0, 0.6);
+  }
+}
+
+.player-item {
+  position: relative;
+}
