@@ -4,7 +4,9 @@ import React from 'react';
 
 const HostRound2: React.FC = () => {
     return (
-        <Round2 isHost={true}/>
+        // <Round2 isHost={true}/>
+        <>
+        </>
     )
 };
 

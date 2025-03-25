@@ -17,7 +17,7 @@ interface ObstacleQuestionBoxProps {
 
 const mainKeyword = "VIETTEL"; // Main obstacle keyword
 
-const ObstacleQuestionBox: React.FC<ObstacleQuestionBoxProps> = ({ obstacleWord, isHost = false }) => {
+const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({ obstacleWord, isHost = false }) => {
     const GRID_SIZE = 20; // Grid size
     const generateEmptyGrid = () => {
         return Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(""));
@@ -132,13 +132,13 @@ const ObstacleQuestionBox: React.FC<ObstacleQuestionBoxProps> = ({ obstacleWord,
 
 
 
-const Round2: React.FC<RoundBase> = ({ isHost }) => {
-    return (
-        <Play
-            questionComponent={<ObstacleQuestionBox obstacleWord={mainKeyword} isHost={isHost}/>}
-            isHost={isHost}
-        />
-    );
-}
+// const Round2: React.FC<RoundBase> = ({ isHost }) => {
+//     return (
+//         <Play
+//             questionComponent={<ObstacleQuestionBox obstacleWord={mainKeyword} isHost={isHost}/>}
+//             isHost={isHost}
+//         />
+//     );
+// }
 
-export default Round2;
+export default QuestionBoxRound2;

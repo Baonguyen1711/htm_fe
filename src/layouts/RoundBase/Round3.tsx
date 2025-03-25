@@ -13,7 +13,7 @@ interface QuestionComponentProps {
     isHost?: boolean; // Determines if the user is a host or not
 }
 
-const QuestionComponent: React.FC<QuestionComponentProps> = ({ isHost = false }) => {
+const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false }) => {
     const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
     const [hiddenTopics, setHiddenTopics] = useState<string[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -94,13 +94,13 @@ const QuestionComponent: React.FC<QuestionComponentProps> = ({ isHost = false })
 };
 
 
-const Round3: React.FC<RoundBase> = ({ isHost }) => {
-    return (
-        <Play
-            questionComponent={<QuestionComponent isHost={isHost}/>}
-            isHost={isHost}
-        />
-    );
-}
+// const Round3: React.FC<RoundBase> = ({ isHost }) => {
+//     return (
+//         <Play
+//             questionComponent={<QuestionComponent isHost={isHost}/>}
+//             isHost={isHost}
+//         />
+//     );
+// }
 
-export default Round3;
+export default QuestionBoxRound3

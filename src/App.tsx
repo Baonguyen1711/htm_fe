@@ -1,8 +1,14 @@
 import './App.css';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Routes, Route, useLocation, useSearchParams } from "react-router-dom";
 import CreateRoom from './pages/Host/Room/CreateRoom';
 import LoadingSpinner from './layouts/Loading/LoadingSpinner';
+import { AxiosAuthProvider } from './context/authContext';
+import { PlayerProvider } from './context/playerContext';
+import { HostProvider } from './context/hostContext';
+import { QueryClient, QueryClientProvider } from 'react-query';
+
+const queryClient = new QueryClient();
 
 const Home = React.lazy(() => import('./pages/Home/Home'));
 
@@ -17,10 +23,13 @@ const HostRound3 = React.lazy(() => import('./pages/Host/Management/HostRound3')
 const HostRound4 = React.lazy(() => import('./pages/Host/Management/HostRound4'));
 
 const Login = React.lazy(() => import('./pages/Login/Login'))
-const InfoForm = React.lazy(()=> import('./pages/User/InformationForm/InformationForm'))
+const InfoForm = React.lazy(() => import('./pages/User/InformationForm/InformationForm'))
+
+const Dashboard = React.lazy(() => import('./pages/Host/Test/Dashboard'))
 
 function PlayComponent() {
   const [searchParams] = useSearchParams();
+
   const round = searchParams.get("round") || "1";
 
   if (round === "1") return <UserRound1 />;
@@ -49,15 +58,46 @@ function App() {
   return (
     <>
 
-      <Suspense fallback={<LoadingSpinner/>}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/play" element={<PlayComponent />} />
-          <Route path="/host/create_room" element={<CreateRoom />} />
-          <Route path="/host" element={<HostComponent />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/user/info" element={<InfoForm />} />
-        </Routes>
+      <Suspense fallback={<LoadingSpinner />}>
+        <QueryClientProvider client={queryClient}>
+          <PlayerProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route
+                path="*"
+                element={
+
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/play" element={<PlayComponent />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/user/info" element={<InfoForm />} />
+                  </Routes>
+
+
+                }
+              />
+              {/* Host Routes */}
+              <Route
+                path="/host/*"
+                element={
+                  <HostProvider>
+                    <AxiosAuthProvider>
+                      <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="dashboard" element={<Dashboard />} />
+                        <Route path="create_room" element={<CreateRoom />} />
+                        <Route path="" element={<HostComponent />} />
+                      </Routes>
+                    </AxiosAuthProvider>
+                  </HostProvider>
+
+                }
+              />
+            </Routes>
+          </PlayerProvider>
+
+        </QueryClientProvider>
       </Suspense>
     </>
   );

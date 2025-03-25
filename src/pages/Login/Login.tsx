@@ -1,17 +1,47 @@
 import React, { useState, useEffect } from 'react';
+
 import banner from "../../assets/banner.jpg";
 import card from "../../assets/card.jpg";
 import ending from "../../assets/ending.jpg";
+import useAuth from '../../hooks/useAuth';
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
     const images = [banner, card, ending];
-
+    const { login, signInWithoutPassword } = useAuth()
+    const navigate = useNavigate();
     // State để kiểm soát trạng thái hoán đổi
     const [isSwapped, setIsSwapped] = useState(false);
+    const [email, setEmail] = useState<string>("")
+    const [password, setPassword] = useState<string>("")
+    const [roomId, setRoomId] = useState<string>("")
 
     const handleJoinRoomClick = () => {
         setIsSwapped(!isSwapped); // Đổi trạng thái để hoán đổi
     };
+
+    const handleLogin = async () => {
+        try {
+            const result = await login(email, password); // Call the login function
+            if (result) {
+                console.log("Login successful:", result);
+                navigate("/host/dashboard");
+            }
+        } catch (error) {
+            console.error("Error during login:", error);
+
+        }
+    }
+
+    const handleJoinRoom = async () => {
+        try {
+            signInWithoutPassword(); // Call the login function
+            navigate(`/user/info?roomid=${roomId}`);
+        } catch (error) {
+            console.error("Error during login:", error);
+
+        }
+    }
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-100 to-gray-300">
@@ -19,8 +49,8 @@ const Login = () => {
                 {/* Phần chào mừng với animation */}
                 <div
                     className={`absolute top-0 w-1/2 h-full bg-blue-600 text-white p-8 flex flex-col items-center justify-center transition-all duration-1000 ease-in-out ${isSwapped
-                            ? 'left-1/2 rounded-l-0 rounded-l-[4rem]'
-                            : 'left-0 rounded-r-[4rem] rounded-l-0'
+                        ? 'left-1/2 rounded-l-0 rounded-l-[4rem]'
+                        : 'left-0 rounded-r-[4rem] rounded-l-0'
                         }`}
                     style={{ minHeight: '100%' }}
                 >
@@ -30,8 +60,8 @@ const Login = () => {
                 {/* Phần form đăng nhập */}
                 <div
                     className={`absolute top-0 w-1/2 h-full p-8 transition-all duration-1000 ease-in-out ${isSwapped
-                            ? 'left-0 rounded-r-0 rounded-l-[4rem]'
-                            : 'left-1/2 rounded-l-0 rounded-r-0'
+                        ? 'left-0 rounded-r-0 rounded-l-[4rem]'
+                        : 'left-1/2 rounded-l-0 rounded-r-0'
                         }`}
                     style={{ minHeight: '100%' }}
                 >
@@ -41,14 +71,15 @@ const Login = () => {
                                 <h2 className="text-3xl font-bold text-center mb-8">Login</h2>
                                 <form>
                                     <div className="mb-6 relative">
-                                        <label className="block text-gray-700 text-lg font-bold mb-2" htmlFor="username">
-                                            Username
+                                        <label className="block text-gray-700 text-lg font-bold mb-2" htmlFor="email">
+                                            Email
                                         </label>
                                         <input
                                             className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-lg bg-gray-200"
                                             type="text"
                                             id="username"
                                             placeholder="Enter your username"
+                                            onChange={(e) => setEmail(e.target.value)}
                                         />
                                         <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">👤</span>
                                     </div>
@@ -61,6 +92,7 @@ const Login = () => {
                                             type="password"
                                             id="password"
                                             placeholder="Enter your password"
+                                            onChange={(e) => setPassword(e.target.value)}
                                         />
                                         <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">🔒</span>
                                     </div>
@@ -78,8 +110,11 @@ const Login = () => {
                                         </a>
                                     </div>
                                     <button
-                                        type="submit"
                                         className="w-full max-w-xs px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-lg"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleLogin();
+                                        }}
                                     >
                                         Login
                                     </button>
@@ -98,10 +133,11 @@ const Login = () => {
                                             type="text"
                                             id="roomid"
                                             placeholder="Enter room id"
+                                            onChange={(e)=>setRoomId(e.target.value)}
                                         />
                                         <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">👤</span>
                                     </div>
-                                    <div className="mb-6 relative">
+                                    {/* <div className="mb-6 relative">
                                         <label className="block text-gray-700 text-lg font-bold mb-2" htmlFor="password">
                                             Password
                                         </label>
@@ -112,21 +148,20 @@ const Login = () => {
                                             placeholder="Enter room password"
                                         />
                                         <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">🔒</span>
-                                    </div>
+                                    </div> */}
                                     {/* <div className="mb-6 relative">
                                         <label className="block text-gray-700 text-lg font-bold mb-2" htmlFor="username">
                                             Name
                                         </label>
                                         <input
                                             className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-lg bg-gray-200"
-                                            type="password"
-                                            id="password"
+                                            id="username"
                                             placeholder="Enter your name "
                                         />
                                         <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">🔒</span>
                                     </div> */}
                                     <div className="mb-6 flex items-center space-x-4">
-                                        <a href="#" className="text-lg text-blue-600 hover:underline">Forgot Password?</a>
+                                        {/* <a href="#" className="text-lg text-blue-600 hover:underline">Forgot Password?</a> */}
                                         <a
                                             href="#"
                                             className="text-lg text-green-600 hover:underline"
@@ -141,6 +176,10 @@ const Login = () => {
                                     <button
                                         type="submit"
                                         className="w-full max-w-xs px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-lg"
+                                        onClick={(e)=>{
+                                            e.preventDefault();
+                                            handleJoinRoom()
+                                        }}
                                     >
                                         Join room
                                     </button>

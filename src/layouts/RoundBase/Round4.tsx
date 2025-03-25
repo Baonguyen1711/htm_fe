@@ -27,7 +27,7 @@ const exampleQuestions = [
     'Question 21', 'Question 22', 'Question 23', 'Question 24', 'Question 25',
 ];
 
-const QuestionComponent: React.FC<QuestionComponentProps> = ({
+const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     initialGrid,
     questions,
     isHost = false,
@@ -115,13 +115,13 @@ const QuestionComponent: React.FC<QuestionComponentProps> = ({
 };
 
 // Example component integrating QuestionComponent
-const  Round4: React.FC<RoundBase>  = ({isHost}) => {
-    return (
-        <Play
-            questionComponent={<QuestionComponent initialGrid={exampleGrid} questions={exampleQuestions} isHost={isHost}/>}
-            isHost={isHost}
-        />
-    );
-}
+// const  Round4: React.FC<RoundBase>  = ({isHost}) => {
+//     return (
+//         <Play
+//             questionComponent={<QuestionComponent initialGrid={exampleGrid} questions={exampleQuestions} isHost={isHost}/>}
+//             isHost={isHost}
+//         />
+//     );
+// }
 
-export default Round4;
+export default QuestionBoxRound4;

@@ -1,9 +1,22 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import Header from './Header';
+import { usePlayer } from '../context/playerContext';
+import { User } from '../type';
+import { addPlayerToRoom, listenToPlayers, listenToScores, listenToAnswers, listenToTimeStart } from '../services/firebaseServices';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { getNextQuestion } from '../pages/Host/Test/service';
+import { useHost } from '../context/hostContext';
+import HostManagement from '../components/HostManagement';
+import PlayerScore from '../components/PlayerScore';
+import HostScore from '../components/PlayerAnswer';
+
+
 
 interface PlayProps {
     questionComponent: ReactNode;
     isHost?: boolean;
+    PlayerScore: ReactNode
+    SideBar: ReactNode
 }
 
 interface Player {
@@ -13,75 +26,125 @@ interface Player {
     position: number;
 }
 
-const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false }) => {
+const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerScore, SideBar }) => {
+
+    const navigate = useNavigate()
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [timeLeft, setTimeLeft] = useState(30);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isRunning, setIsRunning] = useState(false)
+
     const [playerScores, setPlayerScores] = useState<number[]>([0, 0, 0, 0]);
-    const [playerFlashes, setPlayerFlashes] = useState(Array(playerScores.length).fill(""));
+    // const [playerFlashes, setPlayerFlashes] = useState(Array(playerScores.length).fill(""));
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState<string>("0")
+    const { players, setPlayers, roomId, setRoomId, playersArray, setPlayerArray } = usePlayer()
 
-    const simulateSocketScoreUpdate = () => {
-        const playerIndex = Math.floor(Math.random() * playerScores.length);
-        const scoreChange = Math.random() > 0.5 ? 10 : -10;
-        console.log(`Simulated socket event: Player ${playerIndex + 1} score changed by ${scoreChange}`);
-
-        setPlayerScores((prevScores) => {
-            const newScores = [...prevScores];
-            newScores[playerIndex] += scoreChange;
-            return newScores;
-        });
-        triggerPlayerFlash(playerIndex, scoreChange > 0);
-    };
 
     useEffect(() => {
-        const socketInterval = setInterval(() => {
-            simulateSocketScoreUpdate();
-        }, 5000);
-        return () => clearInterval(socketInterval);
+        const unsubscribePlayers = listenToPlayers(roomId, (updatedPlayers) => {
+            console.log("updatedPlayers", updatedPlayers)
+            console.log("Object.keys(updatedPlayers)", Object.keys(updatedPlayers))
+            console.log("Object.keys(updatedPlayers).length", Object.keys(updatedPlayers).length)
+            if (updatedPlayers && Object.keys(updatedPlayers).length > 0) {
+                const playersList = Object.values(updatedPlayers);
+                setPlayerArray(playersList);
+                localStorage.setItem("playerList", JSON.stringify(playersList));
+                console.log("Updated localStorage:", localStorage.getItem("playerList"));
+            } else {
+                console.log("Skipping update: invalid updatedPlayers", updatedPlayers);
+            }
+        });
+
+        // No need to set state here; it's handled by useState initializer
+        return () => {
+            unsubscribePlayers();
+        };
     }, []);
 
-    const triggerPlayerFlash = (index: number, isCorrect: boolean) => {
-        const flashColor = isCorrect ? "flash-correct" : "flash-incorrect";
-        setPlayerFlashes((prevFlashes) => {
-            const newFlashes = [...prevFlashes];
-            newFlashes[index] = flashColor;
-            return newFlashes;
+    useEffect(() => {
+        const unsubscribeTimeStart = listenToTimeStart(roomId, (signal) => {
+            if (signal === "START") {
+                setIsRunning(true)
+            }
         });
-        setTimeout(() => {
-            setPlayerFlashes((prevFlashes) => {
-                const newFlashes = [...prevFlashes];
-                newFlashes[index] = "";
-                return newFlashes;
-            });
-        }, 3000);
-    };
+
+        // No need to set state here; it's handled by useState initializer
+        return () => {
+            unsubscribeTimeStart();
+        };
+    }, []);
+
+    // const simulateSocketScoreUpdate = () => {
+    //     const playerIndex = Math.floor(Math.random() * playerScores.length);
+    //     const scoreChange = Math.random() > 0.5 ? 10 : -10;
+    //     console.log(`Simulated socket event: Player ${playerIndex + 1} score changed by ${scoreChange}`);
+
+    //     setPlayerScores((prevScores) => {
+    //         const newScores = [...prevScores];
+    //         newScores[playerIndex] += scoreChange;
+    //         return newScores;
+    //     });
+    //     triggerPlayerFlash(playerIndex, scoreChange > 0);
+    // };
+
+    // useEffect(() => {
+    //     const socketInterval = setInterval(() => {
+    //         simulateSocketScoreUpdate();
+    //     }, 5000);
+    //     return () => clearInterval(socketInterval);
+    // }, []);
+
+    // const triggerPlayerFlash = (index: number, isCorrect: boolean) => {
+    //     const flashColor = isCorrect ? "flash-correct" : "flash-incorrect";
+    //     setPlayerFlashes((prevFlashes) => {
+    //         const newFlashes = [...prevFlashes];
+    //         newFlashes[index] = flashColor;
+    //         return newFlashes;
+    //     });
+    //     setTimeout(() => {
+    //         setPlayerFlashes((prevFlashes) => {
+    //             const newFlashes = [...prevFlashes];
+    //             newFlashes[index] = "";
+    //             return newFlashes;
+    //         });
+    //     }, 3000);
+    // };
 
     useEffect(() => {
-        if (timeLeft > 0) {
-            const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-            return () => clearTimeout(timer);
+        if (isRunning) {
+            if (timeLeft > 0) {
+                const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+                return () => clearTimeout(timer);
+            } else {
+                // When timeLeft reaches 0, stop the timer and reset
+                setIsRunning(false);
+                setTimeLeft(30);
+            }
         }
-    }, [timeLeft]);
+    }, [isRunning, timeLeft]); // Add timeLeft to dependencies
 
-    const handleScoreAdjust = (index: number, amount: number) => {
-        setPlayerScores((prevScores) => {
-            const newScores = [...prevScores];
-            newScores[index] += amount;
-            return newScores;
-        });
-        triggerPlayerFlash(index, amount > 0);
-    };
+    // const handleScoreAdjust = (index: number, amount: number) => {
+    //     setPlayerScores((prevScores) => {
+    //         const newScores = [...prevScores];
+    //         newScores[index] += amount;
+    //         return newScores;
+    //     });
+    //     triggerPlayerFlash(index, amount > 0);
+    // };
 
-    const handleNextQuestion = () => {
-        alert('Moving to the next question!');
-    };
+    // const handleNextQuestion = async () => {
+    //     setCurrentQuestionIndex((prev)=>(parseInt(prev)+1).toString())
+    //     const question = await getNextQuestion(testName,currentQuestionIndex,currentRound,hostRoomId)
+    //     console.log(question)
+    //     alert('Moving to the next question!');
+    // };
 
-    const getSortedPlayers = (): Player[] => {
-        return playerScores
-            .map((score, index) => ({ score, index, username: `Player ${index + 1}`, position: index }))
-            .sort((a, b) => b.score - a.score)
-            .map((player, rank) => ({ ...player, position: rank }));
-    };
+    // const getSortedPlayers = (): Player[] => {
+    //     return playerScores
+    //         .map((score, index) => ({ score, index, username: `Player ${index + 1}`, position: index }))
+    //         .sort((a, b) => b.score - a.score)
+    //         .map((player, rank) => ({ ...player, position: rank }));
+    // };
 
     return (
         <div className="w-screen h-screen bg-gradient-to-r from-blue-500 to-teal-400 flex flex-col overflow-auto">
@@ -104,109 +167,14 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false }) => {
                             />
                         </div>
                     )}
-                    <div className="flex justify-around mt-4">
-                        {playerScores.map((score, index) => (
-                            <div key={index} className={`flex flex-col items-center ${playerFlashes[index]}`}>
-                                <img
-                                    src="https://via.placeholder.com/60"
-                                    alt="Player"
-                                    className="w-16 h-16 rounded-full"
-                                />
-                                <p className="text-white mt-2 ">
-                                    Score: <b>{score}</b>
-                                </p>
-                                <p className="text-white">Player {index + 1}</p>
-                                {isHost && (
-                                    <div className="flex gap-2 mt-2">
-                                        {[10, 20, 30].map((amount) => (
-                                            <button
-                                                key={amount}
-                                                onClick={() => handleScoreAdjust(index, amount)}
-                                                className="bg-green-500 text-white p-2 rounded-md"
-                                            >
-                                                +{amount}
-                                            </button>
-                                        ))}
-                                        {[10, 20, 30].map((amount) => (
-                                            <button
-                                                key={-amount}
-                                                onClick={() => handleScoreAdjust(index, -amount)}
-                                                className="bg-red-500 text-white p-2 rounded-md"
-                                            >
-                                                -{amount}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
+                    {PlayerScore}
+
                 </div>
                 <div className="w-1/5 flex flex-col">
                     <div className="bg-gray-300 text-center font-bold text-lg p-3 rounded-lg">
                         ROUND 1
                     </div>
-                    {!isHost ? (
-                        <div className="bg-white mt-4 p-4 rounded-lg shadow-md flex-1 relative">
-                            {getSortedPlayers().map((player) => (
-                                <div
-                                    key={player.index}
-                                    className="player-item absolute w-full flex items-center"
-                                    style={{
-                                        top: `${player.position * 50}px`,
-                                        transition: 'top 0.5s ease',
-                                    }}
-                                >
-                                    <img
-                                        src="https://via.placeholder.com/30"
-                                        alt={player.username}
-                                        className="w-8 h-8 rounded-full mr-2"
-                                    />
-                                    <div className="flex-1">
-                                        <p className="text-sm">{player.username}</p>
-                                        <div className="w-full bg-gray-200 text-center py-1 rounded-lg">
-                                            Score: {player.score}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="bg-white mt-4 p-4 rounded-lg shadow-md flex-1">
-                            <div className="flex gap-4 mb-4">
-                                <button
-                                    onClick={() => alert('Correct Answer!')}
-                                    className="bg-green-500 text-white p-2 flex-1 rounded-md"
-                                >
-                                    Correct
-                                </button>
-                                <button
-                                    onClick={() => alert('Incorrect Answer!')}
-                                    className="bg-red-500 text-white p-2 flex-1 rounded-md"
-                                >
-                                    Incorrect
-                                </button>
-                                <button
-                                    onClick={handleNextQuestion}
-                                    className="bg-yellow-500 text-black p-2 flex-1 rounded-md"
-                                >
-                                    Next Question
-                                </button>
-                            </div>
-                            <button
-                                onClick={() => alert('Show Answer!')}
-                                className="bg-blue-500 text-white w-full p-2 rounded-md mb-4"
-                            >
-                                Show Answer
-                            </button>
-                            <button
-                                onClick={() => alert('Start Timer!')}
-                                className="bg-purple-500 text-white w-full p-2 rounded-md"
-                            >
-                                Start Timer
-                            </button>
-                        </div>
-                    )}
+                    {SideBar}
                 </div>
             </div>
             <button

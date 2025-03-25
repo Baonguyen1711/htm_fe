@@ -22,7 +22,9 @@ function UserRound2() {
             rows={3}
             ready={!loading}
         >
-            <Round2 />;
+            {/* <Round2 />; */}
+            <>
+            </>
         </ReactPlaceholder>
     )
 

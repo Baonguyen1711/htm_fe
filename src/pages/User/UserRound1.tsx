@@ -1,10 +1,12 @@
 import Round1 from '../../layouts/RoundBase/Round1';
-
+import User from '../../layouts/User/User';
 
 
 function UserRound1() {
     return (
-        <Round1/>
+        <User
+            QuestionComponent={<Round1/>}
+        />
     );
 }
 

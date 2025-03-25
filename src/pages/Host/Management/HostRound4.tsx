@@ -5,7 +5,9 @@ import Play from '../../../layouts/Play';// Importing the shared Play component
 
 const HostRound4: React.FC = () => {
     return (
-        <Round4 isHost={true}/>
+        // <Round4 isHost={true}/>
+        <>
+        </>
     )
 };
 

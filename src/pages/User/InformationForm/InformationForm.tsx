@@ -1,9 +1,18 @@
 import React, { useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { joinRoom } from "./services";
+import { usePlayer } from "../../../context/playerContext";
+import { User } from "../../../type";
 
 const InformationForm = () => {
+
+    const [searchParams] = useSearchParams()
+    const navigate = useNavigate()
+    const roomId = searchParams.get("roomid")
     const [username, setUsername] = useState("");
     const [playerNumber, setPlayerNumber] = useState("");
     const [avatar, setAvatar] = useState<string | null>(null);
+    const { setPlayers, players, setRoomId, setPlayerArray } = usePlayer()
 
     const defaultAvatar = "https://via.placeholder.com/100"; // Default avatar link
 
@@ -13,11 +22,22 @@ const InformationForm = () => {
             setAvatar(URL.createObjectURL(file));
         }
     };
-    const handleSubmit = () => {
-        if (username && playerNumber) {
+    const handleSubmit = async () => {
+        if (username && playerNumber && roomId && avatar) {
             console.log("Username:", username);
             console.log("Player Number:", playerNumber);
             console.log("Avatar:", avatar || defaultAvatar);
+
+            const result = await joinRoom(roomId, {
+                userName: username,
+                stt: playerNumber,
+                avatar: avatar
+            })
+            setPlayers(result.players)
+            setRoomId(roomId)
+            console.log("players", players)
+            console.log("result", result)
+            navigate(`/play?round=1&roomId=${roomId}`)
         } else {
             alert("Vui lòng nhập tên người dùng và chọn số thứ tự!");
         }
