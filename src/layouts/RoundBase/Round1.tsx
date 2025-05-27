@@ -71,7 +71,7 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost }) => {
     }, []);
 
     useEffect(() => {
-        const unsubscribePlayers = listenToSound (roomId, async (type) => {
+        const unsubscribePlayers = listenToSound(roomId, async (type) => {
 
             const audio = sounds[`${type}`];
             if (audio) {
@@ -110,35 +110,36 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost }) => {
     }, []);
 
     return (
-        <div className="w-full flex flex-col items-center bg-white rounded-lg shadow-md p-6 flex-grow">
-            {/* Nội dung câu hỏi */}
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full flex flex-col items-center">
+            {/* Question text */}
             <div
-                className={`text-gray-700 text-xl font-semibold text-center mb-4 max-w-[90%] ${isExpanded ? "max-h-none" : "max-h-[120px] overflow-hidden"
+                className={`text-white text-xl font-semibold text-center mb-4 max-w-[90%] ${isExpanded ? "max-h-none" : "max-h-[120px] overflow-hidden"
                     }`}
             >
                 {currentQuestion?.question}
             </div>
 
+            {/* Correct answer */}
             <div
-                className={`text-gray-700 text-xl font-semibold text-center mb-4 max-w-[90%] ${isExpanded ? "max-h-none" : "max-h-[120px] overflow-hidden"
+                className={`text-cyan-200 text-lg font-semibold text-center mb-4 max-w-[90%] ${isExpanded ? "max-h-none" : "max-h-[120px] overflow-hidden"
                     }`}
             >
                 {correctAnswer}
             </div>
 
-
+            {/* Media */}
             <div
-                className="w-full h-[300px] flex items-center justify-center overflow-hidden cursor-pointer"
+                className="w-full h-[300px] flex items-center justify-center overflow-hidden cursor-pointer mb-4"
                 onClick={() => setIsModalOpen(true)}
             >
                 {(() => {
                     const url = currentQuestion?.imgUrl;
-                    if (!url) return <p>No media</p>;
+                    if (!url) return <p className="text-white">No media</p>;
 
                     const extension = url.split('.').pop()?.toLowerCase() || "";
 
                     if (["jpg", "jpeg", "png", "gif", "webp"].includes(extension)) {
-                        return <img src={url} alt="Question Visual" className="w-full h-full object-cover" />;
+                        return <img src={url} alt="Question Visual" className="w-full h-full object-cover rounded-lg" />;
                     }
 
                     if (["mp3", "wav", "ogg"].includes(extension)) {
@@ -149,27 +150,27 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost }) => {
                     }
 
                     if (["mp4", "webm", "ogg"].includes(extension)) {
-                        return <video controls className="w-full h-full object-cover">
+                        return <video controls className="w-full h-full object-cover rounded-lg">
                             <source src={url} type={`video/${extension}`} />
                             Your browser does not support the video tag.
                         </video>;
                     }
 
-                    return <p>Unsupported media type</p>;
+                    return <p className="text-white">Unsupported media type</p>;
                 })()}
             </div>
 
+            {/* Answer input */}
             <PlayerAnswerInput
                 isHost={isHost}
                 question={currentQuestion}
             />
 
-
-            {/* Modal hiển thị ảnh full kích thước */}
+            {/* Modal for full-size image */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50"
                     onClick={() => setIsModalOpen(false)}>
-                    <img src={currentQuestion?.imgUrl} alt="Full Size" className="max-w-full max-h-full" />
+                    <img src={currentQuestion?.imgUrl} alt="Full Size" className="max-w-full max-h-full rounded-xl" />
                 </div>
             )}
         </div>

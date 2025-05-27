@@ -2,7 +2,7 @@ import React, { useState, useEffect, ReactNode, useRef, useCallback } from 'reac
 import Header from './Header';
 import { usePlayer } from '../context/playerContext';
 import { Answer, User } from '../type';
-import { addPlayerToRoom, listenToPlayers, listenToScores, listenToAnswers, listenToTimeStart, listenToBroadcastedAnswer, setupOnDisconnect, listenToRoundStart } from '../services/firebaseServices';
+import { deletePath, addPlayerToRoom, listenToPlayers, listenToScores, listenToAnswers, listenToTimeStart, listenToBroadcastedAnswer, setupOnDisconnect, listenToRoundStart } from '../services/firebaseServices';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { submitAnswer } from './services';
 import { getNextQuestion } from '../pages/Host/Test/service';
@@ -31,84 +31,43 @@ interface Player {
 
 const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerScore, SideBar }) => {
 
+    const roundName = {
+        "1": "NHỔ NEO",
+        "2": "VƯỢT SÓNG",
+        "3": "BỨT PHÁ",
+        "4": "CHINH PHỤC",
+    }
     const navigate = useNavigate()
     const playerAnswerRef = useRef("");
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userId, setUserId] = useState(localStorage.getItem("userId"))
     const [params] = useSearchParams()
-    const round = params.get("round") || "1"
-
-
-    const [isRunning, setIsRunning] = useState(false)
-    //const [playerAnswer, setPlayerAnswer] = useState<string>("")
-
-
-    // const [playerFlashes, setPlayerFlashes] = useState(Array(playerScores.length).fill(""));
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState<string>("0")
-    const [startedListening, setStartedListening] = useState<boolean>(false)
+    const round = (params.get("round") as "1" | "2" | "3" | "4") || "1"
     const { players, setPlayers, roomId, setRoomId, playersArray, setPlayerArray, position, setCurrentQuestion, selectedTopic, setSelectedTopic, setScoreList } = usePlayer()
     const { playerScores, setPlayerScores } = useHost()
     const isMounted = useRef(false);
     const { timeLeft, startTimer } = useTimeStart();
+
+
     const [searchParams] = useSearchParams();
 
 
+    const currentRound = searchParams.get("round") || "1";
+    const testName = searchParams.get("testName") || "1"
 
-    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === "Enter") {
-            const inputElement = event.target as HTMLInputElement; // Type assertion
-            console.log("inputElement.value", inputElement.value)
-            playerAnswerRef.current = inputElement.value
-            inputElement.value = ""; // Clears input field
+
+    const handleRoundChange = async (delta: number) => {
+        console.log("currentRound", currentRound)
+        const newRound = parseInt(currentRound) + delta;
+        console.log("new round", newRound)
+        if (newRound >= 1 && newRound <= 4) { // limit to 1-4 rounds
+            navigate(`?round=${newRound}&testName=${testName}&roomId=${roomId}`);
         }
+        await deletePath(roomId, "questions");
+        await deletePath(roomId, "answers");
     };
-    // const startTimer = useCallback(() => {
-    //     let timer: NodeJS.Timeout;
 
-    //     timer = setInterval(() => {
-    //         setTimeLeft(prev => {
-    //             if (prev <= 1) {
-    //                 clearInterval(timer);
-    //                 if (round === "3") {
-    //                     setCurrentPacketQuestion(roomId, 1)
-    //                     setCurrentQuestion("")
-    //                     setSelectedTopic(null)
-    //                     localStorage.removeItem("questions")
-    //                 }
-    //                 if (!isHost && round !== "3") {
-    //                     submitAnswer(roomId, playerAnswerRef.current, position)
-    //                 }
-    //                 return 30;
-    //             }
-    //             return prev - 1;
-    //         });
-    //     }, 1000);
-
-    //     return () => clearInterval(timer);
-    // }, [isHost, position, roomId, round, setCurrentPacketQuestion, setCurrentQuestion, setSelectedTopic]);
-    // const isInitialMount = true;
-    // useEffect(() => {
-    //     if (isInitialMount) return
-
-    //     // Start timer when selectedTopic changes
-    //     startTimer(30);
-
-    //     // Side effects based on timer reaching 0
-    // }, []);
-
-    // useEffect(() => {
-    //     console.log("timeLeft", timeLeft);
-
-    //     if (timeLeft === 0) {
-    //         // When timer runs out, do your clean up / game logic:
-    //         submitAnswer(roomId, playerAnswerRef.current, position)
-    //         // If you want to reset timer, call startTimer again here or leave stopped
-    //     }
-    // }, [timeLeft]);
-    // useEffect(() => {
-    //     console.log("timeLeft on play", timeLeft)
-    // }, [timeLeft]);
 
     useEffect(() => {
         if (!roomId || !userId) return;
@@ -159,89 +118,112 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     }, [round]);
 
 
-    // useEffect(() => {
-
-    //     let timerCleanup: (() => void) | undefined;
-    //     const unsubscribeTimeStart = listenToTimeStart(roomId, startTimer);
-    //     console.log("listening on time start");
-
-
-    //     return () => {
-    //         unsubscribeTimeStart();
-    //         if (timerCleanup) timerCleanup();
-    //     };
-    // }, [roomId]);
-
-
     return (
-        <div className="w-screen h-screen bg-gradient-to-r from-blue-500 to-teal-400 flex flex-col overflow-auto">
-            <Header />
-            <div className="flex flex-1 p-4 gap-4">
-                <div className="w-4/5 flex flex-col">
-                    <div className="w-full h-2 bg-gray-300 rounded-full mb-2">
-                        <div
-                            className="h-full bg-red-500 rounded-full transition-all duration-1000"
-                            style={{ width: `${(timeLeft / 30) * 100}%` }}
-                        ></div>
-                    </div>
-                    {questionComponent}
-                    {/* {!isHost && (
-                        <div className="mt-2 w-full">
-                            <input
-                                type="text"
-                                className="w-full h-14 border border-gray-300 rounded-lg px-4 text-lg text-center"
-                                placeholder="Type your answer..."
-                                onKeyDown={handleKeyDown}
-                            // value={playerAnswer} 
-                            // onChange={(e) => setPlayerAnswer(e.target.value)}
-                            />
-                            <p className="mt-2 text-lg">{playerAnswerRef.current && `Your answer: ${playerAnswerRef.current}`}</p>
-                        </div>
-                    )} */}
-                    {PlayerScore}
-
-                </div>
-                <div className="w-1/5 flex flex-col">
-                    <div className="bg-gray-300 text-center font-bold text-lg p-3 rounded-lg">
-                        ROUND 1
-                    </div>
-                    {SideBar}
-                </div>
+        <div className="w-screen min-h-screen relative">
+            {/* Ocean/Starry Night Background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-blue-900 to-blue-600">
+                {/* Stars overlay */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.3)_1px,transparent_1px),radial-gradient(circle_at_75%_75%,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[length:100px_100px]"></div>
+                {/* Ocean waves effect */}
+                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-blue-500/50 to-transparent"></div>
+                {/* Subtle animated waves */}
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent animate-pulse"></div>
             </div>
-            <button
-                className="fixed bottom-6 right-6 bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-full shadow-lg"
-                onClick={() => setIsChatOpen(!isChatOpen)}
-            >
-                {isChatOpen ? '✖' : '💬'}
-            </button>
-            {isChatOpen && (
-                <div className="fixed bottom-20 right-6 w-80 h-60 bg-white shadow-lg rounded-lg p-4">
-                    <p className="text-sm font-bold">Chat</p>
-                    <div className="h-40 overflow-y-auto bg-gray-100 p-2 rounded-lg">
-                        <p className="text-xs">User1: Hello!</p>
-                        <p className="text-xs text-right">You: Hi there!</p>
+
+            {/* Content overlay */}
+            <div className="relative z-10 flex flex-col min-h-full">
+                <Header />
+                <div className="flex flex-1 p-4 gap-4">
+                    <div className="w-full lg:w-4/5 flex flex-col">
+                        {/* Progress bar with ocean theme */}
+                        <div className="w-full h-3 bg-slate-700/50 rounded-full mb-4 border border-blue-400/30 shadow-lg">
+                            <div
+                                className="h-full bg-gradient-to-r from-blue-400 to-cyan-300 rounded-full transition-all duration-1000 shadow-inner"
+                                style={{ width: `${(timeLeft / 30) * 100}%` }}
+                            ></div>
+                        </div>
+
+                        {/* Question component with ocean-themed styling */}
+                        <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4">
+                            {questionComponent}
+                        </div>
+
+                        {/* Player score with ocean theme */}
+                        <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-xl">
+                            {PlayerScore}
+                        </div>
                     </div>
-                    <input
-                        type="text"
-                        className="w-full h-10 mt-2 border border-gray-300 rounded-lg px-2"
-                        placeholder="Type a message..."
-                    />
+
+                    <div className="hidden lg:flex lg:w-1/5 flex-col gap-4">
+                        {/* Round indicator with nautical theme */}
+                        {isHost ? (
+                            <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-center font-bold text-lg p-4 rounded-xl shadow-xl border border-blue-400/50">
+                                <div className="text-sm opacity-90 mb-1">Vòng</div>
+                                <div className="text-xl">{round ? roundName[round as keyof typeof roundName] : ""}</div>
+                            </div>
+                        ) : (
+                            <div className="flex justify-center items-center gap-4 mb-6">
+                                <button
+                                    onClick={() => handleRoundChange(-1)}
+                                    disabled={parseInt(currentRound) <= 1}
+                                    className="text-2xl lg:text-3xl px-3 py-2 text-blue-200 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg hover:bg-blue-600/20"
+                                >
+                                    ←
+                                </button>
+                                <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-center font-bold text-lg lg:text-xl px-6 py-3 rounded-xl shadow-xl border border-blue-400/50">
+                                    <span>{round ? roundName[round as keyof typeof roundName] : ""}</span>
+                                </div>
+                                <button
+                                    onClick={() => handleRoundChange(1)}
+                                    disabled={parseInt(currentRound) >= 4}
+                                    className="text-2xl lg:text-3xl px-3 py-2 text-blue-200 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg hover:bg-blue-600/20"
+                                >
+                                    →
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Sidebar with ocean theme */}
+                        <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-xl p-4 flex-1">
+                            {SideBar}
+                        </div>
+                    </div>
                 </div>
-            )}
-            {isModalOpen && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50"
-                    onClick={() => setIsModalOpen(false)}
+
+                {/* Mobile round indicator */}
+                <div className="lg:hidden mx-4 mb-4">
+                    <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-center font-bold text-base p-3 rounded-xl shadow-xl border border-blue-400/50">
+                        <span className="text-sm opacity-90">Vòng </span>
+                        <span>{round ? roundName[round as keyof typeof roundName] : ""}</span>
+                    </div>
+                </div>
+
+                {/* Chat button with ocean theme */}
+                <button
+                    className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-600 to-cyan-500 text-white w-14 h-14 flex items-center justify-center rounded-full shadow-2xl border-2 border-blue-400/50 hover:scale-110 transition-transform duration-200"
+                    onClick={() => setIsChatOpen(!isChatOpen)}
                 >
-                    <img
-                        src="https://a.travel-assets.com/findyours-php/viewfinder/images/res70/474000/474240-Left-Bank-Paris.jpg"
-                        alt="Full Size"
-                        className="max-w-full max-h-full"
-                    />
-                </div>
-            )}
+                    <span className="text-xl">{isChatOpen ? "✖" : "💬"}</span>
+                </button>
+
+                {/* Modal with ocean theme */}
+                {isModalOpen && (
+                    <div
+                        className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex justify-center items-center z-50"
+                        onClick={() => setIsModalOpen(false)}
+                    >
+                        <img
+                            src="https://a.travel-assets.com/findyours-php/viewfinder/images/res70/474000/474240-Left-Bank-Paris.jpg"
+                            alt="Full Size"
+                            className="max-w-full max-h-full rounded-xl shadow-2xl"
+                        />
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
+
+
 
 export default Play;

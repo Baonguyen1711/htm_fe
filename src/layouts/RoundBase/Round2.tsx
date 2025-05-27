@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { renderGrid } from "./utils";
 import { usePlayer } from "../../context/playerContext";
 import { setSelectedRow, setCorrectRow, setIncorectRow } from "../../components/services";
-import { deletePath,listenToSound, listenToCorrectRow, listenToIncorrectRow, listenToSelectRow, listenToQuestions, listenToObstacle } from "../../services/firebaseServices";
+import { deletePath, listenToSound, listenToCorrectRow, listenToIncorrectRow, listenToSelectRow, listenToQuestions, listenToObstacle } from "../../services/firebaseServices";
 import { useSearchParams } from "react-router-dom";
 import { getNextQuestion } from "../../pages/Host/Test/service";
 import { openObstacle } from "../../components/services";
@@ -642,17 +642,16 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
 
 
   return (
-    <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 relative">
-      <div className="text-gray-700 text-xl font-semibold text-center mb-4 max-w-[90%]">
+    <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4 relative">
+      <div className="text-white text-xl font-semibold text-center mb-4 max-w-[90%]">
         {typeof currentQuestion?.question === "string"
           ? currentQuestion.question
           : ""}
       </div>
-      <div className="grid grid-cols-[repeat(30,30px)] grid-rows-[repeat(30,30px)] gap-1 max-h-[400px] overflow-y-scroll">
-
+      <div className="grid grid-cols-[repeat(30,40px)] grid-rows-[repeat(30,40px)] gap-1 max-h-[750px] overflow-y-auto">  
 
         {(!grid || !Array.isArray(grid) || !grid.every(row => Array.isArray(row))) ?
-          <div>Invalid grid data</div>
+          <div className="text-white">Invalid grid data</div>
           :
           grid.map((row, rowIndex) => (
             <React.Fragment key={rowIndex}>
@@ -660,8 +659,8 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
 
                 const cellKey = `${rowIndex}-${colIndex}`;
                 const cellStyle = cellStyles[cellKey] || {
-                  background: cell === "" || cell === " " ? "bg-white" : "bg-gray-50",
-                  textColor: cell.includes("number") ? "text-blue-500" : "text-transparent",
+                  background: cell === "" || cell === " " ? "transparent" : "bg-white",
+                  textColor: cell.includes("number") ? "text-blue-400" : "text-transparent",
                 };
 
                 const showMenu =
@@ -671,19 +670,19 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                   cell.includes("number");
 
                 return (
-                  <div className="relative flex items-center" key={colIndex}>
+                  <div className="relative w-10 h-10 flex items-center justify-center" key={colIndex}>
                     <div
-                      className={`w-10 h-10 flex items-center justify-center text-lg font-semibold select-none
-                      ${cell.includes("number") ? "text-blue-500 border-none" : ""}
-                      ${cell.includes("number") ? "" : cellStyle.background}
-                      ${cell.includes("number") ? "text-blue-500" : cellStyle.textColor}
-                      ${obstacleWord?.includes(cell) &&
+                      className={`w-10 h-10 flex items-center justify-center text-lg font-semibold select-none rounded-lg
+                  ${cell.includes("number") ? "text-blue-400 border-none" : ""}
+                  ${cell.includes("number") ? "" : cellStyle.background}
+                  ${cell.includes("number") ? "text-blue-400" : cellStyle.textColor}
+                  ${obstacleWord?.includes(cell) &&
                           cellStyle.textColor === "text-black" &&
                           !cell.includes("number") &&
                           isNaN(Number(cell))
-                          ? "font-bold text-red-500"
+                          ? "font-bold text-red-400"
                           : ""}
-                    `}
+                `}
                       onClick={() => {
                         if (isHost) {
                           if (cell.includes("number")) {
@@ -708,11 +707,10 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                         : ""}
                     </div>
 
-
                     {showMenu && (
                       <div
                         ref={menuRef}
-                        className="absolute left-12 top-1/2 transform -translate-y-1/2 flex space-x-2 bg-white border border-gray-300 rounded shadow-lg p-1 z-10"
+                        className="absolute left-12 top-1/2 transform -translate-y-1/2 flex space-x-2 bg-slate-900 border border-blue-400/50 rounded shadow-lg p-1 z-10"
                       >
                         <button
                           className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -753,13 +751,13 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
       />
       {
         isHost && (
-          <div className="flex gap-2"> {/* Flex container with spacing */}
+          <div className="flex gap-2 mt-4 w-full">
             <button
               onClick={() => {
                 alert('Mở cnv!')
                 handleOpenObstacle()
               }}
-              className="bg-green-500 text-white p-2 flex-1 rounded-md whitespace-nowrap"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 flex-1 rounded-md whitespace-nowrap"
             >
               Mở CNV
             </button>
@@ -767,16 +765,15 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
               onClick={() => {
                 handleSuffleGrid()
               }}
-              className="bg-green-500 text-white p-2 flex-1 rounded-md whitespace-nowrap"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 flex-1 rounded-md whitespace-nowrap"
             >
               Xáo trộn hàng ngang
             </button>
           </div>
         )
       }
-
     </div>
-  );
+  )
 };
 
 export default QuestionBoxRound2;
