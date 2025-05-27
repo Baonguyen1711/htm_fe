@@ -6,7 +6,7 @@ import QuestionBoxRound1 from '../../../layouts/RoundBase/Round1';
 const HostRound1: React.FC = () => {
     return (
         <Host
-            QuestionComponent={<QuestionBoxRound1/>}
+            QuestionComponent={<QuestionBoxRound1 isHost={true}/>}
         />
     )
 };

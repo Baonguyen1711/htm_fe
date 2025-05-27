@@ -1,36 +1,84 @@
 import React, { useState, useEffect } from 'react'
 import Play from '../../layouts/Play'
 import { RoundBase } from '../../type';
-import { listenToQuestions, listenToAnswers } from '../../services/firebaseServices';
+import { listenToQuestions, listenToAnswers, listenToSound, deletePath } from '../../services/firebaseServices';
 import { useSearchParams } from 'react-router-dom';
+import { useTimeStart } from '../../context/timeListenerContext';
+import { usePlayer } from '../../context/playerContext';
+import PlayerAnswerInput from '../../components/ui/PlayerAnswerInput';
+import { Question } from '../../type';
+import { submitAnswer } from '../services';
+import { useSounds } from '../../context/soundContext';
 
+// interface QuestionBoxProps {
+//     question: string;
+//     imgUrl?: string;
+//     isHost?: boolean
+// }
 
-interface QuestionBoxProps {
-    question: string;
-    imageUrl?: string;
-    isHost?: boolean
+interface Round1Props {
+    isHost: boolean
 }
 
-const QuestionBoxRound1: React.FC = () => {
+const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost }) => {
+    const sounds = useSounds();
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || ""
-    const [currentQuestion, setCurrentQuestion] = useState<QuestionBoxProps>()
-    const [correctAnswer,setCorrectAnswer] = useState<string>("")
+    const [currentQuestion, setCurrentQuestion] = useState<Question>()
+    const [correctAnswer, setCorrectAnswer] = useState<string>("")
     const [isExpanded, setIsExpanded] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [finalUrl, setFinalUrl] = useState<string>("")
+    const { timeLeft, startTimer } = useTimeStart();
+    const { setAnswerList, playerAnswerRef, position } = usePlayer()
+    const isInitialMount = true;
+    useEffect(() => {
+        console.log("playerAnswerRef.current", playerAnswerRef.current);
+    }, [playerAnswerRef.current])
+    useEffect(() => {
+        if (isInitialMount) return
 
+        // Start timer when selectedTopic changes
+        startTimer(30);
+
+        // Side effects based on timer reaching 0
+    }, []);
+
+    useEffect(() => {
+        console.log("timeLeft", timeLeft);
+
+        if (timeLeft === 0 && !isHost) {
+            console.log("playerAnswerRef.current", playerAnswerRef.current);
+            console.log("position", position);
+
+
+            // When timer runs out, do your clean up / game logic:
+            submitAnswer(roomId, playerAnswerRef.current, position)
+            // If you want to reset timer, call startTimer again here or leave stopped
+        }
+    }, [timeLeft]);
     useEffect(() => {
         const unsubscribePlayers = listenToQuestions(roomId, (question) => {
             setCurrentQuestion(question)
             console.log("current question", question)
-            if(question.imgUrl){
-                const match = question.imgUrl.match(/\/d\/(.+?)\//);
-                const fileId = match ? match[1] : null; 
-                console.log("image url", question.imgUrl.match(/\/d\/(.+?)\//))
-                setFinalUrl(`https://drive.usercontent.google.com/download?id=${fileId}&export=view`)
+            setAnswerList(null)
+
+        });
+
+        // No need to set state here; it's handled by useState initializer
+        return () => {
+            unsubscribePlayers();
+        };
+    }, []);
+
+    useEffect(() => {
+        const unsubscribePlayers = listenToSound (roomId, async (type) => {
+
+            const audio = sounds[`${type}`];
+            if (audio) {
+                audio.play();
             }
-            
+            console.log("sound type", type)
+            await deletePath(roomId, "sound")
         });
 
         // No need to set state here; it's handled by useState initializer
@@ -42,10 +90,14 @@ const QuestionBoxRound1: React.FC = () => {
     useEffect(() => {
 
         const unsubscribePlayers = listenToAnswers(roomId, (answer) => {
+            const audio = sounds['correct'];
+            if (audio) {
+                audio.play();
+            }
             setCorrectAnswer(`Đáp án: ${answer}`)
-            const timeOut = setTimeout(()=>{
+            const timeOut = setTimeout(() => {
                 setCorrectAnswer("")
-            },4000)
+            }, 4000)
             console.log("answer", answer)
             clearTimeout(timeOut)
         });
@@ -74,27 +126,50 @@ const QuestionBoxRound1: React.FC = () => {
                 {correctAnswer}
             </div>
 
-            {/* Nút "Xem thêm" nếu câu hỏi dài
-            {question.length > 150 && !isExpanded && (
-                <button className="text-blue-500 text-sm underline" onClick={() => setIsExpanded(true)}>
-                    Xem thêm
-                </button>
-            )} */}
 
-            {/* Hình ảnh (nếu có) */}
-            {finalUrl && (
-                <div className="w-full h-[300px] flex items-center justify-center overflow-hidden cursor-pointer"
-                    onClick={() => setIsModalOpen(true)}>
-                    <iframe src={finalUrl} className="w-full h-full object-cover"></iframe>
-                    {/* <img src={finalUrl} alt="Question Visual" className="w-full h-full object-cover" /> */}
-                </div>
-            )}
+            <div
+                className="w-full h-[300px] flex items-center justify-center overflow-hidden cursor-pointer"
+                onClick={() => setIsModalOpen(true)}
+            >
+                {(() => {
+                    const url = currentQuestion?.imgUrl;
+                    if (!url) return <p>No media</p>;
+
+                    const extension = url.split('.').pop()?.toLowerCase() || "";
+
+                    if (["jpg", "jpeg", "png", "gif", "webp"].includes(extension)) {
+                        return <img src={url} alt="Question Visual" className="w-full h-full object-cover" />;
+                    }
+
+                    if (["mp3", "wav", "ogg"].includes(extension)) {
+                        return <audio controls className="w-full h-full">
+                            <source src={url} type={`audio/${extension}`} />
+                            Your browser does not support the audio element.
+                        </audio>;
+                    }
+
+                    if (["mp4", "webm", "ogg"].includes(extension)) {
+                        return <video controls className="w-full h-full object-cover">
+                            <source src={url} type={`video/${extension}`} />
+                            Your browser does not support the video tag.
+                        </video>;
+                    }
+
+                    return <p>Unsupported media type</p>;
+                })()}
+            </div>
+
+            <PlayerAnswerInput
+                isHost={isHost}
+                question={currentQuestion}
+            />
+
 
             {/* Modal hiển thị ảnh full kích thước */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50"
                     onClick={() => setIsModalOpen(false)}>
-                    <img src={finalUrl} alt="Full Size" className="max-w-full max-h-full" />
+                    <img src={currentQuestion?.imgUrl} alt="Full Size" className="max-w-full max-h-full" />
                 </div>
             )}
         </div>

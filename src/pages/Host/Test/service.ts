@@ -1,22 +1,16 @@
 import { Question } from "../../../type";
 import { getAxiosAuthContext } from "../../../context/authContext";
+import axios from "axios";
 
 
 export const getTest = async (testName: string): Promise<any> => {
   try {
     
-    const context = getAxiosAuthContext()
-    const { authToken, getAxiosInstance } = context
-    const axiosInstance = getAxiosInstance()
-    if (!authToken) {
-      throw new Error("No token found. Please log in.");
-    }
-    const response = await axiosInstance(`/api/test/${testName}`, {
-      method: 'GET', // Phương thức HTTP
+    const response = await axios.get(`http://localhost:8000/api/test/${testName}`, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`, // Nếu API yêu cầu token
       },
+      withCredentials: true
     });
 
     if (response.status !== 200) {
@@ -84,17 +78,9 @@ export const uploadTestToServer = async (file: File, testName: string): Promise<
 export const getTestByUserId = async (): Promise<any> => {
   try {
 
-    const context = getAxiosAuthContext()
-    const { authToken, getAxiosInstance } = context
-    const axiosInstance = getAxiosInstance()
-    if (!authToken) {
-      throw new Error("No token found. Please log in.");
-    }
-    const response = await axiosInstance(`/api/test/user`, {
-      method: 'GET', // Phương thức HTTP
+    const response = await axios.get(`http://localhost:8000/api/test/user`, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`, // Nếu API yêu cầu token
       },
       withCredentials: true,
     });
@@ -118,18 +104,79 @@ export const getTestByUserId = async (): Promise<any> => {
 export const updateQuestion = async (updateQuestion: Partial<Question>, question_id: string): Promise<any> => {
   try {
 
-    const context = getAxiosAuthContext()
-    const { authToken, getAxiosInstance } = context
-    const axiosInstance = getAxiosInstance()
-    if (!authToken) {
-      throw new Error("No token found. Please log in.");
-    }
-
-    const response = await axiosInstance.put(`api/test/update/${question_id}`,updateQuestion ,{
+    const response = await axios.put(`http://localhost:8000/api/test/update/${question_id}`,updateQuestion ,{
       method: 'PUT', // Phương thức HTTP
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`, // Nếu API yêu cầu token
+      },
+      withCredentials: true,
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to fetch test with Status: ${response.status}`);
+    }
+    
+    // Access the response data
+    console.log(response.data);
+
+    // Phân tích dữ liệu từ response JSO
+    return response.data;
+
+
+  } catch (error) {
+    console.error('Error fetching test data:', error);
+    throw error; // Quăng lỗi để xử lý ở nơi gọi hàm
+  }
+};
+
+export const addNewQuestion = async (updateQuestion: Partial<Question>): Promise<any> => {
+  try {
+
+    const response = await axios.post(`http://localhost:8000/api/test/question/add`,updateQuestion ,{
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true,
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to fetch test with Status: ${response.status}`);
+    }
+    
+    // Access the response data
+    console.log(response.data);
+
+    // Phân tích dữ liệu từ response JSO
+    return response.data;
+
+
+  } catch (error) {
+    console.error('Error fetching test data:', error);
+    throw error; // Quăng lỗi để xử lý ở nơi gọi hàm
+  }
+};
+
+export const getQuestionByRound = async (testName: string, round: string, roomId: string, packetName?: string, difficulty?: string ): Promise<any> => {
+  try {
+
+    // const context = getAxiosAuthContext()
+    // const { authToken, getAxiosInstance } = context
+    // console.log("authToken", authToken)
+    // const axiosInstance = getAxiosInstance()
+    // if (!authToken) {
+    //   throw new Error("No token found. Please log in.");
+    // }
+    let url = `http://localhost:8000/api/test/question/round?test_name=${testName}&round=${round}&room_id=${roomId}`
+
+    if (packetName) {
+      url += `&packet_name=${packetName}`;
+    }
+    if (difficulty) {
+      url += `&difficulty=${difficulty}`;
+    }
+    const response = await axios.get(url,{
+      headers: {
+        'Content-Type': 'application/json',
       },
       withCredentials: true,
     });
@@ -154,14 +201,7 @@ export const updateQuestion = async (updateQuestion: Partial<Question>, question
 export const getNextQuestion = async (testName: string, questionNumber: string, round: string, roomId: string, packetName?: string, // Optional param
   difficulty?: string ): Promise<any> => {
   try {
-
-    const context = getAxiosAuthContext()
-    const { authToken, getAxiosInstance } = context
-    const axiosInstance = getAxiosInstance()
-    if (!authToken) {
-      throw new Error("No token found. Please log in.");
-    }
-    let url = `api/test/question?test_name=${testName}&question_number=${questionNumber}&round=${round}&room_id=${roomId}`
+    let url = `http://localhost:8000/api/test/question?test_name=${testName}&question_number=${questionNumber}&round=${round}&room_id=${roomId}`
 
     if (packetName) {
       url += `&packet_name=${packetName}`;
@@ -169,12 +209,11 @@ export const getNextQuestion = async (testName: string, questionNumber: string, 
     if (difficulty) {
       url += `&difficulty=${difficulty}`;
     }
-    const response = await axiosInstance.get(url,{
+    const response = await axios.get(url,{
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`, // Nếu API yêu cầu token
       },
-
+      withCredentials: true
     });
 
     if (response.status !== 200) {
@@ -196,18 +235,9 @@ export const getNextQuestion = async (testName: string, questionNumber: string, 
 
 export const getRoomById = async (): Promise<any> => {
   try {
-
-    const context = getAxiosAuthContext()
-    const { authToken, getAxiosInstance } = context
-    const axiosInstance = getAxiosInstance()
-    if (!authToken) {
-      throw new Error("No token found. Please log in.");
-    }
-    const response = await axiosInstance(`/api/rooms`, {
-      method: 'GET', // Phương thức HTTP
+    const response = await axios.get(`http://localhost:8000/api/rooms`, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`, // Nếu API yêu cầu token
       },
       withCredentials: true,
     });
@@ -237,11 +267,9 @@ export const createRoom = async (expiredTime: number): Promise<any> => {
     if (!authToken) {
       throw new Error("No token found. Please log in.");
     }
-    const response = await axiosInstance.post(`/api/room/create?expired_time=${expiredTime}`, {
-      method: 'POST', // Phương thức HTTP
+    const response = await axios.post(`http://localhost:8000/api/room/create?expired_time=${expiredTime}`,{}, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`, // Nếu API yêu cầu token
       },
       withCredentials: true,
     });

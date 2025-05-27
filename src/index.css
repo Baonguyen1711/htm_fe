@@ -72,13 +72,13 @@ code {
 }
 
 .flash-correct {
-  background-color: rgba(0, 255, 0, 0.2); /* Light green */
-  animation: flash-correct-animation 0.5s alternate infinite;
+  background-color: rgba(0, 255, 0, 0.6) !important;
+
 }
 
 .flash-incorrect {
-  background-color: rgba(255, 0, 0, 0.2); /* Light red */
-  animation: flash-incorrect-animation 0.5s alternate infinite;
+  background-color: rgba(255, 0, 0, 0.6) !important;
+
 }
 
 @keyframes flash-correct-animation {

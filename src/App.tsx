@@ -1,5 +1,5 @@
 import './App.css';
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import { Routes, Route, useLocation, useSearchParams } from "react-router-dom";
 import CreateRoom from './pages/Host/Room/CreateRoom';
 import LoadingSpinner from './layouts/Loading/LoadingSpinner';
@@ -7,6 +7,10 @@ import { AxiosAuthProvider } from './context/authContext';
 import { PlayerProvider } from './context/playerContext';
 import { HostProvider } from './context/hostContext';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import { TimeStartProvider } from './context/timeListenerContext';
+import { SoundProvider } from './context/soundContext';
+
+
 
 const queryClient = new QueryClient();
 
@@ -55,47 +59,59 @@ function HostComponent() {
 function App() {
   const [searchParams] = useSearchParams();
   const roundName = `Round${searchParams.get("round") || "1"}`
+  const roomId = searchParams.get("roomId") || ""
   return (
     <>
 
       <Suspense fallback={<LoadingSpinner />}>
         <QueryClientProvider client={queryClient}>
-          <PlayerProvider>
-            <Routes>
-              {/* Public Routes */}
-              <Route
-                path="*"
-                element={
+          <TimeStartProvider roomId={roomId}>
+            <SoundProvider>
+              <HostProvider>
 
+
+                <PlayerProvider>
                   <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/play" element={<PlayComponent />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/user/info" element={<InfoForm />} />
+                    {/* Public Routes */}
+                    <Route
+                      path="*"
+                      element={
+
+                        <Routes>
+                          <Route path="/" element={<Home />} />
+                          <Route path="/play" element={<PlayComponent />} />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/user/info" element={<InfoForm />} />
+                        </Routes>
+
+
+                      }
+                    />
+                    {/* Host Routes */}
+                    <Route
+                      path="/host/*"
+                      element={
+                        <HostProvider>
+                          <AxiosAuthProvider>
+                            <Routes>
+                              <Route path="/login" element={<Login />} />
+                              <Route path="dashboard" element={<Dashboard />} />
+                              <Route path="create_room" element={<CreateRoom />} />
+                              <Route path="" element={<HostComponent />} />
+                            </Routes>
+                          </AxiosAuthProvider>
+                        </HostProvider>
+
+                      }
+                    />
                   </Routes>
+                </PlayerProvider>
+              </HostProvider>
 
+            </SoundProvider>
 
-                }
-              />
-              {/* Host Routes */}
-              <Route
-                path="/host/*"
-                element={
-                  <HostProvider>
-                    <AxiosAuthProvider>
-                      <Routes>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="dashboard" element={<Dashboard />} />
-                        <Route path="create_room" element={<CreateRoom />} />
-                        <Route path="" element={<HostComponent />} />
-                      </Routes>
-                    </AxiosAuthProvider>
-                  </HostProvider>
+          </TimeStartProvider>
 
-                }
-              />
-            </Routes>
-          </PlayerProvider>
 
         </QueryClientProvider>
       </Suspense>

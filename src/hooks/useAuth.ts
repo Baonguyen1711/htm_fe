@@ -5,10 +5,13 @@ import {
   User,
   signOut,
   onAuthStateChanged,
-  signInAnonymously
+  signInAnonymously,
+  browserLocalPersistence,
+  setPersistence
 } from "firebase/auth";
 import {app} from "../firebase-config";
 import { useAxiosAuth } from "../context/authContext";
+import { authenticateUser } from "../services/firebaseServices";
 
 const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -18,11 +21,13 @@ const useAuth = () => {
   const { setAuthToken } = useAxiosAuth()
   useEffect(() => {
     const auth = getAuth(app);
+    console.log("Current persistence:", auth)
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const uid = user.uid;
         console.log("uid", uid)
         const token = await user.getIdToken();
+        const response = await authenticateUser(token)
         setAuthToken(token);
       } else {
         setAuthToken(null);
@@ -32,26 +37,31 @@ const useAuth = () => {
     return () => unsubscribe();
   }, []);
 
+
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    setError(null); // Clear any previous errors
-    const auth = getAuth(app);
-    try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      setUser(userCredential.user);
-      console.log("userCredential", userCredential);
-      return userCredential.user;
-    } catch (err: any) {
-      console.error("Error:", err.message);
-      setError(err.message);
-      return null;
-    } finally {
-      setLoading(false);
-    }
+      setLoading(true);
+      setError(null); // Clear any previous errors
+      const auth = getAuth(app);
+  
+      try {
+          // Set persistence to 'local' before signing in
+          await setPersistence(auth, browserLocalPersistence);
+  
+          const userCredential = await signInWithEmailAndPassword(
+              auth,
+              email,
+              password
+          );
+          setUser(userCredential.user);
+          console.log("userCredential", userCredential);
+          return userCredential.user;
+      } catch (err: any) {
+          console.error("Error:", err.message);
+          setError(err.message);
+          return null;
+      } finally {
+          setLoading(false);
+      }
   };
 
   const logout = async () => {
@@ -72,6 +82,7 @@ const useAuth = () => {
 
   const signInWithoutPassword = async () => {
     const auth = getAuth();
+    await setPersistence(auth, browserLocalPersistence);
     await signInAnonymously(auth)
       .then(() => {
         console.log("sign in sucessfully")

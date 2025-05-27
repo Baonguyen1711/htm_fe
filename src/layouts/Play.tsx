@@ -1,14 +1,17 @@
-import React, { useState, useEffect, ReactNode } from 'react';
+import React, { useState, useEffect, ReactNode, useRef, useCallback } from 'react';
 import Header from './Header';
 import { usePlayer } from '../context/playerContext';
-import { User } from '../type';
-import { addPlayerToRoom, listenToPlayers, listenToScores, listenToAnswers, listenToTimeStart } from '../services/firebaseServices';
+import { Answer, User } from '../type';
+import { addPlayerToRoom, listenToPlayers, listenToScores, listenToAnswers, listenToTimeStart, listenToBroadcastedAnswer, setupOnDisconnect, listenToRoundStart } from '../services/firebaseServices';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { submitAnswer } from './services';
 import { getNextQuestion } from '../pages/Host/Test/service';
 import { useHost } from '../context/hostContext';
 import HostManagement from '../components/HostManagement';
 import PlayerScore from '../components/PlayerScore';
 import HostScore from '../components/PlayerAnswer';
+import { setCurrentPacketQuestion } from '../components/services';
+import { useTimeStart } from '../context/timeListenerContext';
 
 
 
@@ -29,16 +32,95 @@ interface Player {
 const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerScore, SideBar }) => {
 
     const navigate = useNavigate()
+    const playerAnswerRef = useRef("");
     const [isChatOpen, setIsChatOpen] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(30);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isRunning, setIsRunning] = useState(false)
+    const [userId, setUserId] = useState(localStorage.getItem("userId"))
+    const [params] = useSearchParams()
+    const round = params.get("round") || "1"
 
-    const [playerScores, setPlayerScores] = useState<number[]>([0, 0, 0, 0]);
+
+    const [isRunning, setIsRunning] = useState(false)
+    //const [playerAnswer, setPlayerAnswer] = useState<string>("")
+
+
     // const [playerFlashes, setPlayerFlashes] = useState(Array(playerScores.length).fill(""));
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState<string>("0")
-    const { players, setPlayers, roomId, setRoomId, playersArray, setPlayerArray } = usePlayer()
+    const [startedListening, setStartedListening] = useState<boolean>(false)
+    const { players, setPlayers, roomId, setRoomId, playersArray, setPlayerArray, position, setCurrentQuestion, selectedTopic, setSelectedTopic, setScoreList } = usePlayer()
+    const { playerScores, setPlayerScores } = useHost()
+    const isMounted = useRef(false);
+    const { timeLeft, startTimer } = useTimeStart();
+    const [searchParams] = useSearchParams();
 
+
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === "Enter") {
+            const inputElement = event.target as HTMLInputElement; // Type assertion
+            console.log("inputElement.value", inputElement.value)
+            playerAnswerRef.current = inputElement.value
+            inputElement.value = ""; // Clears input field
+        }
+    };
+    // const startTimer = useCallback(() => {
+    //     let timer: NodeJS.Timeout;
+
+    //     timer = setInterval(() => {
+    //         setTimeLeft(prev => {
+    //             if (prev <= 1) {
+    //                 clearInterval(timer);
+    //                 if (round === "3") {
+    //                     setCurrentPacketQuestion(roomId, 1)
+    //                     setCurrentQuestion("")
+    //                     setSelectedTopic(null)
+    //                     localStorage.removeItem("questions")
+    //                 }
+    //                 if (!isHost && round !== "3") {
+    //                     submitAnswer(roomId, playerAnswerRef.current, position)
+    //                 }
+    //                 return 30;
+    //             }
+    //             return prev - 1;
+    //         });
+    //     }, 1000);
+
+    //     return () => clearInterval(timer);
+    // }, [isHost, position, roomId, round, setCurrentPacketQuestion, setCurrentQuestion, setSelectedTopic]);
+    // const isInitialMount = true;
+    // useEffect(() => {
+    //     if (isInitialMount) return
+
+    //     // Start timer when selectedTopic changes
+    //     startTimer(30);
+
+    //     // Side effects based on timer reaching 0
+    // }, []);
+
+    // useEffect(() => {
+    //     console.log("timeLeft", timeLeft);
+
+    //     if (timeLeft === 0) {
+    //         // When timer runs out, do your clean up / game logic:
+    //         submitAnswer(roomId, playerAnswerRef.current, position)
+    //         // If you want to reset timer, call startTimer again here or leave stopped
+    //     }
+    // }, [timeLeft]);
+    // useEffect(() => {
+    //     console.log("timeLeft on play", timeLeft)
+    // }, [timeLeft]);
+
+    useEffect(() => {
+        if (!roomId || !userId) return;
+
+        // Setup onDisconnect to remove user from room when connection lost
+        const cancelOnDisconnect = setupOnDisconnect(roomId, userId);
+
+        return () => {
+            // Optional: cancel onDisconnect if component unmounts normally
+            cancelOnDisconnect();
+        };
+    }, [roomId, userId]);
 
     useEffect(() => {
         const unsubscribePlayers = listenToPlayers(roomId, (updatedPlayers) => {
@@ -47,11 +129,26 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
             console.log("Object.keys(updatedPlayers).length", Object.keys(updatedPlayers).length)
             if (updatedPlayers && Object.keys(updatedPlayers).length > 0) {
                 const playersList = Object.values(updatedPlayers);
+                const initialScoreList = [...playersList]
+                if (round === "1") {
+                    for (var score of initialScoreList) {
+                        score["score"] = "0";
+                        score["isCorrect"] = false;
+                        score["isModified"] = false
+                    }
+                    console.log("initialScoreList", initialScoreList);
+                    setScoreList(initialScoreList)
+                    setPlayerScores(initialScoreList)
+                }
+
+
                 setPlayerArray(playersList);
                 localStorage.setItem("playerList", JSON.stringify(playersList));
                 console.log("Updated localStorage:", localStorage.getItem("playerList"));
             } else {
-                console.log("Skipping update: invalid updatedPlayers", updatedPlayers);
+                console.log("Room is empty or players node deleted");
+                setPlayerArray([]); // Clear state
+                localStorage.removeItem("playerList"); // Clear localStorage
             }
         });
 
@@ -59,92 +156,22 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         return () => {
             unsubscribePlayers();
         };
-    }, []);
+    }, [round]);
 
-    useEffect(() => {
-        const unsubscribeTimeStart = listenToTimeStart(roomId, (signal) => {
-            if (signal === "START") {
-                setIsRunning(true)
-            }
-        });
-
-        // No need to set state here; it's handled by useState initializer
-        return () => {
-            unsubscribeTimeStart();
-        };
-    }, []);
-
-    // const simulateSocketScoreUpdate = () => {
-    //     const playerIndex = Math.floor(Math.random() * playerScores.length);
-    //     const scoreChange = Math.random() > 0.5 ? 10 : -10;
-    //     console.log(`Simulated socket event: Player ${playerIndex + 1} score changed by ${scoreChange}`);
-
-    //     setPlayerScores((prevScores) => {
-    //         const newScores = [...prevScores];
-    //         newScores[playerIndex] += scoreChange;
-    //         return newScores;
-    //     });
-    //     triggerPlayerFlash(playerIndex, scoreChange > 0);
-    // };
 
     // useEffect(() => {
-    //     const socketInterval = setInterval(() => {
-    //         simulateSocketScoreUpdate();
-    //     }, 5000);
-    //     return () => clearInterval(socketInterval);
-    // }, []);
 
-    // const triggerPlayerFlash = (index: number, isCorrect: boolean) => {
-    //     const flashColor = isCorrect ? "flash-correct" : "flash-incorrect";
-    //     setPlayerFlashes((prevFlashes) => {
-    //         const newFlashes = [...prevFlashes];
-    //         newFlashes[index] = flashColor;
-    //         return newFlashes;
-    //     });
-    //     setTimeout(() => {
-    //         setPlayerFlashes((prevFlashes) => {
-    //             const newFlashes = [...prevFlashes];
-    //             newFlashes[index] = "";
-    //             return newFlashes;
-    //         });
-    //     }, 3000);
-    // };
+    //     let timerCleanup: (() => void) | undefined;
+    //     const unsubscribeTimeStart = listenToTimeStart(roomId, startTimer);
+    //     console.log("listening on time start");
 
-    useEffect(() => {
-        if (isRunning) {
-            if (timeLeft > 0) {
-                const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-                return () => clearTimeout(timer);
-            } else {
-                // When timeLeft reaches 0, stop the timer and reset
-                setIsRunning(false);
-                setTimeLeft(30);
-            }
-        }
-    }, [isRunning, timeLeft]); // Add timeLeft to dependencies
 
-    // const handleScoreAdjust = (index: number, amount: number) => {
-    //     setPlayerScores((prevScores) => {
-    //         const newScores = [...prevScores];
-    //         newScores[index] += amount;
-    //         return newScores;
-    //     });
-    //     triggerPlayerFlash(index, amount > 0);
-    // };
+    //     return () => {
+    //         unsubscribeTimeStart();
+    //         if (timerCleanup) timerCleanup();
+    //     };
+    // }, [roomId]);
 
-    // const handleNextQuestion = async () => {
-    //     setCurrentQuestionIndex((prev)=>(parseInt(prev)+1).toString())
-    //     const question = await getNextQuestion(testName,currentQuestionIndex,currentRound,hostRoomId)
-    //     console.log(question)
-    //     alert('Moving to the next question!');
-    // };
-
-    // const getSortedPlayers = (): Player[] => {
-    //     return playerScores
-    //         .map((score, index) => ({ score, index, username: `Player ${index + 1}`, position: index }))
-    //         .sort((a, b) => b.score - a.score)
-    //         .map((player, rank) => ({ ...player, position: rank }));
-    // };
 
     return (
         <div className="w-screen h-screen bg-gradient-to-r from-blue-500 to-teal-400 flex flex-col overflow-auto">
@@ -158,15 +185,19 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
                         ></div>
                     </div>
                     {questionComponent}
-                    {!isHost && (
+                    {/* {!isHost && (
                         <div className="mt-2 w-full">
                             <input
                                 type="text"
                                 className="w-full h-14 border border-gray-300 rounded-lg px-4 text-lg text-center"
                                 placeholder="Type your answer..."
+                                onKeyDown={handleKeyDown}
+                            // value={playerAnswer} 
+                            // onChange={(e) => setPlayerAnswer(e.target.value)}
                             />
+                            <p className="mt-2 text-lg">{playerAnswerRef.current && `Your answer: ${playerAnswerRef.current}`}</p>
                         </div>
-                    )}
+                    )} */}
                     {PlayerScore}
 
                 </div>

@@ -38,7 +38,7 @@ const App: React.FC = () => {
       {/* Tab Content */}
       <div>
         {activeTab === 'upload' && <UploadExam/>}
-        {activeTab === 'view' && <ViewTest getToken={getToken} />}
+        {activeTab === 'view' && <ViewTest  />}
         {activeTab === 'setup' && <SetupMatch />}
       </div>
     </div>

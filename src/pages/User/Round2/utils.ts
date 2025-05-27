@@ -1,353 +1,360 @@
-// Tạo từ khóa gợi ý với vị trí và hướng random
+export const generateGrid = async (wordArr: string[], cellWidth: number) => {
+  let board: string[][] = [[]], wordBank: WordObj[] = [], wordsActive: WordObj[] = [];
 
-interface HintWord {
-    word: string;
+  interface MatchPosition {
     x: number;
     y: number;
-    direction: "horizontal" | "vertical";
-}
-
-interface ObstacleQuestionBoxProps {
-    obstacleWord: string;
-}
-
-type PlacedWord = {
-    word: string;
-    x: number;
-    y: number;
-    direction: "horizontal" | "vertical";
-};
-
-export const generateHintWords = (words: string[], gridSize: number, obstacleWord: string): HintWord[] => {
-    const grid: string[][] = Array(gridSize)
-        .fill(null)
-        .map(() => Array(gridSize).fill("")); // Mảng kiểm tra vị trí
-
-    const findCommonLetterPairs = (words: string[]): { word1: string; word2: string; commonLetters: string[] }[] => {
-        let results: { word1: string; word2: string; commonLetters: string[] }[] = [];
-        let usedWords = new Set<string>(); // Lưu lại các từ đã dùng
-
-        let remainingPairs: { word1: string; word2: string; commonLetters: string[] }[] = [];
-
-        for (let i = 0; i < words.length; i++) {
-            for (let j = i + 1; j < words.length; j++) {
-                const word1 = words[i];
-                const word2 = words[j];
-
-                // Tìm ký tự chung giữa 2 từ
-                const commonLetters = [...new Set(word1)].filter((letter) => word2.includes(letter));
-
-                if (commonLetters.length >= 2) {
-                    // Tính điểm ưu tiên (chữ gần trung tâm hơn)
-                    const scoredLetters = commonLetters.map((letter) => {
-                        const index1 = word1.indexOf(letter);
-                        const index2 = word2.indexOf(letter);
-                        const center1 = word1.length / 2;
-                        const center2 = word2.length / 2;
-                        const score = Math.abs(index1 - center1) + Math.abs(index2 - center2);
-                        return { letter, score };
-                    });
-
-                    // Sắp xếp theo điểm ưu tiên
-                    scoredLetters.sort((a, b) => a.score - b.score);
-                    const prioritizedLetters = scoredLetters.map((item) => item.letter);
-
-                    remainingPairs.push({ word1, word2, commonLetters: prioritizedLetters });
-                }
-            }
-        }
-
-        // Bước 2: Chọn tối đa 2 cặp theo quy tắc
-        for (const pair of remainingPairs) {
-            if (results.length >= 2) break; // Đủ 2 cặp thì dừng
-            if (!usedWords.has(pair.word1) && !usedWords.has(pair.word2)) {
-                results.push(pair);
-                usedWords.add(pair.word1);
-                usedWords.add(pair.word2);
-            }
-        }
-
-        // Nếu vẫn chưa đủ 2 cặp, chọn tiếp từ các cặp có từ đã dùng
-        for (const pair of remainingPairs) {
-            if (results.length >= 2) break;
-            if (!usedWords.has(pair.word1) || !usedWords.has(pair.word2)) {
-                results.push(pair);
-                usedWords.add(pair.word1);
-                usedWords.add(pair.word2);
-            }
-        }
-
-        return results;
-    };
-
-    // 🛠 Test
-    //const testwords = ["BƯUCHÍNH", "5G", "BQP", "TẬPĐOÀN", "HÀNỘI", "RED"];
-
-    const shuffledWords = words.sort(() => Math.random() - 0.5);
-    const placeWordsOnGrid = (words: string[], gridSize: number): PlacedWord[] => {
-        while (true) {
-            let placedWords: PlacedWord[] = [];
-            let occupiedPositions = new Set<string>();
-            let placedSet = new Set<string>(); // Set để theo dõi từ đã đặt
-            let allPlaced = true; // Cờ kiểm tra xem tất cả từ có được đặt hay không
-
-            const getKey = (x: number, y: number) => `${x},${y}`;
-
-            const canPlaceWord = (word: string, x: number, y: number, direction: "horizontal" | "vertical", index: number) => {
-                for (let i = 0; i < word.length; i++) {
-                    if (i === x + index) continue;
-                    let newX = direction === "horizontal" ? x + i : x;
-                    let newY = direction === "horizontal" ? y : y + i;
-                    if (newX < 0 || newY < 0 || newX >= gridSize || newY >= gridSize || occupiedPositions.has(getKey(newX, newY))) {
-                        return false;
-                    }
-                }
-                return true;
-            };
-
-            const commonLetterPairs = findCommonLetterPairs(words);
-            console.log(commonLetterPairs);
-
-            for (const { word1, word2, commonLetters } of commonLetterPairs) {
-                if (placedSet.has(word1) || placedSet.has(word2)) continue; // Kiểm tra nếu đã đặt thì bỏ qua
-
-                const commonLetter = commonLetters[0];
-                const index1 = word1.indexOf(commonLetter);
-                const index2 = word2.indexOf(commonLetter);
-
-                let placed = false;
-                for (let attempt = 0; attempt < 100; attempt++) {
-                    let x = Math.floor(Math.random() * (gridSize - word1.length)) + 1;
-                    let y = Math.floor(Math.random() * (gridSize - index2) + index2) + 1;
-
-                    if (canPlaceWord(word1, x, y, "horizontal", index1)) {
-                        placedWords.push({ word: word1, x, y, direction: "horizontal" });
-                        placedSet.add(word1);
-
-                        let intersecrX = x + index1;
-                        let intersectY = y;
-
-                        if (canPlaceWord(word2, intersecrX, intersectY - index2, "vertical", index2)) {
-                            for (let i = 0; i < word1.length; i++) occupiedPositions.add(getKey(x + i, y));
-                            placedWords.push({ word: word2, x: intersecrX, y: intersectY - index2, direction: "vertical" });
-                            placedSet.add(word2);
-
-                            for (let i = 0; i < word2.length; i++) occupiedPositions.add(getKey(intersecrX, intersectY - index2 + i));
-
-                            placed = true;
-                            break;
-                        } else {
-                            placedWords.pop();
-                        }
-                    }
-                }
-
-                if (!placed) {
-                    console.warn(`Không thể đặt cặp từ: ${word1} - ${word2}`);
-                    allPlaced = false;
-                    break;
-                }
-            }
-
-
-
-            for (const word of words) {
-                if (placedSet.has(word)) continue;
-
-                let placed = false;
-                let found = false;
-
-                for (let j = placedWords.length - 1; j >= 0; j--) {
-                    for (let attempt = 0; attempt < 10; attempt++) {
-                        let direction: "horizontal" | "vertical" = placedWords[j].direction === "horizontal" ? "vertical" : "horizontal";
-                        const shift = Math.random() < 0.5 ? 1 : -1;
-                        let x = placedWords[j].direction === "horizontal" ? placedWords[j].word.length + placedWords[j].x : placedWords[j].x + 1;
-                        let y = placedWords[j].direction === "horizontal" ? placedWords[j].y + 2 : placedWords[j].word.length + placedWords[j].y;
-
-                        if (canPlaceWord(word, x, y, direction, 0)) {
-                            placedWords.push({ word, x, y, direction });
-                            placedSet.add(word);
-
-                            for (let i = 0; i < word.length; i++) {
-                                let newX = direction === "horizontal" ? x + i : x;
-                                let newY = direction === "horizontal" ? y : y + i;
-                                occupiedPositions.add(getKey(newX, newY));
-                            }
-
-                            placed = true;
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (found) break;
-                }
-
-                if (!placed) {
-                    console.warn(`Không thể đặt từ: ${word}`);
-                    allPlaced = false;
-                    break;
-                }
-            }
-            if (!allPlaced) continue; // Nếu có từ không đặt được, restart vòng lặp
-
-            if (allPlaced) return placedWords; // Nếu tất cả từ đều được đặt, thoát khỏi vòng lặp và trả về kết quả
-        }
-    };
-
-    const placedWords = placeWordsOnGrid(shuffledWords, gridSize);
-    console.log(placedWords);
-
-    return placedWords;
-};
-
-
-export const renderGrid = (wordList: string[], mainKeyword:string, GRID_SIZE:number) => {
-    const maxAttempts = 100;
-
-    const generateEmptyGrid = () => {
-        return Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(""));
-    };
-
-    const getKey = (x: number, y: number) => `${x},${y}`;
-
-    const canPlaceNumber = (x: number, y: number) => {
-        if (x < 0 || y < 0 || x >= GRID_SIZE || y >= GRID_SIZE) return false;
-        return !occupiedPositions.has(getKey(x, y));
-    };
-
-    const hasCommonLetter = (word1: string, word2: string) => {
-        return [...new Set(word1)].some((letter) => word2.includes(letter));
-    };
-
-    // Try to place words and numbers until a valid configuration is found
-    let attempts = 0;
-    let randomHintWords: HintWord[] = [];
-    let newGrid = generateEmptyGrid();
-    let occupiedPositions = new Set<string>();
-    let occupiedRows = new Set<number>();
-    let occupiedCols = new Set<number>();
-
-
-    while (attempts < maxAttempts) {
-        randomHintWords = generateHintWords(wordList, GRID_SIZE, mainKeyword);
-        newGrid = generateEmptyGrid();
-        occupiedPositions.clear();
-        occupiedRows.clear();
-        occupiedCols.clear();
-
-        let canPlaceAll = true;
-
-        // First pass: Place words and mark their positions
-        for (const { word, x, y, direction } of randomHintWords) {
-            if (direction === "horizontal") {
-                occupiedRows.add(y);
-                // Check for adjacent rows
-                for (const other of randomHintWords) {
-                    if (other.word === word || other.direction !== "horizontal") continue; // Fixed comparison
-                    if (Math.abs(other.y - y) === 1 && !hasCommonLetter(word, other.word)) {
-                        canPlaceAll = false;
-                        break;
-                    }
-                }
-            } else {
-                occupiedCols.add(x);
-                // Check for adjacent columns
-                for (const other of randomHintWords) {
-                    if (other.word === word || other.direction !== "vertical") continue; // Fixed comparison
-                    if (Math.abs(other.x - x) === 1 && !hasCommonLetter(word, other.word)) {
-                        canPlaceAll = false;
-                        break;
-                    }
-                }
-            }
-
-            if (!canPlaceAll) break;
-
-            for (let i = 0; i < word.length; i++) {
-                let newX = direction === "horizontal" ? x + i : x;
-                let newY = direction === "horizontal" ? y : y + i;
-                newGrid[newY][newX] = word[i];
-                occupiedPositions.add(getKey(newX, newY));
-            }
-        }
-
-        if (!canPlaceAll) {
-            attempts++;
-            continue;
-        }
-
-        // Second pass: Check if numbers can be placed without overlap
-
-        for (const { word, x, y, direction } of randomHintWords) {
-            const wordNumber = wordList.includes(word) ? wordList.indexOf(word) + 1 : -1; // Kiểm tra trước khi lấy số
-
-            if (wordNumber === -1) {
-                console.error(`Không tìm thấy từ ${word} trong wordList`);
-                continue; // Nếu không tìm thấy, tiếp tục vòng lặp
-            }
-
-            if (direction === "horizontal" && x > 0) {
-                if (!canPlaceNumber(x - 1, y)) {
-                    canPlaceAll = false;
-                    break;
-                }
-            } else if (direction === "vertical" && y > 0) {
-                if (!canPlaceNumber(x, y - 1)) {
-                    canPlaceAll = false;
-                    break;
-                }
-            }
-        }
-
-
-        if (canPlaceAll) {
-            // Place numbers if all checks pass
-            randomHintWords.forEach(({ word, x, y, direction }) => {
-                const wordNumber = wordList.indexOf(word) + 1;
-                let newY = y; // Tạo biến mới để lưu trữ vị trí x đã điều chỉnh
-
-                // Kiểm tra nếu ô bên trái đã bị chiếm, thì dịch sang phải
-                if (newGrid[x][y-1] !== '') {
-                    newY = y + 1; // Dịch sang phải 1 đơn vị
-                    
-                    // Nếu là horizontal, cần kiểm tra toàn bộ các ô của word và dịch chúng
-                    if (direction === "horizontal") {
-                        // Kiểm tra xem sau khi dịch có đủ không gian không
-                        if (newY + word.length > newGrid[0].length) {
-                            // Có thể cần xử lý trường hợp vượt quá kích thước grid
-                            console.error("Không dịch được sang phải")
-                            return;
-                        }
-                        // Cập nhật các ô của word ở vị trí mới
-                        for (let i = 0; i < word.length; i++) {
-                            newGrid[x][newY+i] = word[i];
-                            occupiedPositions.add(getKey(x, newY+i));
-                        }
-
-                        occupiedPositions.delete(getKey(x,y))
-                        newGrid[x][y] = ""
-                    }
-                }
-                if (direction === "horizontal" && x > 0) {
-                    newGrid[y][x - 1] = `number${wordNumber.toString()}`;
-                    occupiedPositions.add(getKey(x - 1, y));
-                } else if (direction === "vertical" && y > 0) {
-                    newGrid[y - 1][x] = `number${wordNumber.toString()}`;
-                    occupiedPositions.add(getKey(x, y - 1));
-                }
-            });
-
-
-            break; // Valid configuration found, exit loop
-        }
-
-        attempts++;
+    dir: number;
+  }
+
+  interface Question {
+    answer: string;
+  }
+
+  let isPos: boolean[][] = [[]];
+  let classesOfBoard: number[][][] = [[[]]];
+
+  class WordObj {
+    string: string;
+    char: string[];
+    totalMatches: number = 0;
+    effectiveMatches: number = 0;
+    successfulMatches: MatchPosition[] = [];
+    x: number = 0;
+    y: number = 0;
+    dir: number = 0;
+    index: number;
+
+    constructor(str: string, index: number) {
+      this.string = str;
+      this.char = str.split('');
+      this.index = index;
+    }
+  }
+
+  const Bounds = {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+
+    Update: function (x: number, y: number) {
+      this.top = Math.min(y, this.top);
+      this.right = Math.max(x, this.right);
+      this.bottom = Math.max(y, this.bottom);
+      this.left = Math.min(x, this.left);
+    },
+
+    Clean: function () {
+      this.top = 999;
+      this.right = 0;
+      this.bottom = 0;
+      this.left = 999;
+    }
+  };
+
+  Bounds.Clean();
+
+  for (let i = 0; i < 100; i++) {
+    board[i] = [];
+    isPos[i] = [];
+    classesOfBoard[i] = [];
+    for (let j = 0; j < 100; j++) {
+      board[i][j] = "";
+      isPos[i][j] = false;
+      classesOfBoard[i][j] = [];
+    }
+  }
+
+  function CleanVars(): void {
+    Bounds.Clean();
+    wordBank = [];
+    wordsActive = [];
+    board = [];
+    isPos = [];
+    classesOfBoard = [];
+
+    for (let i = 0; i < 100; i++) {
+      board.push([]);
+      isPos.push([]);
+      classesOfBoard.push([]);
+      for (let j = 0; j < 100; j++) {
+        board[i].push("");
+        isPos[i].push(false);
+        classesOfBoard[i].push([]);
+      }
+    }
+  }
+
+  function PopulateBoard() {
+    PrepareBoard();
+
+    for (var i = 0, isOk = true, len = wordBank.length; i < len && isOk; i++) {
+      isOk = AddWordToBoard();
+    }
+    return isOk;
+  }
+
+  function PrepareBoard(): void {
+    wordBank = [];
+
+    for (let i = 0; i < wordArr.length; i++) {
+      const actualPos = i + 1;
+      wordBank.push(new WordObj(' ' + actualPos.toString() + wordArr[i] + ' ', actualPos));
     }
 
-    if (attempts >= maxAttempts) {
-        console.warn("Could not find a valid grid configuration without overlapping numbers or adjacent non-shared words after max attempts.");
+    for (let i = 0; i < wordBank.length; i++) {
+      const wA = wordBank[i];
+      for (let j = 0; j < wA.char.length; j++) {
+        const cA = wA.char[j];
+        for (let k = 0; k < wordBank.length; k++) {
+          const wB = wordBank[k];
+          if (i !== k) {
+            for (let l = 0; l < wB.char.length; l++) {
+              wA.totalMatches += (cA === wB.char[l]) ? 1 : 0;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function findWordIdx(givenWord: string): number | undefined {
+    givenWord = givenWord.substring(2, givenWord.length - 1);
+    for (let i = 0; i < wordArr.length; i++) {
+      if (givenWord === wordArr[i]) return i + 1;
+    }
+    return undefined;
+  }
+
+  function AddWordToBoard(): boolean {
+    var i, len, curIndex, curWord, curChar, curMatch, testWord, testChar,
+      minMatchDiff = 9999, curMatchDiff;
+
+    if (wordsActive.length < 1) {
+      curIndex = 0;
+      for (i = 0, len = wordBank.length; i < len; i++) {
+        if (wordBank[i].totalMatches < wordBank[curIndex].totalMatches) {
+          curIndex = i;
+        }
+      }
+      wordBank[curIndex].successfulMatches = [{ x: 12, y: 12, dir: 0 }];
+    } else {
+      curIndex = -1;
+
+      for (i = 0, len = wordBank.length; i < len; i++) {
+        curWord = wordBank[i];
+        curWord.effectiveMatches = 0;
+        curWord.successfulMatches = [];
+        for (var j = 0, lenJ = curWord.char.length; j < lenJ; j++) {
+          if (j == 1) continue;
+          curChar = curWord.char[j];
+          for (var k = 0, lenK = wordsActive.length; k < lenK; k++) {
+            testWord = wordsActive[k];
+            for (var l = 0, lenL = testWord.char.length; l < lenL; l++) {
+              if (l == 1) continue;
+              testChar = testWord.char[l];
+              if (curChar === testChar) {
+                curWord.effectiveMatches++;
+
+                var curCross = { x: testWord.x, y: testWord.y, dir: 0 };
+                if (testWord.dir === 0) {
+                  curCross.dir = 1;
+                  curCross.x += l;
+                  curCross.y -= j;
+                } else {
+                  curCross.dir = 0;
+                  curCross.y += l;
+                  curCross.x -= j;
+                }
+
+                var isMatch = true;
+
+                for (var m = -1, lenM = curWord.char.length + 1; m < lenM; m++) {
+                  var crossVal = [];
+                  if (m !== j) {
+                    if (curCross.dir === 0) {
+                      var xIndex = curCross.x + m;
+
+                      if (xIndex < 0 || xIndex > board.length) {
+                        isMatch = false;
+                        break;
+                      }
+
+                      crossVal.push(board[xIndex][curCross.y]);
+                      crossVal.push(board[xIndex][curCross.y + 1]);
+                      crossVal.push(board[xIndex][curCross.y - 1]);
+                    } else {
+                      var yIndex = curCross.y + m;
+
+                      if (yIndex < 0 || yIndex > board[curCross.x].length) {
+                        isMatch = false;
+                        break;
+                      }
+
+                      crossVal.push(board[curCross.x][yIndex]);
+                      crossVal.push(board[curCross.x + 1][yIndex]);
+                      crossVal.push(board[curCross.x - 1][yIndex]);
+                    }
+
+                    if (m > -1 && m < lenM - 1) {
+                      if (crossVal[0] !== curWord.char[m]) {
+                        if (crossVal[0] !== "") {
+                          isMatch = false;
+                          break;
+                        } else if (crossVal[1] !== "") {
+                          isMatch = false;
+                          break;
+                        } else if (crossVal[2] !== "") {
+                          isMatch = false;
+                          break;
+                        }
+                      }
+                    } else if (crossVal[0] !== "") {
+                      isMatch = false;
+                      break;
+                    }
+                  }
+                }
+
+                if (isMatch === true) {
+                  curWord.successfulMatches.push(curCross);
+                }
+              }
+            }
+          }
+        }
+
+        curMatchDiff = curWord.totalMatches - curWord.effectiveMatches;
+
+        if (curMatchDiff < minMatchDiff && curWord.successfulMatches.length > 0) {
+          curMatchDiff = minMatchDiff;
+          curIndex = i;
+        } else if (curMatchDiff <= 0) {
+          return false;
+        }
+      }
     }
 
-    return {randomHintWords, newGrid}
+    if (curIndex === -1) {
+      return false;
+    }
+
+    var spliced = wordBank.splice(curIndex, 1);
+    wordsActive.push(spliced[0]);
+
+    var pushIndex = wordsActive.length - 1,
+      rand = Math.random(),
+      matchArr = wordsActive[pushIndex].successfulMatches,
+      matchIndex = Math.floor(rand * matchArr.length),
+      matchData = matchArr[matchIndex];
+
+    wordsActive[pushIndex].x = matchData.x;
+    wordsActive[pushIndex].y = matchData.y;
+    wordsActive[pushIndex].dir = matchData.dir;
+
+    let actualIndex = findWordIdx(wordsActive[pushIndex].string);
+    console.log(wordsActive[pushIndex].string, " ~~~ ", actualIndex);
+    for (i = 0, len = wordsActive[pushIndex].char.length; i < len; i++) {
+      var xIndex = matchData.x,
+        yIndex = matchData.y;
+
+      if (matchData.dir === 0) {
+        xIndex += i;
+      } else {
+        yIndex += i;
+      }
+      if (i === 1) {
+        board[xIndex][yIndex] = `number${wordsActive[pushIndex].index}`;
+      } else {
+        board[xIndex][yIndex] = wordsActive[pushIndex].char[i];
+      }
+      isPos[xIndex][yIndex] = (i == 1);
+      if (actualIndex != undefined)
+        classesOfBoard[xIndex][yIndex].push(actualIndex);
+      console.log(xIndex, yIndex, classesOfBoard[xIndex][yIndex]);
+
+      Bounds.Update(xIndex, yIndex);
+    }
+
+    return true;
+  }
+
+  PopulateBoard()
+
+  function findContentBounds(matrix: string[][]) {
+  const rows = matrix.length;
+  const cols = matrix[0].length;
+
+  let top = rows, bottom = -1, left = cols, right = -1;
+
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      if (matrix[i][j]) {
+        if (i < top) top = i;
+        if (i > bottom) bottom = i;
+        if (j < left) left = j;
+        if (j > right) right = j;
+      }
+    }
+  }
+
+  if (bottom === -1) {
+    // No content found
+    return null;
+  }
+
+  return { top, left, bottom, right };
+}
+
+  const top = Bounds.top;
+  const bottom = Bounds.right;
+  const left = Bounds.left;
+  const right = Bounds.bottom;
+
+  console.log("top", top);
+  console.log("bottom", bottom);
+  console.log("left", left);
+  console.log("right", right);
+
+  const wordHeight = bottom - top + 1;
+  const wordWidth = right - left + 1;
+
+  let startRow = top;
+  let startCol = left;
+
+  if (wordHeight < cellWidth) {
+    const padding = Math.floor((cellWidth - wordHeight) / 2);
+    startRow = Math.max(0, top - padding);
+  }
+
+  if (wordWidth < cellWidth) {
+    const padding = Math.floor((cellWidth - wordWidth) / 2);
+    console.log("padding",padding);
+    
+    startCol = Math.max(0, left - padding);
+  }
+
+  startRow = Math.min(startRow, 100 - cellWidth);
+  startCol = Math.min(startCol, 100 - cellWidth);
+  console.log("startRow",startRow);
+  console.log("startCol",startCol);
+  
+  
+
+  let slicedBoard: string[][] = [[]]
+  slicedBoard = board.slice(startRow, startRow + cellWidth).map(row =>
+      row.slice(startCol, startCol + cellWidth)
+    );
+
+  console.log("original board", board);
+  const bound = findContentBounds(board)
+  console.log("bound", bound);
+  
+  
+
+  return {
+    grid: slicedBoard,
+    placementArray: wordsActive
+  };
 }

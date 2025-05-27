@@ -1,21 +1,15 @@
 import { Question, User } from "../../../type";
 import { getAxiosAuthContext } from "../../../context/authContext";
+import axios from "axios";
 
 export const joinRoom = async (roomId: string, userInfo: User) => {
     try {
     
-        const context = getAxiosAuthContext()
-        const { authToken, getAxiosInstance } = context
-        const axiosInstance = getAxiosInstance()
-        if (!authToken) {
-          throw new Error("No token found. Please log in.");
-        }
-        const response = await axiosInstance.post(`/api/room/join?room_id=${roomId}`, userInfo, {
-          method: 'POST', // Phương thức HTTP
+        const response = await axios.post(`http://localhost:8000/api/room/join?room_id=${roomId}`, userInfo, {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`, // Nếu API yêu cầu token
           },
+          withCredentials: true
         });
     
         if (response.status !== 200) {
