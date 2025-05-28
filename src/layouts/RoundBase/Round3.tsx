@@ -3,7 +3,7 @@ import Play from '../Play';
 import { RoundBase } from '../../type';
 import { getPacketNames } from '../../components/services';
 import { useSearchParams } from 'react-router-dom';
-import { deletePath,listenToSound, listenToPackets, listenToQuestions, listenToCurrentQuestionsNumber, listenToTimeStart, listenToAnswers } from '../../services/firebaseServices';
+import { deletePath, listenToSound, listenToPackets, listenToQuestions, listenToCurrentQuestionsNumber, listenToTimeStart, listenToAnswers } from '../../services/firebaseServices';
 import { usePlayer } from '../../context/playerContext';
 import { setCurrentPacketQuestion } from '../../components/services';
 import { useTimeStart } from '../../context/timeListenerContext';
@@ -223,16 +223,19 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
     return (
         <div className="flex flex-col items-center">
             {!selectedTopic ? (
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-6 w-full max-w-xl">
                     {Array.isArray(topics) && topics.length > 0 ? (
                         topics
                             .filter((topic) => !hiddenTopics.includes(topic))
+                            .slice(0, 8) // Only show up to 8 packages
                             .map((topic) => (
                                 <button
                                     key={topic}
-                                    className={`bg-blue-500 text-white p-2 rounded-lg shadow-md hover:bg-blue-700 ${!isHost ? "cursor-not-allowed opacity-50" : ""}`}
+                                    className={`bg-blue-500 text-white text-xl font-bold p-8 rounded-2xl shadow-lg hover:bg-blue-700 transition-all duration-200 ${!isHost ? "cursor-not-allowed opacity-50" : ""
+                                        }`}
                                     onClick={() => handleTopicSelect(topic)}
                                     disabled={!isHost}
+                                    style={{ minHeight: "100px" }}
                                 >
                                     {topic}
                                 </button>
@@ -250,8 +253,6 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
                             {correctAnswer ? correctAnswer : ""}
                         </p>
                     </div>
-
-
                 </div>
             )}
         </div>

@@ -508,6 +508,10 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
         return; // Skip the initial snapshot
       }
 
+      const audio = sounds['wrong_2'];
+      if (audio) {
+        audio.play();
+      }
       let rowIndex = -1;
       let colIndex = -1;
       for (let row = 0; row < grid.length; row++) {
@@ -547,7 +551,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
           return; // Skip the initial snapshot
         }
 
-        const audio = sounds['correct'];
+        const audio = sounds['correct_2'];
         if (audio) {
           audio.play();
         }
@@ -648,7 +652,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
           ? currentQuestion.question
           : ""}
       </div>
-      <div className="grid grid-cols-[repeat(30,40px)] grid-rows-[repeat(30,40px)] gap-1 max-h-[750px] overflow-y-auto">  
+      <div className="grid grid-cols-[repeat(30,40px)] grid-rows-[repeat(30,40px)] gap-1 max-h-[750px] overflow-y-auto">
 
         {(!grid || !Array.isArray(grid) || !grid.every(row => Array.isArray(row))) ?
           <div className="text-white">Invalid grid data</div>

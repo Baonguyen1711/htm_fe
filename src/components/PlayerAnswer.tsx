@@ -55,76 +55,73 @@ const PlayerAnswer: React.FC = () => {
     }, [roomId, round]);
 
     useEffect(() => {
-        console.log("playerFlashes before outside",playerFlashes);
+        console.log("playerFlashes before outside", playerFlashes);
         if (playerFlashes && playerFlashes.length > 0 && playerFlashes.some((p: Score) => p.flashColor && p.isModified)) {
-            console.log("playerFlashes before",playerFlashes);
-            
+            console.log("playerFlashes before", playerFlashes);
+
             const timeoutId = setTimeout(() => {
                 setPlayerFlashes((prevFlashes: Score[]) =>
                     prevFlashes.map((player) => ({ ...player, flashColor: undefined, isModified: false }))
                 );
             }, 3000);
 
-            console.log("playerFlashes before",playerFlashes);
+            console.log("playerFlashes before", playerFlashes);
             return () => clearTimeout(timeoutId);
         }
     }, [playerFlashes, setPlayerFlashes]);
 
     return (
         <>
-            <button
-                onClick={() => {
-                    alert('buzzed')
-                    handleBuzz()
-                }}
-                className={`p-2 flex-1 rounded-md text-white ${isButtonEnabled ? 'bg-green-500' : 'bg-gray-500 cursor-not-allowed'
-                    }`}
-                disabled={!isButtonEnabled}
-            >
-                {round === "2" ? "Trả lời CNV" : round === "4" ? "Giành quyền trả lời" : ""}
-            </button>
-            <div className="flex justify-around mt-4">
-                {
-                    spots.map((spotNumber: number) => {
-                        const storedPlayers = localStorage.getItem("playerList");
-                        { console.log("storedPlayers", storedPlayers) }
-                        { console.log("playersArray", playersArray) }
-                        const array = playersArray !== null
-                            ? playersArray
-                            : (storedPlayers ? JSON.parse(storedPlayers) : []);
-                        { console.log("array", array) }
-                        const player = array.find((p: User) => parseInt(p.stt) === spotNumber);
-                        console.log("playerFlashes", playerFlashes);
-                        const playerFlash = playerFlashes.find((p: Score) => p.stt === spotNumber.toString());
-                        console.log("playerFlash", playerFlash);
-                        const answer = Array.isArray(answerList) && answerList.length !== 0
-                            ? answerList.find((answer: Answer) => parseInt(answer.stt) === spotNumber)
-                            : null
-                        console.log("answer in spot", answer);
+            {(round === "2" || round === "4") && (
+                <button
+                    onClick={() => {
+                        alert('buzzed')
+                        handleBuzz()
+                    }}
+                    className={`w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white py-3 px-6 rounded-xl shadow-lg font-semibold text-lg mb-6 transition-all duration-200 ${isButtonEnabled ? '' : 'bg-gray-500 cursor-not-allowed'
+                        }`}
+                    disabled={!isButtonEnabled}
+                >
+                    {round === "2" ? "Trả lời CNV" : "Giành quyền trả lời"}
+                </button>
+            )}
+            <div className="grid grid-cols-4 gap-6 mt-4 w-full">
+                {spots.map((spotNumber: number) => {
+                    const storedPlayers = localStorage.getItem("playerList");
+                    const array = playersArray !== null
+                        ? playersArray
+                        : (storedPlayers ? JSON.parse(storedPlayers) : []);
+                    const player = array.find((p: User) => parseInt(p.stt) === spotNumber);
+                    const playerFlash = playerFlashes.find((p: Score) => p.stt === spotNumber.toString());
+                    const answer = Array.isArray(answerList) && answerList.length !== 0
+                        ? answerList.find((answer: Answer) => parseInt(answer.stt) === spotNumber)
+                        : null;
 
-                        if (player) {
-                            return (
-                                <div
-                                    key={spotNumber}
-                                    className={`flex flex-col items-center 
-    ${playerFlash ? playerFlash.flashColor : ""}`}
-                                >
-                                    <img
-                                        src={player.avatar}
-                                        alt="Player"
-                                        className="w-16 h-16 rounded-full"
-                                    />
-
-                                    <p className="text-white mt-2 min-h-[1.5rem]">
-                                        {answer?.answer || ""}
-                                    </p>
-
-                                    <p className="text-white">{`player_${player.stt}: ${player.userName}`}</p>
-                                </div>
-                            )
-                        }
-                    })
-                }
+                    if (player) {
+                        return (
+                            <div
+                                key={spotNumber}
+                                className={`flex flex-col items-center justify-between bg-slate-800/80 rounded-xl p-4 min-h-[180px] shadow-md transition-all duration-200 ${playerFlash ? playerFlash.flashColor : ""}`}
+                            >
+                                <img
+                                    src={player.avatar}
+                                    alt="Player"
+                                    className="w-16 h-16 rounded-full"
+                                />
+                                <p className="text-white mt-2 min-h-[1.5rem] text-center">
+                                    {answer?.answer || ""}
+                                </p>
+                                <p className="text-white text-center">{`player_${player.stt}: ${player.userName}`}</p>
+                            </div>
+                        )
+                    }
+                    return (
+                        <div
+                            key={spotNumber}
+                            className="flex flex-col items-center justify-between bg-slate-800/80 rounded-xl p-4 min-h-[180px] shadow-md opacity-50"
+                        />
+                    );
+                })}
             </div>
         </>
     )

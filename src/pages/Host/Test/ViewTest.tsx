@@ -4,7 +4,6 @@ import { uploadFile } from '../../../services/uploadAssestServices';
 import { Question } from '../../../type';
 import { useQuery } from 'react-query';
 
-
 const ViewTest: React.FC = () => {
   const [testList, setTestList] = useState<string[]>([]);
   const [selectedTestName, setSelectedTestName] = useState<string>("");
@@ -25,7 +24,6 @@ const ViewTest: React.FC = () => {
   });
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  // Fetch test list on mount
   useEffect(() => {
     const getTestList = async () => {
       try {
@@ -56,7 +54,6 @@ const ViewTest: React.FC = () => {
       localStorage.setItem("testId", data["round_1"][0]["testId"])
       console.log(localStorage.getItem("testId"));
       
-      
       setTestData({
         round_1: data.round_1 || [],
         round_2: data.round_2 || [],
@@ -75,24 +72,14 @@ const ViewTest: React.FC = () => {
     }
   };
 
-  // Handle file upload to S3
   const handleFileUpload = async (question: Question, type: string | undefined, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type against question type
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
     console.log("file.name.", file.name);
-
     console.log("fileExtension", fileExtension);
-
     console.log("question type inside function", type);
-
-    // const allowedExtensions = question.type?.toLowerCase().split(',') || [];
-    // if (!allowedExtensions.includes(fileExtension || '')) {
-    //   alert(`File type must be one of: ${allowedExtensions.join(', ')}`);
-    //   return;
-    // }
 
     try {
       const key = await uploadFile(file, `Question ${question.questionId}`);
@@ -103,7 +90,6 @@ const ViewTest: React.FC = () => {
 
       await updateQuestion(updatedQuestion, question.questionId || "");
 
-      // Update testData
       const updatedTestData = { ...testData };
       const updateQuestionInList = (questions: Question[]) =>
         questions.map((q) =>
@@ -129,7 +115,6 @@ const ViewTest: React.FC = () => {
 
   const openModal = (question?: Question, round?: string, groupName?: string) => {
     if (question) {
-      // Edit mode - load selected question data
       setSelectedQuestion(question);
       setEditedQuestion({
         question: question.question,
@@ -140,7 +125,6 @@ const ViewTest: React.FC = () => {
         groupName: question.groupName || '',
       });
     } else {
-      // Add mode - start fresh, optionally with round/groupName info
       setSelectedQuestion(null);
       setEditedQuestion({
         question: '',
@@ -154,8 +138,6 @@ const ViewTest: React.FC = () => {
     setIsModalOpen(true);
   };
 
-
-  // Open modal for editing question
   const handleEditClick = (question: Question) => {
     setSelectedQuestion(question);
     setEditedQuestion({
@@ -167,7 +149,6 @@ const ViewTest: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // Open modal for adding new question
   const handleAddQuestion = (round: string, groupName?: string) => {
     setSelectedQuestion(null);
     setEditedQuestion({ round, groupName });
@@ -183,7 +164,6 @@ const ViewTest: React.FC = () => {
     if (!selectedQuestion && !editedQuestion.round) return;
 
     if (selectedQuestion) {
-      // Update existing question
       await updateQuestion(editedQuestion, selectedQuestion.questionId || "");
       const updatedTestData = { ...testData };
       const updateQuestionInList = (questions: Question[]) =>
@@ -211,87 +191,87 @@ const ViewTest: React.FC = () => {
     setEditedQuestion({});
   };
 
-  // Render table for questions
   const renderTable = (questions: Question[], title: string, round: string, groupName?: string) => {
     if (questions.length === 0 && !groupName) return null;
 
     return (
       <div className="mb-8">
-        {title && <h3 className="text-2xl font-semibold text-gray-800 mb-4">{title}</h3>}
+        {title && (
+          <h3 className="text-2xl font-semibold text-white mb-4 flex items-center">
+            <span className="text-cyan-300 mr-2">📝</span>
+            {title}
+          </h3>
+        )}
         {questions.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="grid grid-cols-6 gap-4 p-4 bg-gray-50 font-semibold text-gray-700">
+          <div className="bg-slate-700/50 backdrop-blur-sm border border-blue-400/30 rounded-xl overflow-hidden">
+            <div className="grid grid-cols-6 gap-4 p-4 bg-slate-600/50 font-semibold text-blue-200">
               <div>#</div>
-              <div>Question</div>
-              <div>Answer</div>
-              <div>Type</div>
-              <div>URL</div>
-              <div>Action</div>
+              <div>Câu Hỏi</div>
+              <div>Đáp Án</div>
+              <div>Loại</div>
+              <div>Hình Ảnh</div>
+              <div>Thao Tác</div>
             </div>
-            {questions.map((question, index) => {
-              return (
+            {questions.map((question, index) => (
+              <div key={question.testId + index} className="grid grid-cols-6 gap-4 p-4 border-t border-blue-400/20 hover:bg-slate-600/30 transition-colors">
+                <div className="text-blue-200/80">{index + 1}</div>
+                <div className="text-white">{question.question}</div>
+                <div className="text-white">{question.answer}</div>
+                <div className="text-blue-200/80">{question.type || 'N/A'}</div>
 
-                <div key={question.testId + index} className="grid grid-cols-6 gap-4 p-4 border-t hover:bg-gray-50">
-                  <div className="text-gray-600">{index + 1}</div>
-                  <div className="text-gray-800">{question.question}</div>
-                  <div className="text-gray-800">{question.answer}</div>
-                  <div className="text-gray-600">{question.type || 'N/A'}</div>
+                <div className="flex flex-col space-y-2 items-start max-w-full">
+                  <button
+                    className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-3 py-1 rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all duration-300 text-sm font-medium"
+                    onClick={() => fileInputRefs.current[question.questionId || 0]?.click()}
+                  >
+                    📤 Tải Lên
+                  </button>
 
-                  <div className="flex flex-col space-y-2 items-start max-w-full">
-                    <button
-                      className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition"
-                      onClick={() => fileInputRefs.current[question.questionId || 0]?.click()}
-                    >
-                      Upload
-                    </button>
+                  <span className="text-blue-200/60 break-words max-w-full text-xs">
+                    {question.imgUrl ? '✅ Có hình ảnh' : '❌ Chưa có hình ảnh'}
+                  </span>
 
-                    <span className="text-gray-600 break-words max-w-full">{question.imgUrl || 'N/A'}</span>
-
-                    <input
-                      type="file"
-                      ref={(el) => {
-                        fileInputRefs.current[question.questionId || 0] = el;
-                      }}
-                      className="hidden"
-                      onChange={(e) => handleFileUpload(question, question.type, e)}
-                    />
-                  </div>
-
-
-                  <div>
-                    <button
-                      className="bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600 transition"
-                      onClick={() => openModal(question)}
-                    >
-                      Edit
-                    </button>
-                  </div>
+                  <input
+                    type="file"
+                    ref={(el) => {
+                      fileInputRefs.current[question.questionId || 0] = el;
+                    }}
+                    className="hidden"
+                    onChange={(e) => handleFileUpload(question, question.type, e)}
+                  />
                 </div>
-              )
 
-            })}
+                <div>
+                  <button
+                    className="bg-gradient-to-r from-yellow-600 to-orange-500 text-white px-3 py-1 rounded-lg hover:from-yellow-700 hover:to-orange-600 transition-all duration-300 text-sm font-medium"
+                    onClick={() => openModal(question)}
+                  >
+                    ✏️ Sửa
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
-        {/* <button
-          className="mt-4 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
-          onClick={() => openModal(undefined,round, groupName)}
-        >
-          Add New Question
-        </button> */}
       </div>
     );
   };
 
-  // Render grouped tables for round_3 and round_4
   const renderGroupedTable = (groups: { [key: string]: Question[] }, roundTitle: string, round: string) => {
     if (Object.keys(groups).length === 0) return null;
 
     return (
       <div className="mb-8">
-        <h3 className="text-2xl font-semibold text-gray-800 mb-4">{roundTitle}</h3>
+        <h3 className="text-2xl font-semibold text-white mb-4 flex items-center">
+          <span className="text-cyan-300 mr-2">🎯</span>
+          {roundTitle}
+        </h3>
         {Object.entries(groups).map(([groupName, questions]) => (
           <div key={groupName} className="mb-6">
-            <h4 className="text-xl font-medium text-gray-700 mb-3">{groupName}</h4>
+            <h4 className="text-xl font-medium text-blue-200 mb-3 flex items-center">
+              <span className="text-yellow-400 mr-2">📦</span>
+              {groupName}
+            </h4>
             {renderTable(questions, "", round, groupName)}
           </div>
         ))}
@@ -300,25 +280,31 @@ const ViewTest: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-gray-100 min-h-screen">
-      <div className="bg-white p-8 rounded-xl shadow-lg">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">Uploaded Exams</h2>
+    <div className="p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-white mb-2">Xem Đề Thi</h2>
+        <p className="text-blue-200/80">Quản lý và chỉnh sửa các câu hỏi trong đề thi</p>
+      </div>
+
+      {/* Test Selection */}
+      <div className="bg-slate-700/50 backdrop-blur-sm border border-blue-400/30 rounded-xl p-6 mb-8">
         <div className="mb-6">
-          <label htmlFor="testSelect" className="block text-lg font-medium text-gray-700 mb-2">
-            Select Test
+          <label htmlFor="testSelect" className="block text-blue-200 text-sm font-medium mb-2">
+            📋 Chọn Bộ Đề
           </label>
           <select
             id="testSelect"
             name="testSelect"
-            className="border border-gray-300 rounded-lg p-3 w-full bg-white focus:ring-2 focus:ring-blue-500 transition"
+            className="w-full bg-slate-600/50 border border-blue-400/30 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
             value={selectedTestName}
             onChange={handleTestChange}
           >
-            <option value="" disabled>
-              -- Select a Test --
+            <option value="" disabled className="bg-slate-700">
+              -- Chọn một bộ đề --
             </option>
             {testList.map((test) => (
-              <option key={test} value={test}>
+              <option key={test} value={test} className="bg-slate-700">
                 {test}
               </option>
             ))}
@@ -326,92 +312,104 @@ const ViewTest: React.FC = () => {
         </div>
         <button
           type="button"
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition mb-8"
+          className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-cyan-600 font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
           onClick={handleViewTest}
         >
-          View Test
+          👁️ Xem Đề Thi
         </button>
+      </div>
 
-        {/* Render rounds */}
-        {renderTable(testData.round_1, "Round 1", "round_1")}
-        {renderTable(testData.round_2, "Round 2", "round_2")}
-        {renderGroupedTable(testData.round_3, "Round 3", "round_3")}
-        {renderGroupedTable(testData.round_4, "Round 4", "round_4")}
+      {/* Test Content */}
+      <div className="space-y-8">
+        {renderTable(testData.round_1, "Vòng 1", "round_1")}
+        {renderTable(testData.round_2, "Vòng 2", "round_2")}
+        {renderGroupedTable(testData.round_3, "Vòng 3", "round_3")}
+        {renderGroupedTable(testData.round_4, "Vòng 4", "round_4")}
 
         {testData.round_1.length === 0 &&
           testData.round_2.length === 0 &&
           Object.keys(testData.round_3).length === 0 &&
           Object.keys(testData.round_4).length === 0 && (
-            <p className="text-gray-500 text-center">No questions available for this test.</p>
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📝</div>
+              <p className="text-blue-200/60 text-lg">Không có câu hỏi nào trong bộ đề này.</p>
+            </div>
           )}
+      </div>
 
-        {/* Modal for editing/adding */}
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg">
-              <h3 className="text-2xl font-semibold text-gray-800 mb-6">
-                {selectedQuestion ? 'Edit Question' : 'Add New Question'}
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Question</label>
-                  <input
-                    type="text"
-                    name="question"
-                    value={editedQuestion.question || ''}
-                    onChange={handleInputChange}
-                    className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Answer</label>
-                  <input
-                    type="text"
-                    name="answer"
-                    value={editedQuestion.answer || ''}
-                    onChange={handleInputChange}
-                    className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                  <input
-                    type="text"
-                    name="type"
-                    value={editedQuestion.type || ''}
-                    onChange={handleInputChange}
-                    className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 transition"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                  <input
-                    type="text"
-                    name="imgUrl"
-                    value={editedQuestion.imgUrl || ''}
-                    onChange={handleInputChange}
-                    className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500 transition"
-                  />
-                </div>
+      {/* Modal for editing/adding */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-slate-800/90 backdrop-blur-sm border border-blue-400/30 rounded-xl p-8 shadow-2xl w-full max-w-lg mx-4">
+            <h3 className="text-2xl font-semibold text-white mb-6 flex items-center">
+              <span className="text-cyan-300 mr-2">
+                {selectedQuestion ? '✏️' : '➕'}
+              </span>
+              {selectedQuestion ? 'Sửa Câu Hỏi' : 'Thêm Câu Hỏi Mới'}
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-blue-200 text-sm font-medium mb-1">Câu Hỏi</label>
+                <input
+                  type="text"
+                  name="question"
+                  value={editedQuestion.question || ''}
+                  onChange={handleInputChange}
+                  className="w-full bg-slate-700/50 border border-blue-400/30 rounded-lg p-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
+                  placeholder="Nhập câu hỏi"
+                />
               </div>
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition"
-                  onClick={handleCancel}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
-                  onClick={handleConfirm}
-                >
-                  {selectedQuestion ? 'Confirm' : 'Add'}
-                </button>
+              <div>
+                <label className="block text-blue-200 text-sm font-medium mb-1">Đáp Án</label>
+                <input
+                  type="text"
+                  name="answer"
+                  value={editedQuestion.answer || ''}
+                  onChange={handleInputChange}
+                  className="w-full bg-slate-700/50 border border-blue-400/30 rounded-lg p-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
+                  placeholder="Nhập đáp án"
+                />
+              </div>
+              <div>
+                <label className="block text-blue-200 text-sm font-medium mb-1">Loại</label>
+                <input
+                  type="text"
+                  name="type"
+                  value={editedQuestion.type || ''}
+                  onChange={handleInputChange}
+                  className="w-full bg-slate-700/50 border border-blue-400/30 rounded-lg p-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
+                  placeholder="Nhập loại câu hỏi"
+                />
+              </div>
+              <div>
+                <label className="block text-blue-200 text-sm font-medium mb-1">URL Hình Ảnh</label>
+                <input
+                  type="text"
+                  name="imgUrl"
+                  value={editedQuestion.imgUrl || ''}
+                  onChange={handleInputChange}
+                  className="w-full bg-slate-700/50 border border-blue-400/30 rounded-lg p-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
+                  placeholder="Nhập URL hình ảnh"
+                />
               </div>
             </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-all duration-300"
+                onClick={handleCancel}
+              >
+                Hủy
+              </button>
+              <button
+                className="bg-gradient-to-r from-green-600 to-emerald-500 text-white px-6 py-2 rounded-lg hover:from-green-700 hover:to-emerald-600 transition-all duration-300"
+                onClick={handleConfirm}
+              >
+                {selectedQuestion ? 'Xác Nhận' : 'Thêm'}
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,18 +2,22 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-const Login = () => {
+const JoinRoom = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [roomId, setRoomId] = useState<string>("");
 
-  const handleLogin = async () => {
+  const handleJoinRoom = async () => {
     try {
-      // Mock login - replace with actual auth logic
-      console.log("Login attempt:", { email, password });
-      navigate("/host/dashboard");
+      if (!roomId.trim()) {
+        alert("Vui lòng nhập mã phòng");
+        return;
+      }
+      
+      // Mock join room - replace with actual logic
+      console.log("Joining room:", roomId);
+      navigate(`/user/info?roomid=${roomId}`);
     } catch (error) {
-      console.error("Error during login:", error);
+      console.error("Error during joining room:", error);
     }
   };
 
@@ -38,78 +42,54 @@ const Login = () => {
               Hành Trình Magellan
             </h1>
             <p className="text-blue-200/90 text-lg">
-              Đăng nhập để quản lý cuộc thi
+              Tham gia phòng thi trực tuyến
             </p>
           </div>
 
-          {/* Login Form */}
+          {/* Join Room Form */}
           <div className="bg-slate-800/80 backdrop-blur-sm border border-blue-400/30 rounded-xl shadow-2xl p-8">
             <h2 className="text-2xl font-bold text-white text-center mb-6">
-              Đăng nhập
+              Tham gia phòng
             </h2>
             
             <form onSubmit={(e) => e.preventDefault()}>
               <div className="mb-6">
-                <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="email">
-                  Email
+                <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="roomId">
+                  Mã phòng
                 </label>
                 <div className="relative">
                   <input
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
-                    type="email"
-                    id="email"
-                    placeholder="Nhập email của bạn"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm text-center text-lg font-mono tracking-wider"
+                    type="text"
+                    id="roomId"
+                    placeholder="Nhập mã phòng"
+                    value={roomId}
+                    onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                    maxLength={8}
                   />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50">
-                    📧
-                  </span>
                 </div>
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="password">
-                  Mật khẩu
-                </label>
-                <div className="relative">
-                  <input
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
-                    type="password"
-                    id="password"
-                    placeholder="Nhập mật khẩu"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50">
-                    🔒
-                  </span>
-                </div>
-              </div>
-
-              <div className="mb-6 text-center">
-                <a href="#" className="text-blue-300 hover:text-blue-200 text-sm transition-colors">
-                  Quên mật khẩu?
-                </a>
+                <p className="text-blue-300/60 text-xs mt-1 text-center">
+                  Nhập mã phòng gồm 6 chữ số 
+                </p>
               </div>
 
               <button
                 type="button"
-                onClick={handleLogin}
+                onClick={handleJoinRoom}
                 className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg hover:from-blue-700 hover:to-cyan-600 font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
               >
-                Đăng nhập
+                Tham gia phòng
               </button>
             </form>
 
             <div className="mt-6 text-center">
               <p className="text-blue-200/70 text-sm">
-                Muốn tham gia phòng thi?{' '}
+                Bạn muốn tổ chức trận đấu?{' '}
                 <Link 
-                  to="/join" 
+                  to="/login" 
                   className="text-cyan-300 hover:text-cyan-200 font-medium transition-colors"
                 >
-                  Tham gia ngay
+                  Đăng nhập tại đây
                 </Link>
               </p>
             </div>
@@ -130,4 +110,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default JoinRoom;

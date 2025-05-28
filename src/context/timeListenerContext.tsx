@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { listenToTimeStart } from "../services/firebaseServices";
+import { useSounds } from "./soundContext";
+import { round } from "react-placeholder/lib/placeholders";
+import { useSearchParams } from "react-router-dom";
 
 type TimeStartContextType = {
   timeLeft: number;
@@ -15,15 +18,19 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
 }) => {
   const [timeLeft, setTimeLeft] = useState<number>(30);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const sounds = useSounds();
+  const [searchParams] = useSearchParams();
+  const round = searchParams.get("round") || "1";
 
   const startTimer = (duration: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
     setTimeLeft(duration);
 
+
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         console.log(prev);
-        
+
         if (prev <= 1) {
           clearInterval(timerRef.current!);
           return 0;
@@ -39,6 +46,15 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
 
   useEffect(() => {
     const unsubscribe = listenToTimeStart(roomId, () => {
+
+
+      if (round === "2") {
+        console.log("roùnd", round);
+
+        startTimer(15)
+        return;
+      }
+
       startTimer(30); // or 60 depending on your needs
     });
 

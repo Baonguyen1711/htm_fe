@@ -4,7 +4,7 @@ import { RoundBase } from '../../type';
 import { sendSelectedCell, sendCellColor } from '../../components/services';
 import { useSearchParams } from 'react-router-dom';
 import { usePlayer } from '../../context/playerContext';
-import { deletePath,listenToSound, listenToQuestions, listenToSelectedCell, listenToCellColor, listenToAnswers, listenToBuzzing } from '../../services/firebaseServices';
+import { deletePath, listenToSound, listenToQuestions, listenToSelectedCell, listenToCellColor, listenToAnswers, listenToBuzzing } from '../../services/firebaseServices';
 
 import { resetBuzz } from '../../components/services';
 import { useSounds } from '../../context/soundContext';
@@ -144,6 +144,10 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
             //     hasMounted = true; // skip initial
             //     return;
             // }
+            const audio = sounds['buzz'];
+            if (audio) {
+                audio.play();
+            }
             console.log("playerName on host", playerName);
 
             console.log("listening on buzzing");
@@ -206,6 +210,7 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
             console.log("questions", data);
 
             setCurrentQuestion(data.question)
+            setCorrectAnswer("")
         });
 
         return () => {
@@ -286,26 +291,25 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     }, []);
 
     return (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full max-w-3xl mx-auto">
             {/* Display selected question */}
-            <h2 className="text-xl font-bold text-black mb-4">
-                {currentQuestion ? currentQuestion : ''}
+            <h2 className="text-2xl font-bold text-cyan-200 mb-2 text-center drop-shadow">
+                {currentQuestion || ""}
             </h2>
-
-            {
-                correctAnswer &&
-                <>
-                    <h2 className="text-xl font-bold text-black mb-4">
-                        {correctAnswer}
-                    </h2>
-                </>
-            }
+            {correctAnswer && (
+                <h2 className="text-xl font-semibold text-green-300 mb-4 text-center drop-shadow">
+                    {correctAnswer}
+                </h2>
+            )}
 
             {/* Column labels (1, 2, 3, 4, 5) */}
-            <div className="grid grid-cols-6 gap-2 mb-2">
-                <div></div> {/* Empty corner cell */}
+            <div className="grid grid-cols-6 mb-2 w-fit">
+                <div className="w-14 h-14"></div>
                 {['1', '2', '3', '4', '5'].map((label) => (
-                    <div key={label} className="flex items-center justify-center font-bold text-black w-16 h-16">
+                    <div
+                        key={label}
+                        className="flex items-center justify-center font-bold text-cyan-100 rounded-lg w-14 h-14 shadow"
+                    >
                         {label}
                     </div>
                 ))}
@@ -315,8 +319,8 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
             <div className="grid grid-rows-5 gap-2">
                 {['A', 'B', 'C', 'D', 'E'].map((rowLabel, rowIndex) => (
                     <div key={rowIndex} className="flex">
-                        <div className="flex items-center justify-center font-bold text-black w-16 h-16">
-                            {rowLabel} {/* Row label */}
+                        <div className="flex items-center justify-center font-bold text-cyan-100 rounded-lg w-14 h-14 shadow">
+                            {rowLabel}
                         </div>
                         {initialGrid[rowIndex].map((cell, colIndex) => {
                             const showMenu =
@@ -328,14 +332,16 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                                 <div className="relative flex items-center" key={`${rowIndex}-${colIndex}`}>
                                     <div
                                         onClick={() => handleCellClick(rowIndex, colIndex)}
-                                        className={`flex items-center justify-center w-16 h-16 rounded-md ${isHost ? 'cursor-pointer' : 'cursor-not-allowed'
-                                            }`} // Disable interaction for non-hosts
+                                        className={`flex items-center justify-center w-14 h-14 rounded-lg border-2 transition-all duration-150 ${isHost
+                                            ? 'cursor-pointer hover:scale-105 hover:border-blue-400'
+                                            : 'cursor-not-allowed'
+                                            }`}
                                         style={{
                                             backgroundColor: gridColors[rowIndex][colIndex],
-                                            border: '1px solid #000',
+                                            borderColor: showMenu ? '#38bdf8' : '#334155',
                                         }}
                                     >
-                                        <span className="text-black text-lg">{cell}</span>
+                                        <span className="text-black text-lg font-semibold">{cell}</span>
                                     </div>
 
                                     {showMenu && (

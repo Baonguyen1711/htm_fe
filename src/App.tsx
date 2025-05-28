@@ -27,6 +27,7 @@ const HostRound3 = React.lazy(() => import('./pages/Host/Management/HostRound3')
 const HostRound4 = React.lazy(() => import('./pages/Host/Management/HostRound4'));
 
 const Login = React.lazy(() => import('./pages/Login/Login'))
+const JoinRoom = React.lazy(() => import('./pages/JoinRoom/JoinRoom'))
 const InfoForm = React.lazy(() => import('./pages/User/InformationForm/InformationForm'))
 
 const Dashboard = React.lazy(() => import('./pages/Host/Test/Dashboard'))
@@ -79,6 +80,7 @@ function App() {
 
                         <Routes>
                           <Route path="/" element={<Home />} />
+                          <Route path="/join" element={<JoinRoom />} />
                           <Route path="/play" element={<PlayComponent />} />
                           <Route path="/login" element={<Login />} />
                           <Route path="/user/info" element={<InfoForm />} />
