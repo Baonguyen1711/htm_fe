@@ -1,21 +1,28 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import useAuth from '../../hooks/useAuth';
+// Adjust the import path as necessary
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
+  const { login } = useAuth();
+
   const handleLogin = async () => {
     try {
-      // Mock login - replace with actual auth logic
-      console.log("Login attempt:", { email, password });
-      navigate("/host/dashboard");
+      const result = await login(email, password); // Call the login function
+      if (result) {
+        console.log("Login successful:", result);
+        navigate("/host/dashboard");
+      }
     } catch (error) {
       console.error("Error during login:", error);
+
     }
-  };
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -47,7 +54,7 @@ const Login = () => {
             <h2 className="text-2xl font-bold text-white text-center mb-6">
               Đăng nhập
             </h2>
-            
+
             <form onSubmit={(e) => e.preventDefault()}>
               <div className="mb-6">
                 <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="email">
@@ -105,8 +112,8 @@ const Login = () => {
             <div className="mt-6 text-center">
               <p className="text-blue-200/70 text-sm">
                 Muốn tham gia phòng thi?{' '}
-                <Link 
-                  to="/join" 
+                <Link
+                  to="/join"
                   className="text-cyan-300 hover:text-cyan-200 font-medium transition-colors"
                 >
                   Tham gia ngay
@@ -117,8 +124,8 @@ const Login = () => {
 
           {/* Back to Home */}
           <div className="text-center mt-6">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="text-blue-300/80 hover:text-blue-200 text-sm transition-colors"
             >
               ← Quay về trang chủ

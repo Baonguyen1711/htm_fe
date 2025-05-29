@@ -21,7 +21,11 @@ const exampleQuestions = [
     'Question 21', 'Question 22', 'Question 23', 'Question 24', 'Question 25',
 ];
 
-function UserRound4() {
+interface UserRound4Props {
+    isSpectator?: boolean;
+}
+
+function UserRound4({ isSpectator }: UserRound4Props) {
 
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -39,20 +43,24 @@ function UserRound4() {
             const currentRound = data.round;
             const requestedRound = parseInt(round || "", 10);
 
-            console.log("currentRound",currentRound);
+            console.log("currentRound", currentRound);
             console.log("requestedRound", requestedRound);
-            
-            
+
+
             if (requestedRound === currentRound) {
                 setIsAllowed(true);
             } else {
                 setIsAllowed(false);
                 if (currentRound) {
-                    navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
+                    if (isSpectator) {
+                        navigate(`/spectator?round=${data.round}&roomId=${roomId}`, { replace: true });
+                    } else {
+                        navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
+                    }
                 }
             }
 
-            
+
             if (isFirstCallback.current) {
                 isFirstCallback.current = false;
                 return;
@@ -61,7 +69,11 @@ function UserRound4() {
 
             console.log("round", data)
             setInitialGrid(data.grid)
-            navigate(`/play?round=${data.round}&roomId=${roomId}`);
+            if (isSpectator) {
+                navigate(`/spectator?round=${data.round}&roomId=${roomId}`, { replace: true });
+            } else {
+                navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
+            }
         });
 
         return () => {
@@ -71,7 +83,8 @@ function UserRound4() {
     return (
         // <Round4 isHost={false}/>
         <User
-            QuestionComponent={<Round4 questions={exampleQuestions} initialGrid={exampleGrid} isHost={false}/>}
+            QuestionComponent={<Round4 questions={exampleQuestions} initialGrid={exampleGrid} isHost={false} isSpectator={isSpectator} />}
+            isSpectator={isSpectator}
         />
     );
 }

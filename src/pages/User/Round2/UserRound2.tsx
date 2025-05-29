@@ -8,7 +8,11 @@ import { usePlayer } from "../../../context/playerContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { listenToRoundStart } from "../../../services/firebaseServices";
 
-function UserRound2() {
+interface UserRound2Props {
+  isSpectator?: boolean;
+}
+
+function UserRound2({ isSpectator }: UserRound2Props) {
   const [loading, setLoading] = useState(true);
   const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
   const [showModal, setShowModal] = useState(false); // State for modal visibility
@@ -17,55 +21,63 @@ function UserRound2() {
   const isMounted = useRef(false)
   const [searchParams] = useSearchParams();
 
-    const round = searchParams.get("round") || "";
-    const { setInitialGrid } = usePlayer()
+  const round = searchParams.get("round") || "";
+  const { setInitialGrid } = usePlayer()
 
-    const isFirstCallback = useRef(true);
-    const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
+  const isFirstCallback = useRef(true);
+  const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
-    useEffect(() => {
-        const unsubscribePlayers = listenToRoundStart(roomId, (data) => {
-
-
-            const currentRound = data.round;
-            const requestedRound = parseInt(round || "", 10);
-
-            console.log("currentRound",currentRound);
-            console.log("requestedRound", requestedRound);
-            
-            
-            if (requestedRound === currentRound) {
-                setIsAllowed(true);
-            } else {
-                setIsAllowed(false);
-                if (currentRound) {
-                    navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
-                }
-            }
-
-            
-            if (isFirstCallback.current) {
-                isFirstCallback.current = false;
-                return;
-            }
+  useEffect(() => {
+    const unsubscribePlayers = listenToRoundStart(roomId, (data) => {
 
 
-            console.log("round", data)
-            setInitialGrid(data.grid)
-            navigate(`/play?round=${data.round}&roomId=${roomId}`);
-        });
+      const currentRound = data.round;
+      const requestedRound = parseInt(round || "", 10);
 
-        return () => {
-            unsubscribePlayers();
-        };
-    }, [roomId]);
+      console.log("currentRound", currentRound);
+      console.log("requestedRound", requestedRound);
+
+
+      if (requestedRound === currentRound) {
+        setIsAllowed(true);
+      } else {
+        setIsAllowed(false);
+        if (currentRound) {
+          if (isSpectator) {
+            navigate(`/spectator?round=${data.round}&roomId=${roomId}`, { replace: true });
+          } else {
+            navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
+          }
+        }
+      }
+
+
+      if (isFirstCallback.current) {
+        isFirstCallback.current = false;
+        return;
+      }
+
+
+      console.log("round", data)
+      setInitialGrid(data.grid)
+      if (isSpectator) {
+        navigate(`/spectator?round=${data.round}&roomId=${roomId}`);
+      } else {
+        navigate(`/play?round=${data.round}&roomId=${roomId}`);
+      }
+    });
+
+    return () => {
+      unsubscribePlayers();
+    };
+  }, [roomId]);
 
 
   // Handle grid loading
   useEffect(() => {
     if (initialGrid && initialGrid.length > 0) {
-      console.log("initialGrid",initialGrid);
-      
+      console.log("initialGrid", initialGrid);
+
       setLoading(false);
     }
   }, [initialGrid]);
@@ -78,8 +90,8 @@ function UserRound2() {
       if (playerName) {
         setBuzzedPlayer(playerName);
         console.log("playerName", typeof playerName);
-        
-        console.log(playerName,"đã bấm chuông")
+
+        console.log(playerName, "đã bấm chuông")
         setShowModal(true); // Show modal when a player buzzes
       }
     });
@@ -99,7 +111,8 @@ function UserRound2() {
   return (
     <>
       <ReactPlaceholder type="text" rows={3} ready={!loading}>
-        <User QuestionComponent={<Round2 initialGrid={initialGrid} isHost={false} />} />
+        <User QuestionComponent={<Round2 initialGrid={initialGrid} isHost={false} isSpectator={isSpectator} />}
+          isSpectator={isSpectator} />
       </ReactPlaceholder>
 
       {/* Modal */}
@@ -107,7 +120,7 @@ function UserRound2() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
-              {`${buzzedPlayer} đã nhấn chuông trả lời`} 
+              {`${buzzedPlayer} đã nhấn chuông trả lời`}
             </h2>
             <div className="flex justify-center">
               <button

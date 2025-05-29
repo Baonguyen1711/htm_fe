@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 
-const JoinRoom = () => {
+const SpectatorJoin = () => {
   const navigate = useNavigate();
   const [roomId, setRoomId] = useState<string>("");
   const { signInWithoutPassword } = useAuth();
@@ -17,7 +17,7 @@ const JoinRoom = () => {
 
       // Mock join room - replace with actual logic
       signInWithoutPassword(); // Call the login function
-      navigate(`/user/info?roomid=${roomId}`);
+      navigate(`/spectator?roomId=${roomId}&round=1`);
     } catch (error) {
       console.error("Error during joining room:", error);
     }
@@ -44,7 +44,7 @@ const JoinRoom = () => {
               Hành Trình Magellan
             </h1>
             <p className="text-blue-200/90 text-lg">
-              Tham gia phòng thi trực tuyến
+              Tham gia với tư cách khán giả
             </p>
           </div>
 
@@ -84,17 +84,6 @@ const JoinRoom = () => {
               </button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-blue-200/70 text-sm">
-                Bạn muốn tổ chức trận đấu?{' '}
-                <Link
-                  to="/login"
-                  className="text-cyan-300 hover:text-cyan-200 font-medium transition-colors"
-                >
-                  Đăng nhập tại đây
-                </Link>
-              </p>
-            </div>
           </div>
 
           {/* Back to Home */}
@@ -112,4 +101,4 @@ const JoinRoom = () => {
   );
 };
 
-export default JoinRoom;
+export default SpectatorJoin;

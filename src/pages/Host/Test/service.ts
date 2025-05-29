@@ -260,13 +260,6 @@ export const getRoomById = async (): Promise<any> => {
 
 export const createRoom = async (expiredTime: number): Promise<any> => {
   try {
-
-    const context = getAxiosAuthContext()
-    const { authToken, getAxiosInstance } = context
-    const axiosInstance = getAxiosInstance()
-    if (!authToken) {
-      throw new Error("No token found. Please log in.");
-    }
     const response = await axios.post(`http://localhost:8000/api/room/create?expired_time=${expiredTime}`,{}, {
       headers: {
         'Content-Type': 'application/json',

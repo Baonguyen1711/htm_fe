@@ -11,6 +11,7 @@ import { useSounds } from '../../context/soundContext';
 interface QuestionComponentProps {
     initialGrid: string[][]; // 5x5 grid (can be passed from parent or generated)
     questions: string[]; // Array of questions for testing
+    isSpectator?: boolean; // Indicates whether the user is a spectator
     isHost?: boolean; // Indicates whether the user is the host
 }
 
@@ -34,6 +35,7 @@ const exampleQuestions = [
 const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     initialGrid,
     questions,
+    isSpectator ,
     isHost = false,
 }) => {
     const colorMap: Record<string, string> = {

@@ -44,7 +44,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     const [userId, setUserId] = useState(localStorage.getItem("userId"))
     const [params] = useSearchParams()
     const round = (params.get("round") as "1" | "2" | "3" | "4") || "1"
-    const { players, setPlayers, roomId, setRoomId, playersArray, setPlayerArray, position, setCurrentQuestion, selectedTopic, setSelectedTopic, setScoreList } = usePlayer()
+    const { players, setPlayers,  setRoomId, playersArray, setPlayerArray, position, setCurrentQuestion, selectedTopic, setSelectedTopic, setScoreList } = usePlayer()
     const { playerScores, setPlayerScores } = useHost()
     const isMounted = useRef(false);
     const { timeLeft, startTimer } = useTimeStart();
@@ -55,6 +55,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
 
     const currentRound = searchParams.get("round") || "1";
     const testName = searchParams.get("testName") || "1"
+    const roomId = searchParams.get("roomId") || "";
 
 
     const handleRoundChange = async (delta: number) => {
@@ -88,6 +89,8 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
             console.log("Object.keys(updatedPlayers).length", Object.keys(updatedPlayers).length)
             if (updatedPlayers && Object.keys(updatedPlayers).length > 0) {
                 const playersList = Object.values(updatedPlayers);
+                console.log("playersList", playersList);
+                
                 const initialScoreList = [...playersList]
                 if (round === "1") {
                     for (var score of initialScoreList) {
@@ -106,6 +109,8 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
                 console.log("Updated localStorage:", localStorage.getItem("playerList"));
             } else {
                 console.log("Room is empty or players node deleted");
+                console.log("roomId", roomId);
+                
                 setPlayerArray([]); // Clear state
                 localStorage.removeItem("playerList"); // Clear localStorage
             }

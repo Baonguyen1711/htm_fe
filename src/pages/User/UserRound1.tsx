@@ -5,7 +5,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePlayer } from '../../context/playerContext';
 
-function UserRound1() {
+interface UserRound1Props {
+    isSpectator?: boolean;
+}
+
+function UserRound1({ isSpectator }: UserRound1Props) {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const roomId = searchParams.get("roomId") || "";
@@ -22,20 +26,25 @@ function UserRound1() {
             const currentRound = data.round;
             const requestedRound = parseInt(round || "", 10);
 
-            console.log("currentRound",currentRound);
+            console.log("currentRound", currentRound);
             console.log("requestedRound", requestedRound);
-            
-            
+
+
             if (requestedRound === currentRound) {
                 setIsAllowed(true);
             } else {
                 setIsAllowed(false);
                 if (currentRound) {
-                    navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
+                    if (isSpectator) {
+                        navigate(`/spectator?round=${data.round}&roomId=${roomId}`, { replace: true });
+                    } else {
+                        navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
+                    }
+
                 }
             }
 
-            
+
             if (isFirstCallback.current) {
                 isFirstCallback.current = false;
                 return;
@@ -44,7 +53,11 @@ function UserRound1() {
 
             console.log("round", data)
             setInitialGrid(data.grid)
-            navigate(`/play?round=${data.round}&roomId=${roomId}`);
+            if (isSpectator) {
+                navigate(`/spectator?round=${data.round}&roomId=${roomId}`);
+            } else {
+                navigate(`/play?round=${data.round}&roomId=${roomId}`);
+            }
         });
 
         return () => {
@@ -54,7 +67,8 @@ function UserRound1() {
 
     return (
         <User
-            QuestionComponent={<Round1 isHost={false} />}
+            QuestionComponent={<Round1 isHost={false} isSpectator={isSpectator} />}
+            isSpectator={isSpectator}
         />
     );
 }

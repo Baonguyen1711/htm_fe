@@ -6,7 +6,12 @@ import { useSearchParams } from 'react-router-dom';
 import { buzzing } from './services';
 import { closeBuzz } from './services';
 
-const PlayerAnswer: React.FC = () => {
+interface PlayerAnswerProps { 
+    isSpectator?: boolean;
+}
+
+
+const PlayerAnswer: React.FC<PlayerAnswerProps> = ({isSpectator}) => {
     const { playersArray, playerFlashes, setPlayerFlashes, roomId, triggerPlayerFlash, scoreList, setScoreList, position, currentPlayerName, answerList, setAnswerList } = usePlayer()
 
     const spots = [1, 2, 3, 4]
@@ -72,7 +77,7 @@ const PlayerAnswer: React.FC = () => {
 
     return (
         <>
-            {(round === "2" || round === "4") && (
+            {!isSpectator && ((round === "2" || round === "4")) && (
                 <button
                     onClick={() => {
                         alert('buzzed')

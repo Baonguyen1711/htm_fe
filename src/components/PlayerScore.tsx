@@ -5,10 +5,11 @@ import { listenToScores } from '../services/firebaseServices';
 import { useSearchParams } from 'react-router-dom';
 
 function PlayerScore() {
-    const { roomId, scoreList, setScoreList, setPlayerFlashes } = usePlayer();
+    const {scoreList, setScoreList, setPlayerFlashes } = usePlayer();
     const prevOrder = useRef<{ [name: string]: number }>({});
     const [params] = useSearchParams();
     const round = params.get("round") || "1";
+    const roomId = params.get("roomId") || "1";
 
     useEffect(() => {
         const unsubscribePlayers = listenToScores(roomId, (scoreList) => {

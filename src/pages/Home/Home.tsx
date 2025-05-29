@@ -130,6 +130,12 @@ function Home() {
               >
                 Tham gia phòng thi
               </button>
+              <button 
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-md hover:from-blue-700 hover:to-cyan-600 shadow-lg hover:shadow-blue-500/25 transition-all duration-300 font-medium"
+                onClick={() => window.location.href = "/spectatorJoin"}
+              >
+                Tham gia phòng thi với tư cách khán giả
+              </button>
               <button className="px-6 py-3 border border-blue-400/50 text-blue-200 rounded-md hover:bg-blue-600/20 hover:text-white hover:border-blue-400 backdrop-blur-sm transition-all duration-300 font-medium">
                 Luật chơi
               </button>

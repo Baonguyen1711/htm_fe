@@ -4,15 +4,16 @@ import PlayerScore from '../../components/PlayerScore'
 import PlayerAnswer from '../../components/PlayerAnswer'
 
 interface UserInterfaceProps {
-    QuestionComponent: React.ReactNode
+    QuestionComponent: React.ReactNode,
+    isSpectator?: boolean
 }
 
-const User:React.FC<UserInterfaceProps> = ({QuestionComponent}) => {
+const User:React.FC<UserInterfaceProps> = ({QuestionComponent, isSpectator = false}) => {
   return (
     <Play
         questionComponent={QuestionComponent}
-        PlayerScore={<PlayerAnswer/>}
-        SideBar={<PlayerScore/>}
+        PlayerScore={<PlayerAnswer isSpectator={isSpectator} />}
+        SideBar={<PlayerScore />}
     />
   )
 }

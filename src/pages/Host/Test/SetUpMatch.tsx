@@ -55,7 +55,7 @@ const SetupMatch: React.FC = () => {
   };
 
   return (
-    <div className="p-8">
+    <div className="relative p-8">
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">Thiết Lập Phòng Thi</h2>
@@ -171,7 +171,7 @@ const SetupMatch: React.FC = () => {
 
       {/* Success Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50">
+        <div className="absolute inset-0 flex items-baseline justify-center bg-black/70 backdrop-blur-sm z-50">
           <div className="bg-slate-800/90 backdrop-blur-sm border border-blue-400/30 rounded-xl p-8 shadow-2xl max-w-sm w-full mx-4">
             <div className="text-center">
               <div className="text-4xl mb-4">🎉</div>

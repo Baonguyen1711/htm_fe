@@ -4,7 +4,12 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { listenToRoundStart } from "../../../services/firebaseServices";
 import { useEffect, useState, useRef } from "react";
 import { usePlayer } from "../../../context/playerContext";
-function UserRound3() {
+
+interface UserRound3Props {
+    isSpectator?: boolean;
+}
+
+function UserRound3({ isSpectator }: UserRound3Props) {
     const navigate = useNavigate();
     const isMounted = useRef(false)
     const [searchParams] = useSearchParams();
@@ -32,7 +37,11 @@ function UserRound3() {
             } else {
                 setIsAllowed(false);
                 if (currentRound) {
-                    navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
+                    if (isSpectator) {
+                        navigate(`/spectator?round=${data.round}&roomId=${roomId}`, { replace: true });
+                    } else {
+                        navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
+                    }
                 }
             }
 
@@ -45,7 +54,11 @@ function UserRound3() {
 
             console.log("round", data)
             setInitialGrid(data.grid)
-            navigate(`/play?round=${data.round}&roomId=${roomId}`);
+            if (isSpectator) {
+                navigate(`/spectator?round=${data.round}&roomId=${roomId}`);
+            } else {
+                navigate(`/play?round=${data.round}&roomId=${roomId}`);
+            }
         });
 
         return () => {
@@ -55,6 +68,7 @@ function UserRound3() {
     return (
         <User
             QuestionComponent={<Round3 />}
+            isSpectator={isSpectator}
         />
     );
 }

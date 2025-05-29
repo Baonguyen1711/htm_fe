@@ -45,6 +45,7 @@ interface ObstacleQuestionBoxProps {
   hintWordArray?: string[];
   isHost?: boolean;
   initialGrid?: string[][];
+  isSpectator?: boolean;
 }
 
 interface QuestionBoxProps {
@@ -59,6 +60,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
   obstacleWord,
   hintWordArray,
   initialGrid,
+  isSpectator = false,
   isHost = false,
 }) => {
   console.log("initialGrid inside player", initialGrid);
@@ -748,11 +750,15 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
             </React.Fragment>
           ))}
       </div>
+      {
+        !isSpectator && (
+          <PlayerAnswerInput
+            isHost={isHost}
+            question={currentQuestion}
+          />
+        )
+      }
 
-      <PlayerAnswerInput
-        isHost={isHost}
-        question={currentQuestion}
-      />
       {
         isHost && (
           <div className="flex gap-2 mt-4 w-full">

@@ -20,7 +20,7 @@ import { useSounds } from '../../context/soundContext';
 // ];
 
 interface QuestionComponentProps {
-    isHost?: boolean; // Determines if the user is a host or not
+    isHost?: boolean;// Determines if the user is a spectator or not
 }
 
 

@@ -17,10 +17,11 @@ import { useSounds } from '../../context/soundContext';
 // }
 
 interface Round1Props {
-    isHost: boolean
+    isHost: boolean,
+    isSpectator?: boolean
 }
 
-const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost }) => {
+const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false }) => {
     const sounds = useSounds();
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || ""
@@ -161,10 +162,14 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost }) => {
             </div>
 
             {/* Answer input */}
-            <PlayerAnswerInput
-                isHost={isHost}
-                question={currentQuestion}
-            />
+            {
+                !isSpectator &&
+                <PlayerAnswerInput
+                    isHost={isHost}
+                    question={currentQuestion}
+                />
+            }
+
 
             {/* Modal for full-size image */}
             {isModalOpen && (

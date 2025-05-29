@@ -10,7 +10,7 @@ import {
   setPersistence
 } from "firebase/auth";
 import {app} from "../firebase-config";
-import { useAxiosAuth } from "../context/authContext";
+// import { useAxiosAuth } from "../context/authContext";
 import { authenticateUser } from "../services/firebaseServices";
 
 const useAuth = () => {
@@ -18,7 +18,7 @@ const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { setAuthToken } = useAxiosAuth()
+  // const { setAuthToken } = useAxiosAuth()
   useEffect(() => {
     const auth = getAuth(app);
     console.log("Current persistence:", auth)
@@ -28,9 +28,9 @@ const useAuth = () => {
         console.log("uid", uid)
         const token = await user.getIdToken();
         const response = await authenticateUser(token)
-        setAuthToken(token);
+        // setAuthToken(token);
       } else {
-        setAuthToken(null);
+        // setAuthToken(null);
       }
     });
 
