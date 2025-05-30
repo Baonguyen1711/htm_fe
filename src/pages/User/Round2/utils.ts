@@ -283,29 +283,29 @@ export const generateGrid = async (wordArr: string[], cellWidth: number) => {
   PopulateBoard()
 
   function findContentBounds(matrix: string[][]) {
-  const rows = matrix.length;
-  const cols = matrix[0].length;
+    const rows = matrix.length;
+    const cols = matrix[0].length;
 
-  let top = rows, bottom = -1, left = cols, right = -1;
+    let top = rows, bottom = -1, left = cols, right = -1;
 
-  for (let i = 0; i < rows; i++) {
-    for (let j = 0; j < cols; j++) {
-      if (matrix[i][j]) {
-        if (i < top) top = i;
-        if (i > bottom) bottom = i;
-        if (j < left) left = j;
-        if (j > right) right = j;
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        if (matrix[i][j]) {
+          if (i < top) top = i;
+          if (i > bottom) bottom = i;
+          if (j < left) left = j;
+          if (j > right) right = j;
+        }
       }
     }
-  }
 
-  if (bottom === -1) {
-    // No content found
-    return null;
-  }
+    if (bottom === -1) {
+      // No content found
+      return null;
+    }
 
-  return { top, left, bottom, right };
-}
+    return { top, left, bottom, right };
+  }
 
   const top = Bounds.top;
   const bottom = Bounds.right;
@@ -330,28 +330,47 @@ export const generateGrid = async (wordArr: string[], cellWidth: number) => {
 
   if (wordWidth < cellWidth) {
     const padding = Math.floor((cellWidth - wordWidth) / 2);
-    console.log("padding",padding);
-    
+    console.log("padding", padding);
+
     startCol = Math.max(0, left - padding);
   }
 
   startRow = Math.min(startRow, 100 - cellWidth);
   startCol = Math.min(startCol, 100 - cellWidth);
-  console.log("startRow",startRow);
-  console.log("startCol",startCol);
-  
-  
+  console.log("startRow", startRow);
+  console.log("startCol", startCol);
 
-  let slicedBoard: string[][] = [[]]
-  slicedBoard = board.slice(startRow, startRow + cellWidth).map(row =>
-      row.slice(startCol, startCol + cellWidth)
-    );
+  let topBound = board.length; // Default to max row index
+  let bottomBound = -1; // Default to invalid row index
+  let leftBound = board[0]?.length || 0; // Default to max column index
+  let rightBound = -1; // Default to invalid column index
+
+
+  for (let i = 0; i < board.length; i++) {
+    for (let j = 0; j < board[i].length; j++) {
+      if (board[i][j] !== "") {
+        topBound = Math.min(topBound, i);
+        bottomBound = Math.max(bottomBound, i);
+        leftBound = Math.min(leftBound, j);
+        rightBound = Math.max(rightBound, j);
+      }
+    }
+  }
+
+  console.log("topBound", topBound);
+  console.log("bottomBound", bottomBound);
+
+
+  const slicedBoard: string[][] = board.slice(topBound, bottomBound + 1).map(row =>
+    row.slice(leftBound, rightBound + 1)
+  );
+
 
   console.log("original board", board);
   const bound = findContentBounds(board)
   console.log("bound", bound);
-  
-  
+
+
 
   return {
     grid: slicedBoard,

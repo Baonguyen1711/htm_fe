@@ -41,13 +41,16 @@ const InformationForm = () => {
         const result = await joinRoom(roomId, {
           userName: username,
           stt: playerNumber,
-          avatar: avatar, 
+          avatar: avatar,
         });
 
         console.log("result", result);
 
-        localStorage.setItem("userId", result.userId)
-        
+        const currentPlayer = result.players.find((player: any) => player.stt === playerNumber);
+
+        console.log("currentPlayer", currentPlayer);
+        localStorage.setItem("currentPlayer", JSON.stringify(currentPlayer));
+
         setCurrentPlayerName(username);
         setPlayers(result.players);
         setPosition(playerNumber);

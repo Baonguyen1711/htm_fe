@@ -1,7 +1,8 @@
-import { ref, onValue, set, database } from "../firebase-config"
+import { ref, onValue, set, database, serverTimestamp } from "../firebase-config"
 import { DatabaseReference, Unsubscribe, onDisconnect, remove } from "firebase/database";
 import { User, Question, Answer, Score } from "../type";
 import axios from "axios";
+import { useEffect } from "react";
 
 // Định nghĩa kiểu dữ liệu cho player và scores
 interface PlayerData {
@@ -28,13 +29,18 @@ let lastStartTime = localStorage.getItem("lastStartTime")
   : null;
 
 
-export const setupOnDisconnect = (roomId: string, userId: string, onDisconnectCallback?: () => void) => {
+export const setupOnDisconnect = (
+  roomId: string,
+  userId: string,
+  userData: any,
+  onDisconnectCallback?: () => void
+) => {
   const userRef = ref(database, `rooms/${roomId}/players/${userId}`);
-
   const disconnectHandler = onDisconnect(userRef);
 
   // Remove the user from players when disconnect happens
-  disconnectHandler.remove()
+  disconnectHandler
+    .remove()
     .then(() => {
       console.log(`onDisconnect handler set for user ${userId} in room ${roomId}`);
       if (onDisconnectCallback) onDisconnectCallback();
@@ -43,9 +49,16 @@ export const setupOnDisconnect = (roomId: string, userId: string, onDisconnectCa
       console.error("Failed to set onDisconnect handler:", error);
     });
 
-  // Return a cleanup function if you want to cancel onDisconnect manually (optional)
+  // Start heartbeat to keep user online and update lastActive
+  const interval = setInterval(() => {
+    set(userRef, { ...userData, lastActive: serverTimestamp() });
+  }, 3000);
+
+  // Cleanup: cancel onDisconnect and clear heartbeat
   return () => {
-    disconnectHandler.cancel()
+    clearInterval(interval);
+    disconnectHandler
+      .cancel()
       .then(() => console.log(`onDisconnect handler canceled for user ${userId}`))
       .catch((err) => console.error("Failed to cancel onDisconnect handler:", err));
   };

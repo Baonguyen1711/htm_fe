@@ -74,13 +74,16 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         if (!roomId || !userId) return;
 
         // Setup onDisconnect to remove user from room when connection lost
-        const cancelOnDisconnect = setupOnDisconnect(roomId, userId);
+        const currentPlayer = JSON.parse(localStorage.getItem("currentPlayer") || "{}");  
+        const cancelOnDisconnect = setupOnDisconnect(roomId, userId, currentPlayer);
 
         return () => {
             // Optional: cancel onDisconnect if component unmounts normally
             cancelOnDisconnect();
         };
     }, [roomId, userId]);
+
+
 
     useEffect(() => {
         const unsubscribePlayers = listenToPlayers(roomId, (updatedPlayers) => {
@@ -92,7 +95,8 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
                 console.log("playersList", playersList);
                 
                 const initialScoreList = [...playersList]
-                if (round === "1") {
+                const scoreInitKey = `scoreInit_${roomId}_round1`;
+                if (!localStorage.getItem(scoreInitKey)) {
                     for (var score of initialScoreList) {
                         score["score"] = "0";
                         score["isCorrect"] = false;
@@ -101,9 +105,15 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
                     console.log("initialScoreList", initialScoreList);
                     setScoreList(initialScoreList)
                     setPlayerScores(initialScoreList)
+                    localStorage.setItem(scoreInitKey, "true"); 
                 }
 
-
+                // const currentPlayer = playersList.find((player: any) => player.uid === userId);
+                // const now = new Date().getTime();
+                // if(currentPlayer.lastActive && (now - currentPlayer.lastActive) > 10) {
+                //     return;
+                // }
+                
                 setPlayerArray(playersList);
                 localStorage.setItem("playerList", JSON.stringify(playersList));
                 console.log("Updated localStorage:", localStorage.getItem("playerList"));
@@ -120,11 +130,13 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         return () => {
             unsubscribePlayers();
         };
-    }, [round]);
+    }, []);
 
 
     return (
-        <div className="w-screen min-h-screen relative">
+        <div className="relative "
+            style={{zoom: "0.75"}}
+        >
             {/* Ocean/Starry Night Background */}
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-blue-900 to-blue-600">
                 {/* Stars overlay */}

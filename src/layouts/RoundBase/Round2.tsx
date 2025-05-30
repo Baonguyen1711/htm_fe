@@ -91,6 +91,9 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     if (isHost && hintWordArray) {
       const result = await generateGrid(hintWordArray, 30)
       console.log("board", result.grid);
+      let topBound = 0
+      let bottomBound = 0
+
       setHintWords(result.placementArray)
       setGrid(result.grid)
 
@@ -654,7 +657,9 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
           ? currentQuestion.question
           : ""}
       </div>
-      <div className="grid grid-cols-[repeat(30,40px)] grid-rows-[repeat(30,40px)] gap-1 max-h-[750px] overflow-y-auto">
+      <div className="grid  [grid-template-columns:repeat(var(--cols),32px)] [grid-auto-rows:max-content]  gap-1 max-h-[750px] overflow-y-auto overflow-visible"
+        style={{ '--cols': grid[0]?.length || 1 } as React.CSSProperties}
+      >
 
         {(!grid || !Array.isArray(grid) || !grid.every(row => Array.isArray(row))) ?
           <div className="text-white">Invalid grid data</div>
@@ -676,9 +681,9 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                   cell.includes("number");
 
                 return (
-                  <div className="relative w-10 h-10 flex items-center justify-center" key={colIndex}>
+                  <div className="relative w-8 h-8 flex items-center justify-center overflow-visible" key={colIndex}>
                     <div
-                      className={`w-10 h-10 flex items-center justify-center text-lg font-semibold select-none rounded-lg
+                      className={`w-8 h-8 flex items-center justify-center text-lg font-semibold select-none rounded-lg overflow-visible   
                   ${cell.includes("number") ? "text-blue-400 border-none" : ""}
                   ${cell.includes("number") ? "" : cellStyle.background}
                   ${cell.includes("number") ? "text-blue-400" : cellStyle.textColor}
@@ -714,6 +719,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                     </div>
 
                     {showMenu && (
+                      
                       <div
                         ref={menuRef}
                         className="absolute left-12 top-1/2 transform -translate-y-1/2 flex space-x-2 bg-slate-900 border border-blue-400/50 rounded shadow-lg p-1 z-10"
