@@ -28,6 +28,8 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
   const [level, setLevel] = useState<string>("")
   const [answerList, setAnswerList] = useState<Answer[]>([])
   const [initialGrid, setInitialGrid] = useState<string[][]>([])
+  const [animationKey, setAnimationKey] = useState(0);
+  
 
 //   const triggerPlayerFlash = (index: number, isCorrect: boolean) => {
 //     const flashColor = isCorrect ? "flash-correct" : "flash-incorrect";
@@ -45,7 +47,7 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
 //     }, 3000);
 // };
   return (
-    <PlayerContext.Provider value={{ players, setPlayers, roomId, setRoomId, playersArray, setPlayerArray, playerFlashes, setPlayerFlashes,position, setPosition, startedListening, setStartedListening,scoreList, setScoreList, setInitialGrid, initialGrid, setCurrentPlayerName, currentPlayerName, selectedTopic, setSelectedTopic, easyQuestionNumber,setEasyQuestionNumber, mediumQuestionNumber, setMediumQuestionNumber, hardQuestionNumber, setHardQuestionNumber, level,setLevel, currentQuestion, setCurrentQuestion, answerList, setAnswerList, playerAnswerRef }}>
+    <PlayerContext.Provider value={{ animationKey, setAnimationKey,players, setPlayers, roomId, setRoomId, playersArray, setPlayerArray, playerFlashes, setPlayerFlashes,position, setPosition, startedListening, setStartedListening,scoreList, setScoreList, setInitialGrid, initialGrid, setCurrentPlayerName, currentPlayerName, selectedTopic, setSelectedTopic, easyQuestionNumber,setEasyQuestionNumber, mediumQuestionNumber, setMediumQuestionNumber, hardQuestionNumber, setHardQuestionNumber, level,setLevel, currentQuestion, setCurrentQuestion, answerList, setAnswerList, playerAnswerRef }}>
       {children}
     </PlayerContext.Provider>
   );

@@ -13,6 +13,7 @@ const Host:React.FC<HostInterfaceProps> = ({QuestionComponent}) => {
         questionComponent={QuestionComponent}
         PlayerScore={<HostAnswer/>}
         SideBar={<HostManagement/>}
+        isHost={true}
     />
   )
 }

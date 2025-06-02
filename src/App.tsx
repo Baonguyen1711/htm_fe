@@ -30,7 +30,8 @@ const Login = React.lazy(() => import('./pages/Login/Login'))
 const JoinRoom = React.lazy(() => import('./pages/JoinRoom/JoinRoom'))
 const SpectatorJoin = React.lazy(() => import('./pages/Spectator/SpectatorJoin'))
 const InfoForm = React.lazy(() => import('./pages/User/InformationForm/InformationForm'))
-
+const HostFinalScore = React.lazy(() => import('./pages/FinalScore/HostFinalScore'));
+const PlayerFinalScore = React.lazy(() => import('./pages/FinalScore/PlayerFinalScore'));
 const Dashboard = React.lazy(() => import('./pages/Host/Test/Dashboard'))
 
 function PlayComponent() {
@@ -42,6 +43,7 @@ function PlayComponent() {
   if (round === "2") return <UserRound2 />;
   if (round === "3") return <UserRound3 />;
   if (round === "4") return <UserRound4 />;
+  if (round === "final") return <PlayerFinalScore />;
 
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
 }
@@ -54,6 +56,7 @@ function HostComponent() {
   if (round === "2") return <HostRound2 />;
   if (round === "3") return <HostRound3 />;
   if (round === "4") return <HostRound4 />;
+  if (round === "final") return <HostFinalScore />;
 
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
 }
@@ -66,6 +69,7 @@ function SpectatorComponent() {
   if (round === "2") return <UserRound2 isSpectator={true} />;
   if (round === "3") return <UserRound3 isSpectator={true} />;
   if (round === "4") return <UserRound4 isSpectator={true} />;
+  if (round === "final") return <PlayerFinalScore />;
 
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
 }

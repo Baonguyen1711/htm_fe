@@ -4,8 +4,8 @@ import { RoundBase } from '../../type';
 import { sendSelectedCell, sendCellColor } from '../../components/services';
 import { useSearchParams } from 'react-router-dom';
 import { usePlayer } from '../../context/playerContext';
-import { deletePath, listenToSound, listenToQuestions, listenToSelectedCell, listenToCellColor, listenToAnswers, listenToBuzzing } from '../../services/firebaseServices';
-
+import { deletePath, listenToTimeStart, listenToSound, listenToQuestions, listenToSelectedCell, listenToCellColor, listenToAnswers, listenToBuzzing, listenToStar } from '../../services/firebaseServices';
+import { useTimeStart } from '../../context/timeListenerContext';
 import { resetBuzz } from '../../components/services';
 import { useSounds } from '../../context/soundContext';
 interface QuestionComponentProps {
@@ -35,7 +35,7 @@ const exampleQuestions = [
 const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     initialGrid,
     questions,
-    isSpectator ,
+    isSpectator,
     isHost = false,
 }) => {
     const colorMap: Record<string, string> = {
@@ -45,6 +45,7 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         yellow: '#FFFF00',
     };
     const sounds = useSounds();
+    const { startTimer, timeLeft, setTimeLeft } = useTimeStart();
     const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
     const [currentQuestion, setCurrentQuestion] = useState<string>("")
     const [correctAnswer, setCorrectAnswer] = useState<string>("")
@@ -60,9 +61,41 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     const menuRef = useRef<HTMLDivElement>(null);
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || "4"
-    const { setEasyQuestionNumber, setMediumQuestionNumber, setHardQuestionNumber, setLevel } = usePlayer()
+    const { setEasyQuestionNumber, setMediumQuestionNumber, setHardQuestionNumber, setLevel, animationKey, setAnimationKey } = usePlayer()
     const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
+    const [staredPlayer, setStaredPlayer] = useState<string>("");
     const [showModal, setShowModal] = useState(false); // State for modal visibility
+    const isInitialTimerMount = useRef(false)
+    useEffect(() => {
+        console.log("timeLeft", timeLeft);
+        if (isInitialTimerMount.current) {
+            isInitialTimerMount.current = false;
+            return;
+        }
+        if (timeLeft === 0) {
+            setAnimationKey((prev: number) => prev + 1);
+        }
+    }, [timeLeft]);
+
+    const isInitialMount = useRef(false)
+    useEffect(() => {
+        const unsubscribe = listenToTimeStart(roomId, async () => {
+
+
+            // Skip the timer setting on the first mount, but allow future calls to run
+            if (isInitialMount.current) {
+                isInitialMount.current = false;
+                return;
+            }
+            startTimer(15)
+            return () => {
+                unsubscribe();
+
+            };
+        })
+
+    }, [])
+
     const handleCloseModal = () => {
         setShowModal(false);
         // Optionally clear buzzedPlayer if you want to reset it
@@ -138,6 +171,22 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         setMenu({ visible: false }); // Close the menu
     };
     const lastBuzzedPlayerRef = useRef<string | null>(null);
+
+    // const isInitialMount = true;
+    // useEffect(() => {
+    //     if (isInitialMount) return
+
+
+    //     // Start timer when selectedTopic changes
+    //     startTimer(15);
+
+    //     return () => {
+
+    //     }
+
+    //     // Side effects based on timer reaching 0
+    // }, []);
+
     useEffect(() => {
 
         let hasMounted = false;
@@ -159,6 +208,36 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                 console.log("playerName", typeof playerName);
 
                 console.log(playerName, "đã bấm chuông")
+                setShowModal(true); // Show modal when a player buzzes
+            }
+        });
+
+        return () => {
+            unsubscribeBuzzing();
+        };
+    }, [roomId]);
+
+    useEffect(() => {
+
+        let hasMounted = false;
+        const unsubscribeBuzzing = listenToStar(roomId, (playerName) => {
+            // if (!hasMounted) {
+            //     hasMounted = true; // skip initial
+            //     return;
+            // }
+            const audio = sounds['nshv'];
+            if (audio) {
+                audio.play();
+            }
+            console.log("playerName on host", playerName);
+
+            console.log("listening on buzzing");
+
+            if (playerName && playerName !== "") {
+                setStaredPlayer(playerName);
+                console.log("playerName", typeof playerName);
+
+                console.log(playerName, "đã chọn ngôi sao hy vọng")
                 setShowModal(true); // Show modal when a player buzzes
             }
         });
@@ -293,7 +372,7 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     }, []);
 
     return (
-        <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full max-w-3xl mx-auto">
+        <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full max-w-3xl mx-auto min-h-[470px]">
             {/* Display selected question */}
             <h2 className="text-2xl font-bold text-cyan-200 mb-2 text-center drop-shadow">
                 {currentQuestion || ""}
@@ -398,6 +477,24 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                     <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
                         <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
                             {`${buzzedPlayer} đã nhấn chuông trả lời`}
+                        </h2>
+                        <div className="flex justify-center">
+                            <button
+                                onClick={handleCloseModal}
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showModal && staredPlayer && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+                            {`${staredPlayer} đã nhấn chọn ngôi sao hy vọng`}
                         </h2>
                         <div className="flex justify-center">
                             <button

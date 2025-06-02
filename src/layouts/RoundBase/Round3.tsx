@@ -32,13 +32,13 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
     //const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
     const [hiddenTopics, setHiddenTopics] = useState<string[]>([]);
     // const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const { selectedTopic, setSelectedTopic, currentQuestion, setCurrentQuestion } = usePlayer()
+    const { selectedTopic, setSelectedTopic, currentQuestion, setCurrentQuestion, animationKey, setAnimationKey } = usePlayer()
     const { currentQuestionIndex, setCurrentQuestionIndex } = useHost()
     const [searchParams] = useSearchParams()
     const testName = searchParams.get("testName") || ""
     const roomId = searchParams.get("roomId") || ""
     const isFirstMounted = useRef(true)
-    const { timeLeft, startTimer } = useTimeStart();
+    const { timeLeft, startTimer, setTimeLeft } = useTimeStart();
     const salt = "HTMNBK2025";
     function decodeQuestion(encoded: string): string {
         // Decode base64 to bytes
@@ -91,20 +91,48 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
         };
     }, []);
 
-
+    const isInitialMount = useRef(false)
     useEffect(() => {
-        if (!selectedTopic) return;
+        const unsubscribe = listenToTimeStart(roomId, async () => {
 
-        // Start timer when selectedTopic changes
-        startTimer(30);
 
-        // Side effects based on timer reaching 0
-    }, []);
+            // Skip the timer setting on the first mount, but allow future calls to run
+            if (isInitialMount.current) {
+                isInitialMount.current = false;
+                return;
+            }
+            startTimer(60)
+            return () => {
+                unsubscribe();
 
+            };
+        })
+
+    }, [])
+
+
+    // useEffect(() => {
+    //     if (!selectedTopic) return;
+
+    //     // Start timer when selectedTopic changes
+    //     startTimer(60);
+
+    //     return () => {
+
+
+    //     }
+
+    //     // Side effects based on timer reaching 0
+    // }, []);
+    const isInitialTimerMount = useRef(false)
     useEffect(() => {
         console.log("timeLeft", timeLeft);
-
+        if (isInitialTimerMount.current) {
+            isInitialTimerMount.current = false;
+            return;
+        }
         if (timeLeft === 0) {
+            setAnimationKey((prev: number) => prev + 1); // Trigger animation or any other side effect
             // When timer runs out, do your clean up / game logic:
             if (isHost) {
                 deletePath(roomId, "currentQuestions")
@@ -221,7 +249,7 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
     //const currentQuestions = topics.find((topic) => topic.name === selectedTopic)?.questions;
 
     return (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center min-h-[600px]">
             {!selectedTopic ? (
                 <div className="grid grid-cols-2 gap-6 w-full max-w-xl">
                     {Array.isArray(topics) && topics.length > 0 ? (

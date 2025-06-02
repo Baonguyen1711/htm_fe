@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { renderGrid } from "./utils";
 import { usePlayer } from "../../context/playerContext";
 import { setSelectedRow, setCorrectRow, setIncorectRow } from "../../components/services";
-import { deletePath, listenToSound, listenToCorrectRow, listenToIncorrectRow, listenToSelectRow, listenToQuestions, listenToObstacle } from "../../services/firebaseServices";
+import { deletePath, listenToTimeStart, listenToBuzzing, listenToSound, listenToCorrectRow, listenToIncorrectRow, listenToSelectRow, listenToQuestions, listenToObstacle } from "../../services/firebaseServices";
 import { useSearchParams } from "react-router-dom";
 import { getNextQuestion } from "../../pages/Host/Test/service";
 import { openObstacle } from "../../components/services";
@@ -11,7 +11,9 @@ import { generateGrid } from "../../pages/User/Round2/utils";
 import PlayerAnswerInput from "../../components/ui/PlayerAnswerInput";
 import { Question } from "../../type";
 import { useSounds } from "../../context/soundContext";
-
+import { resetBuzz } from "../../components/services";
+import { useTimeStart } from "../../context/timeListenerContext";
+import { submitAnswer } from "../services";
 interface HintWord {
   word: string;
   x: number;
@@ -64,9 +66,10 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
   isHost = false,
 }) => {
   console.log("initialGrid inside player", initialGrid);
+  const { startTimer, timeLeft, setTimeLeft } = useTimeStart();
   const sounds = useSounds();
   const [searchParams] = useSearchParams();
-  const { setInitialGrid } = usePlayer();
+  const { setInitialGrid, animationKey, setAnimationKey, playerAnswerRef, position, setAnswerList } = usePlayer();
   const roomId = searchParams.get("roomId") || "";
   const testName = searchParams.get("testName") || ""
   const GRID_SIZE = 30;
@@ -74,6 +77,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
   const [grid, setGrid] = useState<string[][]>([[]]);
   const [hintWords, setHintWords] = useState<WordObj[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<Question>()
+  const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
 
   const [cellStyles, setCellStyles] = useState<
     Record<string, { background: string; textColor: string }>
@@ -86,7 +90,41 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
   const [hintWordsLength, setHintWordsLength] = useState<number[]>([]);
   const [markedCharacters, setMarkedCharacters] = useState<Record<string, number[]>>({});
   const [highlightedCharacters, setHighlightedCharacters] = useState<Record<string, number[]>>({});
+  const [showModal, setShowModal] = useState(false);
+  const isInitialTimerMount = useRef(false)
+  useEffect(() => {
+    console.log("timeLeft", timeLeft);
+    if (isInitialTimerMount.current) {
+      isInitialTimerMount.current = false;
+      return;
+    }
+    if (timeLeft === 0) {
+      submitAnswer(roomId, playerAnswerRef.current, position)
 
+      setAnimationKey((prev: number) => prev + 1);
+
+      // If you want to reset timer, call startTimer again here or leave stopped
+    }
+  }, [timeLeft]);
+
+  const isInitialMount = useRef(false)
+  useEffect(() => {
+    const unsubscribe = listenToTimeStart(roomId, async () => {
+
+
+      // Skip the timer setting on the first mount, but allow future calls to run
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
+      }
+      startTimer(15)
+      return () => {
+        unsubscribe();
+
+      };
+    })
+
+  }, [])
   const handleSuffleGrid = async () => {
     if (isHost && hintWordArray) {
       const result = await generateGrid(hintWordArray, 30)
@@ -107,6 +145,62 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     }
 
   }
+
+  // const isInitialMount = true;
+  // useEffect(() => {
+  //       if (isInitialMount) return
+
+
+  //       // Start timer when selectedTopic changes
+  //       startTimer(15);
+
+  //       return () => {  
+
+
+  //       }
+
+  //       // Side effects based on timer reaching 0
+  //   }, []);
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    // Optionally clear buzzedPlayer if you want to reset it
+    setBuzzedPlayer("");
+
+    if (isHost) {
+      resetBuzz(roomId)
+    }
+  };
+
+  useEffect(() => {
+
+    let hasMounted = false;
+    const unsubscribeBuzzing = listenToBuzzing(roomId, (playerName) => {
+      // if (!hasMounted) {
+      //     hasMounted = true; // skip initial
+      //     return;
+      // }
+      const audio = sounds['buzz'];
+      if (audio) {
+        audio.play();
+      }
+      console.log("playerName on host", playerName);
+
+      console.log("listening on buzzing");
+
+      if (playerName && playerName !== "") {
+        setBuzzedPlayer(playerName);
+        console.log("playerName", typeof playerName);
+
+        console.log(playerName, "đã bấm chuông")
+        setShowModal(true); // Show modal when a player buzzes
+      }
+    });
+
+    return () => {
+      unsubscribeBuzzing();
+    };
+  }, [roomId]);
 
 
 
@@ -476,7 +570,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
         isInitialCall = false;
         return; // Skip the initial snapshot
       }
-
+      setAnswerList(null)
 
       let rowIndex = -1;
       let colIndex = -1;
@@ -719,7 +813,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                     </div>
 
                     {showMenu && (
-                      
+
                       <div
                         ref={menuRef}
                         className="absolute left-12 top-1/2 transform -translate-y-1/2 flex space-x-2 bg-slate-900 border border-blue-400/50 rounded shadow-lg p-1 z-10"
@@ -788,6 +882,24 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
           </div>
         )
       }
+
+      {showModal && buzzedPlayer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+              {`${buzzedPlayer} đã nhấn chuông trả lời`}
+            </h2>
+            <div className="flex justify-center">
+              <button
+                onClick={handleCloseModal}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 };

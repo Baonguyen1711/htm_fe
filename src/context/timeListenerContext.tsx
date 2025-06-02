@@ -1,13 +1,16 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { listenToTimeStart } from "../services/firebaseServices";
+import { deletePath, listenToTimeStart } from "../services/firebaseServices";
 import { useSounds } from "./soundContext";
 import { round } from "react-placeholder/lib/placeholders";
 import { useSearchParams } from "react-router-dom";
+import { useHost } from "./hostContext";
 
 type TimeStartContextType = {
   timeLeft: number;
+  setTimeLeft: React.Dispatch<React.SetStateAction<number>>,
   startTimer: (duration: number) => void;
   setExternalTimer: (seconds: number) => void;
+  
 };
 
 const TimeStartContext = createContext<TimeStartContextType | undefined>(undefined);
@@ -16,22 +19,30 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
   roomId,
   children,
 }) => {
-  const [timeLeft, setTimeLeft] = useState<number>(30);
+  // const {setAnimationKey} = useHost();
+  const [timeLeft, setTimeLeft] = useState<number>(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sounds = useSounds();
   const [searchParams] = useSearchParams();
   const round = searchParams.get("round") || "1";
+  const roundRef = useRef(round);
 
-  const startTimer = (duration: number) => {
+
+
+  const startTimer = async (duration: number) => {
+    // Clear any existing timer
     if (timerRef.current) clearInterval(timerRef.current);
+    console.log("duration", duration);
+
+    // Set the new time
     setTimeLeft(duration);
 
-
+    // Start the countdown
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         console.log(prev);
-
         if (prev <= 1) {
+          // setAnimationKey((prev: number) => prev + 1);
           clearInterval(timerRef.current!);
           return 0;
         }
@@ -39,33 +50,16 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
       });
     }, 1000);
   };
-
   const setExternalTimer = (seconds: number) => {
     startTimer(seconds);
   };
 
-  useEffect(() => {
-    const unsubscribe = listenToTimeStart(roomId, () => {
+  const isInitialMount = useRef(true);
 
-
-      if (round === "2") {
-        console.log("roùnd", round);
-
-        startTimer(15)
-        return;
-      }
-
-      startTimer(30); // or 60 depending on your needs
-    });
-
-    return () => {
-      unsubscribe();
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [roomId]);
+  
 
   return (
-    <TimeStartContext.Provider value={{ timeLeft, startTimer, setExternalTimer }}>
+    <TimeStartContext.Provider value={{ timeLeft, setTimeLeft, startTimer, setExternalTimer }}>
       {children}
     </TimeStartContext.Provider>
   );

@@ -12,7 +12,7 @@ import PlayerScore from '../components/PlayerScore';
 import HostScore from '../components/PlayerAnswer';
 import { setCurrentPacketQuestion } from '../components/services';
 import { useTimeStart } from '../context/timeListenerContext';
-
+import '../index.css';
 
 
 interface PlayProps {
@@ -31,12 +31,23 @@ interface Player {
 
 const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerScore, SideBar }) => {
 
-    const roundName = {
-        "1": "NHỔ NEO",
-        "2": "VƯỢT SÓNG",
-        "3": "BỨT PHÁ",
-        "4": "CHINH PHỤC",
+
+    const roundTabs = [
+        { key: "1", label: "NHỔ NEO" },
+        { key: "2", label: "VƯỢT SÓNG" },
+        { key: "3", label: "BỨT PHÁ" },
+        { key: "4", label: "CHINH PHỤC" },
+        { key: "summary", label: "Tổng kết điểm" },
+        { key: "turns", label: "Phân lượt" },
+    ];
+
+    const roundTime = {
+        "1": 10,
+        "2": 15,
+        "3": 60,
+        "4": 15,
     }
+
     const navigate = useNavigate()
     const playerAnswerRef = useRef("");
     const [isChatOpen, setIsChatOpen] = useState(false);
@@ -44,8 +55,8 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     const [userId, setUserId] = useState(localStorage.getItem("userId"))
     const [params] = useSearchParams()
     const round = (params.get("round") as "1" | "2" | "3" | "4") || "1"
-    const { players, setPlayers,  setRoomId, playersArray, setPlayerArray, position, setCurrentQuestion, selectedTopic, setSelectedTopic, setScoreList } = usePlayer()
-    const { playerScores, setPlayerScores } = useHost()
+    const { players, setPlayers, setRoomId, playersArray, setPlayerArray, position, setCurrentQuestion, selectedTopic, setSelectedTopic, setScoreList } = usePlayer()
+    const { playerScores, setPlayerScores, animationKey, setAnimationKey } = useHost()
     const isMounted = useRef(false);
     const { timeLeft, startTimer } = useTimeStart();
 
@@ -56,6 +67,41 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     const currentRound = searchParams.get("round") || "1";
     const testName = searchParams.get("testName") || "1"
     const roomId = searchParams.get("roomId") || "";
+    const isInitialMount = useRef(true);
+    const styles = `
+  @keyframes shrink {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
+    }
+  }
+`;
+    // useEffect(() => {
+    //     if (isInitialMount.current) {
+    //         isInitialMount.current = false; // Allow subsequent runs
+    //         return;
+    //     }
+    //     setAnimationKey((prev) => prev + 1);
+    //     if (round === "1") {
+    //         console.log("start timer for round 1");
+    //         startTimer(10);
+
+    //     }
+    //     if (round === "2") {
+    //         console.log("start timer for round 2");
+    //         startTimer(15);
+    //     }
+    //     if (round === "3") {
+    //         console.log("start timer for round 3");
+    //         startTimer(60);
+    //     }
+    //     if (round === "4") {
+    //         console.log("start timer for round 4");
+    //         startTimer(15);
+    //     }
+    // }, [round]);
 
 
     const handleRoundChange = async (delta: number) => {
@@ -74,7 +120,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         if (!roomId || !userId) return;
 
         // Setup onDisconnect to remove user from room when connection lost
-        const currentPlayer = JSON.parse(localStorage.getItem("currentPlayer") || "{}");  
+        const currentPlayer = JSON.parse(localStorage.getItem("currentPlayer") || "{}");
         const cancelOnDisconnect = setupOnDisconnect(roomId, userId, currentPlayer);
 
         return () => {
@@ -93,7 +139,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
             if (updatedPlayers && Object.keys(updatedPlayers).length > 0) {
                 const playersList = Object.values(updatedPlayers);
                 console.log("playersList", playersList);
-                
+
                 const initialScoreList = [...playersList]
                 const scoreInitKey = `scoreInit_${roomId}_round1`;
                 if (!localStorage.getItem(scoreInitKey)) {
@@ -105,7 +151,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
                     console.log("initialScoreList", initialScoreList);
                     setScoreList(initialScoreList)
                     setPlayerScores(initialScoreList)
-                    localStorage.setItem(scoreInitKey, "true"); 
+                    localStorage.setItem(scoreInitKey, "true");
                 }
 
                 // const currentPlayer = playersList.find((player: any) => player.uid === userId);
@@ -113,14 +159,14 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
                 // if(currentPlayer.lastActive && (now - currentPlayer.lastActive) > 10) {
                 //     return;
                 // }
-                
+
                 setPlayerArray(playersList);
                 localStorage.setItem("playerList", JSON.stringify(playersList));
                 console.log("Updated localStorage:", localStorage.getItem("playerList"));
             } else {
                 console.log("Room is empty or players node deleted");
                 console.log("roomId", roomId);
-                
+
                 setPlayerArray([]); // Clear state
                 localStorage.removeItem("playerList"); // Clear localStorage
             }
@@ -135,7 +181,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
 
     return (
         <div className="relative "
-            style={{zoom: "0.75"}}
+            style={{ zoom: "0.75" }}
         >
             {/* Ocean/Starry Night Background */}
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-blue-900 to-blue-600">
@@ -148,20 +194,27 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
             </div>
 
             {/* Content overlay */}
-            <div className="relative z-10 flex flex-col min-h-full">
-                <Header />
+                <div className="relative z-10 flex flex-col min-h-full">
+                <Header isHost={isHost} />
+
+
                 <div className="flex flex-1 p-4 gap-4">
                     <div className="w-full lg:w-4/5 flex flex-col">
                         {/* Progress bar with ocean theme */}
                         <div className="w-full h-3 bg-slate-700/50 rounded-full mb-4 border border-blue-400/30 shadow-lg">
                             <div
-                                className="h-full bg-gradient-to-r from-blue-400 to-cyan-300 rounded-full transition-all duration-1000 shadow-inner"
-                                style={{ width: `${(timeLeft / 30) * 100}%` }}
+                                className="h-full bg-gradient-to-r from-blue-400 to-cyan-300 rounded-full shadow-inner"
+                                style={{
+                                    width: timeLeft > 0 ? '100%' : '100%', // Always reset to 100% width
+                                    animation: timeLeft > 0 ? `shrink ${roundTime[round]}s linear forwards` : 'none',
+                                    animationPlayState: timeLeft > 0 ? 'running' : 'paused',
+                                }}
+                                key={animationKey} // Restart animation on round change
                             ></div>
                         </div>
 
                         {/* Question component with ocean-themed styling */}
-                        <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4">
+                        <div className={`bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4  ${isHost ? "min-h-[400px]" : "min-h-[400px]"}`}>
                             {questionComponent}
                         </div>
 
@@ -173,33 +226,14 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
 
                     <div className="hidden lg:flex lg:w-1/5 flex-col gap-4">
                         {/* Round indicator with nautical theme */}
-                        {isHost ? (
+                        {!isHost && (
                             <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-center font-bold text-lg p-4 rounded-xl shadow-xl border border-blue-400/50">
                                 <div className="text-sm opacity-90 mb-1">Vòng</div>
-                                <div className="text-xl">{round ? roundName[round as keyof typeof roundName] : ""}</div>
-                            </div>
-                        ) : (
-                            <div className="flex justify-center items-center gap-4 mb-6">
-                                <button
-                                    onClick={() => handleRoundChange(-1)}
-                                    disabled={parseInt(currentRound) <= 1}
-                                    className="text-2xl lg:text-3xl px-3 py-2 text-blue-200 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg hover:bg-blue-600/20"
-                                >
-                                    ←
-                                </button>
-                                <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-center font-bold text-lg lg:text-xl px-6 py-3 rounded-xl shadow-xl border border-blue-400/50">
-                                    <span>{round ? roundName[round as keyof typeof roundName] : ""}</span>
+                                <div className="text-xl">
+                                    {roundTabs.find(tab => tab.key === currentRound)?.label || ""}
                                 </div>
-                                <button
-                                    onClick={() => handleRoundChange(1)}
-                                    disabled={parseInt(currentRound) >= 4}
-                                    className="text-2xl lg:text-3xl px-3 py-2 text-blue-200 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg hover:bg-blue-600/20"
-                                >
-                                    →
-                                </button>
                             </div>
                         )}
-
                         {/* Sidebar with ocean theme */}
                         <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-xl p-4 flex-1">
                             {SideBar}
@@ -208,12 +242,12 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
                 </div>
 
                 {/* Mobile round indicator */}
-                <div className="lg:hidden mx-4 mb-4">
+                {/* <div className="lg:hidden mx-4 mb-4">
                     <div className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white text-center font-bold text-base p-3 rounded-xl shadow-xl border border-blue-400/50">
                         <span className="text-sm opacity-90">Vòng </span>
                         <span>{round ? roundName[round as keyof typeof roundName] : ""}</span>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Chat button with ocean theme */}
                 <button

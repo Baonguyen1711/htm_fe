@@ -83,30 +83,30 @@ function UserRound2({ isSpectator }: UserRound2Props) {
   }, [initialGrid]);
 
   // Listen for buzzing events
-  useEffect(() => {
+  // useEffect(() => {
 
 
-    const unsubscribeBuzzing = listenToBuzzing(roomId, (playerName) => {
-      if (playerName) {
-        setBuzzedPlayer(playerName);
-        console.log("playerName", typeof playerName);
+  //   const unsubscribeBuzzing = listenToBuzzing(roomId, (playerName) => {
+  //     if (playerName) {
+  //       setBuzzedPlayer(playerName);
+  //       console.log("playerName", typeof playerName);
 
-        console.log(playerName, "đã bấm chuông")
-        setShowModal(true); // Show modal when a player buzzes
-      }
-    });
+  //       console.log(playerName, "đã bấm chuông")
+  //       setShowModal(true); // Show modal when a player buzzes
+  //     }
+  //   });
 
-    return () => {
-      unsubscribeBuzzing();
-    };
-  }, [roomId]);
+  //   return () => {
+  //     unsubscribeBuzzing();
+  //   };
+  // }, [roomId]);
 
-  // Close modal handler
-  const handleCloseModal = () => {
-    setShowModal(false);
-    // Optionally clear buzzedPlayer if you want to reset it
-    setBuzzedPlayer("");
-  };
+  // // Close modal handler
+  // const handleCloseModal = () => {
+  //   setShowModal(false);
+  //   // Optionally clear buzzedPlayer if you want to reset it
+  //   setBuzzedPlayer("");
+  // };
 
   return (
     <>
@@ -116,7 +116,7 @@ function UserRound2({ isSpectator }: UserRound2Props) {
       </ReactPlaceholder>
 
       {/* Modal */}
-      {showModal && (
+      {/* {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
             <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
@@ -132,7 +132,7 @@ function UserRound2({ isSpectator }: UserRound2Props) {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </>
   );
 }

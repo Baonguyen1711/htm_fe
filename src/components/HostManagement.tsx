@@ -5,6 +5,7 @@ import { usePlayer } from '../context/playerContext';
 import { openBuzz } from './services';
 import { playSound } from './services';
 import { deletePath } from '../services/firebaseServices';
+import { updateScore } from '../pages/Host/Management/service';
 
 const HostManagement = () => {
     const {
@@ -14,6 +15,8 @@ const HostManagement = () => {
         handleStartRound,
         handleCorrectAnswer,
         currentAnswer,
+        playerScores,
+        setPlayerScores,
         hostInitialGrid
     } = useHost();
 
@@ -102,7 +105,14 @@ const HostManagement = () => {
             {/* Start Round - Third row */}
             <div className="mb-4">
                 <button
-                    onClick={() => {
+                    onClick={() => {               
+                        const newScoreList = [...playerScores]
+                        for (let score of newScoreList) {
+                            score["isCorrect"] = false;
+                            score["isModified"] = false
+                        }
+                        setPlayerScores(newScoreList)
+                        updateScore(roomId, playerScores)
                         handleStartRound(currentRound, roomId, initialGrid)
                     }}
                     className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white p-4 lg:p-5 rounded-xl shadow-lg border border-orange-400/50 transition-all duration-200 hover:scale-105 font-bold text-base lg:text-lg"
@@ -130,7 +140,7 @@ const HostManagement = () => {
                     CHẠY ÂM THANH MỞ ĐẦU
                 </button>
             </div>
-        </div>  
+        </div>
     );
 };
 

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Play from '../../layouts/Play'
 import { RoundBase } from '../../type';
-import { listenToQuestions, listenToAnswers, listenToSound, deletePath } from '../../services/firebaseServices';
+import { listenToTimeStart, listenToQuestions, listenToAnswers, listenToSound, deletePath } from '../../services/firebaseServices';
 import { useSearchParams } from 'react-router-dom';
 import { useTimeStart } from '../../context/timeListenerContext';
 import { usePlayer } from '../../context/playerContext';
@@ -9,6 +9,7 @@ import PlayerAnswerInput from '../../components/ui/PlayerAnswerInput';
 import { Question } from '../../type';
 import { submitAnswer } from '../services';
 import { useSounds } from '../../context/soundContext';
+import { set } from 'firebase/database';
 
 // interface QuestionBoxProps {
 //     question: string;
@@ -29,31 +30,64 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
     const [correctAnswer, setCorrectAnswer] = useState<string>("")
     const [isExpanded, setIsExpanded] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { timeLeft, startTimer } = useTimeStart();
-    const { setAnswerList, playerAnswerRef, position } = usePlayer()
-    const isInitialMount = true;
+    const { timeLeft, startTimer, setTimeLeft } = useTimeStart();
+    const { setAnswerList, playerAnswerRef, position, animationKey, setAnimationKey } = usePlayer()
+
     useEffect(() => {
         console.log("playerAnswerRef.current", playerAnswerRef.current);
     }, [playerAnswerRef.current])
+    // useEffect(() => {
+    //     if (isInitialMount) return
+
+
+    //     startTimer(10);
+
+    //     return () => {
+    //         // Clean up timer
+    //     }
+
+
+    // }, []);
+    const isInitialMount = useRef(false)
     useEffect(() => {
-        if (isInitialMount) return
+        const unsubscribe = listenToTimeStart(roomId, async () => {
 
-        // Start timer when selectedTopic changes
-        startTimer(30);
 
-        // Side effects based on timer reaching 0
-    }, []);
+            // Skip the timer setting on the first mount, but allow future calls to run
+            if (isInitialMount.current) {
+                isInitialMount.current = false;
+                return;
+            }
+            startTimer(10)
+            return () => {
+                unsubscribe();
 
+            };
+        })
+
+    }, [])
+
+    const isInitialTimerMount = useRef(false)
     useEffect(() => {
         console.log("timeLeft", timeLeft);
 
-        if (timeLeft === 0 && !isHost) {
-            console.log("playerAnswerRef.current", playerAnswerRef.current);
-            console.log("position", position);
+
+        if (isInitialTimerMount.current) {
+            isInitialTimerMount.current = false;
+            return;
+        }
+        if (timeLeft === 0) {
+
+            setAnimationKey((prev: number) => prev + 1);
+            if (!isHost) {
+                console.log("playerAnswerRef.current", playerAnswerRef.current);
+                console.log("position", position);
 
 
-            // When timer runs out, do your clean up / game logic:
-            submitAnswer(roomId, playerAnswerRef.current, position)
+                // When timer runs out, do your clean up / game logic:
+                submitAnswer(roomId, playerAnswerRef.current, position)
+
+            }
             // If you want to reset timer, call startTimer again here or leave stopped
         }
     }, [timeLeft]);
@@ -111,7 +145,9 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
     }, []);
 
     return (
-        <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full flex flex-col items-center">
+        <div
+            className={`bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full flex flex-col items-center`}
+        >
             {/* Question text */}
             <div
                 className={`text-white text-xl font-semibold text-center mb-4 max-w-[90%] ${isExpanded ? "max-h-none" : "max-h-[120px] overflow-hidden"
@@ -130,7 +166,7 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
 
             {/* Media */}
             <div
-                className="w-full h-[300px] flex items-center justify-center overflow-hidden cursor-pointer mb-4"
+                className={`w-full h-[300px] flex items-center justify-center overflow-hidden cursor-pointer mb-4  min-h-[400px]`}
                 onClick={() => setIsModalOpen(true)}
             >
                 {(() => {

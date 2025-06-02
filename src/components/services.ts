@@ -158,6 +158,33 @@ export const buzzing = async (roomId: string, playerName: string, stt: string) =
     }
 }
 
+export const setStar = async (roomId: string, playerName: string) => {
+    try {
+        const response = await axios.post(`http://localhost:8000/api/star?room_id=${roomId}`,
+            {
+
+                "player_name": playerName
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                withCredentials: true,
+            });
+
+        if (response.status !== 200) {
+            throw new Error(`Failed to go to next round, Status: ${response.status}`);
+        }
+
+        // Phân tích dữ liệu từ response JSON
+        return response.data;
+
+    } catch (error) {
+        console.error('Error fetching test data:', error);
+        throw error; // Quăng lỗi để xử lý ở nơi gọi hàm
+    }
+}
+
 export const resetBuzz = async (roomId: string) => {
     try {
         const response = await axios.post(`http://localhost:8000/api/buzz/reset?room_id=${roomId}`,

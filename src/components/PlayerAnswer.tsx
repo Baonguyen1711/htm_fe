@@ -3,15 +3,17 @@ import { usePlayer } from '../context/playerContext';
 import { User, Answer, Score } from '../type';
 import { listenToBroadcastedAnswer, listenToOpenBuzz } from '../services/firebaseServices';
 import { useSearchParams } from 'react-router-dom';
-import { buzzing } from './services';
+import { buzzing, setStar } from './services';
 import { closeBuzz } from './services';
+import { useSounds } from '../context/soundContext';
 
-interface PlayerAnswerProps { 
+interface PlayerAnswerProps {
     isSpectator?: boolean;
 }
 
 
-const PlayerAnswer: React.FC<PlayerAnswerProps> = ({isSpectator}) => {
+const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
+    const sounds = useSounds()
     const { playersArray, playerFlashes, setPlayerFlashes, roomId, triggerPlayerFlash, scoreList, setScoreList, position, currentPlayerName, answerList, setAnswerList } = usePlayer()
 
     const spots = [1, 2, 3, 4]
@@ -19,11 +21,18 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({isSpectator}) => {
     const round = searchParams.get("round") || "1"
 
     const [isButtonEnabled, setIsButtonEnabled] = useState(round === "2")
+    const [isStarButtonEnabled, setIsStarButtonEnabled] = useState(true)
 
     const handleBuzz = async () => {
         console.log("currentPlayerName", currentPlayerName);
 
         await buzzing(roomId, currentPlayerName, position)
+    }
+
+    const handleSetStar = async () => {
+        console.log("currentPlayerName", currentPlayerName);
+        setIsStarButtonEnabled(false)
+        await setStar(roomId, currentPlayerName)
     }
 
     useEffect(() => {
@@ -42,6 +51,10 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({isSpectator}) => {
             console.log("buzz", buzz);
 
             if (round === "4" && buzz === "open") {
+                const audio = sounds['5seconds_remain'];
+                if (audio) {
+                    audio.play();
+                }
                 setIsButtonEnabled(true)
                 const timeoutId = setTimeout(() => {
                     setIsButtonEnabled(false)
@@ -77,7 +90,7 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({isSpectator}) => {
 
     return (
         <>
-            {!isSpectator && ((round === "2" || round === "4")) && (
+            {!isSpectator && ((round === "2")) && (
                 <button
                     onClick={() => {
                         alert('buzzed')
@@ -87,8 +100,36 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({isSpectator}) => {
                         }`}
                     disabled={!isButtonEnabled}
                 >
-                    {round === "2" ? "Trả lời CNV" : "Giành quyền trả lời"}
+                    Trả lời CNV
                 </button>
+            )}
+            {!isSpectator && ((round === "4")) && (
+                <div className="flex w-full gap-4 mb-6">
+                    <button
+                        onClick={() => {
+                            alert('buzzed')
+                            handleSetStar()
+                        }}
+                        className={`flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white py-3 px-6 rounded-xl shadow-lg font-semibold text-lg transition-all duration-200 ${isStarButtonEnabled ? '' : 'bg-gray-500 cursor-not-allowed'
+                            }`}
+                        disabled={!isStarButtonEnabled}
+                    >
+                        Ngôi sao hy vọng
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            alert('buzzed')
+                            handleBuzz()
+                        }}
+                        className={`flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white py-3 px-6 rounded-xl shadow-lg font-semibold text-lg transition-all duration-200 ${isButtonEnabled ? '' : 'bg-gray-500 cursor-not-allowed'
+                            }`}
+                        disabled={!isButtonEnabled}
+                    >
+                        Giành quyền trả lời
+                    </button>
+                </div>
+
             )}
             <div className="grid grid-cols-4 gap-6 mt-4 w-full">
                 {spots.map((spotNumber: number) => {

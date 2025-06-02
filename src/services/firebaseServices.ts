@@ -52,7 +52,7 @@ export const setupOnDisconnect = (
   // Start heartbeat to keep user online and update lastActive
   const interval = setInterval(() => {
     set(userRef, { ...userData, lastActive: serverTimestamp() });
-  }, 3000);
+  }, 5000);
 
   // Cleanup: cancel onDisconnect and clear heartbeat
   return () => {
@@ -135,6 +135,22 @@ export const listenToBuzzing = (roomId: string, callback: (data: string) => void
   const questionsRef: DatabaseReference = ref(database, `rooms/${roomId}/buzzedPlayer`);
   console.log("questiónsRef ref", questionsRef)
   const unsubscribe: Unsubscribe = onValue(questionsRef, (snapshot) => {
+    if (!snapshot.exists()) {
+
+      console.log("Path deleted or does not exist.");
+      return;
+    }
+    const data: string = snapshot.val() || {};
+    console.log("data", data)
+    callback(data);
+  });
+  return unsubscribe; // Trả về hàm unsubscribe để cleanup
+};
+
+export const listenToStar = (roomId: string, callback: (data: string) => void): Unsubscribe => {
+  const starRef: DatabaseReference = ref(database, `rooms/${roomId}/star`);
+  console.log("starRef", starRef)
+  const unsubscribe: Unsubscribe = onValue(starRef, (snapshot) => {
     if (!snapshot.exists()) {
 
       console.log("Path deleted or does not exist.");
