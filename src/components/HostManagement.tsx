@@ -17,6 +17,8 @@ import {
     MusicalNoteIcon,
 } from "@heroicons/react/24/solid";
 import { toast } from 'react-toastify';
+import HostQuestionPreview from './HostQuestionPreview';
+
 const HostManagement = () => {
     const {
         handleNextQuestion,
@@ -50,6 +52,8 @@ const HostManagement = () => {
         }
         await deletePath(roomId, "questions");
         await deletePath(roomId, "answers");
+        await deletePath(roomId, "turn"); // Clear turn assignments
+        await deletePath(roomId, "isModified"); // Clear isModified state
     };
 
     useEffect(() => {
@@ -58,6 +62,9 @@ const HostManagement = () => {
 
     return (
         <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-4 lg:p-6 mt-4">
+
+            {/* Host Question Preview */}
+            <HostQuestionPreview />
 
             {/* Host actions - First row */}
             <div className="flex flex-col gap-3 lg:gap-4 mb-4">
@@ -71,31 +78,50 @@ const HostManagement = () => {
                     MỞ BẤM CHUÔNG
                 </button> */}
                 <div className="flex items-center gap-3">
-                    {/* Current Question Index Input */}
-                    <input
-                        min={0}
-                        value={inGameQuestionIndex}
-                        onChange={e => {
-                            const val = e.target.value;
-                            if (val === "") {
-                                setInGameQuestionIndex(0);
-                            } else {
-                                setInGameQuestionIndex(Number(val));
+                    {/* Current Question Index Input - Disabled for Round 4 */}
+                    {currentRound !== "4" && (
+                        <input
+                            min={0}
+                            value={inGameQuestionIndex}
+                            onChange={e => {
+                                const val = e.target.value;
+                                if (val === "") {
+                                    setInGameQuestionIndex(0);
+                                } else {
+                                    setInGameQuestionIndex(Number(val));
+                                }
+                            }}
+                            className="w-16 px-2 py-2 rounded-lg border border-blue-400 bg-slate-700 text-white text-center font-bold focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            style={{ minWidth: 0 }}
+                        />
+                    )}
+                    {currentRound !== "4" && (
+                        <button
+                        onClick={async () => {
+                            try {
+                                setCurrentQuestionIndex(inGameQuestionIndex.toString());
+
+                                // Fetch and display the specified question
+                                if (currentRound === "3") {
+                                    await handleNextQuestion(selectedTopic, undefined, inGameQuestionIndex.toString());
+                                } else if (currentRound === "4") {
+                                    await handleNextQuestion(undefined, level, inGameQuestionIndex.toString());
+                                } else {
+                                    await handleNextQuestion(undefined, undefined, inGameQuestionIndex.toString());
+                                }
+
+                                toast.success(`Đã chuyển đến câu hỏi số: ${inGameQuestionIndex}`);
+                            } catch (error) {
+                                console.error("Error jumping to question:", error);
+                                toast.error("Lỗi khi chuyển đến câu hỏi!");
                             }
                         }}
-                        className="w-16 px-2 py-2 rounded-lg border border-blue-400 bg-slate-700 text-white text-center font-bold focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        style={{ minWidth: 0 }}
-                    />
-                    <button
-                        onClick={() => {
-                            setCurrentQuestionIndex(inGameQuestionIndex);
-                            toast.success(`Đã cập nhật câu hỏi hiện tại: ${inGameQuestionIndex}`);
-                        }}
-                        className="flex items-center bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 text-white p-3 lg:p-4 rounded-xl shadow-lg border border-yellow-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
+                        className="flex items-center bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-yellow-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                     >
-                        <ArrowRightCircleIcon className="w-5 h-5 mr-2" />
-                        CẬP NHẬT CÂU HỎI HIỆN TẠI
-                    </button>
+                            <ArrowRightCircleIcon className="w-4 h-4 mr-2" />
+                            CHUYỂN ĐẾN CÂU HỎI
+                        </button>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -113,9 +139,9 @@ const HostManagement = () => {
                         handleStartRound(currentRound, roomId, initialGrid)
                         toast.success(`Đã bắt đầu vòng thi ${currentRound}`);
                     }}
-                    className="w-full flex items-center bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white p-4 lg:p-5 rounded-xl shadow-lg border border-orange-400/50 transition-all duration-200 hover:scale-105 font-bold text-base lg:text-lg"
+                    className="w-full flex items-center bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-green-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base"
                 >
-                    <PlayCircleIcon className="w-6 h-6 mr-2" />
+                    <PlayCircleIcon className="w-4 h-4 mr-2" />
 
                     BẮT ĐẦU VÒNG THI
                 </button>
@@ -125,7 +151,9 @@ const HostManagement = () => {
                 <button
                         onClick={() => {
                             if (currentRound === "3") {
-                                handleNextQuestion(selectedTopic)
+                                // Use the input box value for round 3
+                                handleNextQuestion(selectedTopic, undefined, inGameQuestionIndex.toString())
+                                setInGameQuestionIndex(prev => prev + 1);
                                 return
                             }
                             if (currentRound === "4") {
@@ -143,12 +171,13 @@ const HostManagement = () => {
                                 }
                                 return
                             }
+                            // Use the input box value for other rounds
+                            handleNextQuestion(undefined, undefined, inGameQuestionIndex.toString())
                             setInGameQuestionIndex(prev => prev + 1);
-                            handleNextQuestion()
                         }}
-                        className="flex items-center bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 text-white p-3 lg:p-4 rounded-xl shadow-lg border border-yellow-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
+                        className="flex items-center bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-yellow-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                     >
-                        <ArrowRightCircleIcon className="w-5 h-5 mr-2" />
+                        <ArrowRightCircleIcon className="w-4 h-4 mr-2" />
                         CÂU HỎI TIẾP THEO
                     </button>
                     <button
@@ -156,9 +185,9 @@ const HostManagement = () => {
                         handleStartTime()
                         toast.success("Đã bắt đầu đếm giờ!");
                     }}
-                    className="flex items-center bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white p-3 lg:p-4 rounded-xl shadow-lg border border-purple-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
+                    className="flex items-center bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-red-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                 >
-                    <ClockIcon className="w-5 h-5 mr-2" />
+                    <ClockIcon className="w-4 h-4 mr-2" />
 
                     BẮT ĐẦU ĐẾM GIỜ
                 </button>
@@ -167,9 +196,9 @@ const HostManagement = () => {
                         handleShowAnswer()
                         toast.success("Đã hiển thị câu trả lời cho người chơi!");
                     }}
-                    className="flex items-center bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white p-3 lg:p-4 rounded-xl shadow-lg border border-blue-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
+                    className="flex items-center bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-green-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                 >
-                    <EyeIcon className="w-5 h-5 mr-2" />
+                    <EyeIcon className="w-4 h-4 mr-2" />
 
                     HIỆN CÂU TRẢ LỜI THÍ SINH
                 </button>
@@ -180,9 +209,9 @@ const HostManagement = () => {
             <div className="flex flex-col gap-3 lg:gap-4 mb-4">
                  <button
                     onClick={() => handleCorrectAnswer(currentAnswer)}
-                    className=" flex items-center bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white p-3 lg:p-4 rounded-xl shadow-lg border border-green-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
+                    className="flex items-center bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-green-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                 >
-                    <CheckCircleIcon className="w-5 h-5 mr-2" />
+                    <CheckCircleIcon className="w-4 h-4 mr-2" />
 
                     HIỆN ĐÁP ÁN ĐÚNG
                 </button>
@@ -197,9 +226,9 @@ const HostManagement = () => {
                         playSound(roomId, currentRound)
                         toast.success(`Đã chạy âm thanh cho vòng thi ${currentRound}`);
                     }}
-                    className="flex items-center bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white p-3 lg:p-4 rounded-xl shadow-lg border border-indigo-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
+                    className="flex items-center bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-yellow-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                 >
-                    <SpeakerWaveIcon className="w-5 h-5 mr-2" />
+                    <SpeakerWaveIcon className="w-4 h-4 mr-2" />
 
                     CHẠY ÂM THANH BẮT ĐẦU VÒNG THI
                 </button>
@@ -208,9 +237,9 @@ const HostManagement = () => {
                         playSound(roomId, "opening")
                         toast.success("Đã chạy âm thanh mở đầu!");
                     }}
-                    className="flex items-center bg-gradient-to-r from-pink-600 to-pink-500 hover:from-pink-700 hover:to-pink-600 text-white p-3 lg:p-4 rounded-xl shadow-lg border border-pink-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
+                    className="flex items-center bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-red-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                 >
-                    <MusicalNoteIcon className="w-5 h-5 mr-2" />
+                    <MusicalNoteIcon className="w-4 h-4 mr-2" />
 
                     CHẠY ÂM THANH MỞ ĐẦU
                 </button>

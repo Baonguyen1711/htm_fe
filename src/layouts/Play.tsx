@@ -118,6 +118,8 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         }
         await deletePath(roomId, "questions");
         await deletePath(roomId, "answers");
+        await deletePath(roomId, "turn"); // Clear turn assignments
+        await deletePath(roomId, "isModified"); // Clear isModified state
     };
 
 

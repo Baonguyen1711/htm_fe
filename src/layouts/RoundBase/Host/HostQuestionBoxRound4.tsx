@@ -4,6 +4,7 @@ import { RoundBase } from '../../../type';
 import { sendSelectedCell, sendCellColor } from '../../../components/services';
 import { useSearchParams } from 'react-router-dom';
 import { usePlayer } from '../../../context/playerContext';
+import { useHost } from '../../../context/hostContext';
 import { deletePath, listenToTimeStart, listenToSound, listenToQuestions, listenToSelectedCell, listenToCellColor, listenToAnswers, listenToBuzzing, listenToStar } from '../../../services/firebaseServices';
 import { useTimeStart } from '../../../context/timeListenerContext';
 import { resetBuzz } from '../../../components/services';
@@ -218,6 +219,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || "4"
     const { setEasyQuestionNumber, setMediumQuestionNumber, setHardQuestionNumber, setLevel, animationKey, setAnimationKey, setInitialGrid } = usePlayer()
+    const { currentAnswer } = useHost()
     const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
     const [staredPlayer, setStaredPlayer] = useState<string>("");
     const [showModal, setShowModal] = useState(false); // State for modal visibility
@@ -254,6 +256,14 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
             setAnimationKey((prev: number) => prev + 1);
         }
     }, [timeLeft]);
+
+    // Watch for changes in currentAnswer from host context
+    useEffect(() => {
+        if (isHost && currentAnswer) {
+            setCorrectAnswer(currentAnswer)
+            console.log("Host answer updated in Round 4:", currentAnswer)
+        }
+    }, [currentAnswer, isHost]);
 
     // const isInitialMount = useRef(false)
     // useEffect(() => {

@@ -150,6 +150,14 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
         };
     }, []);
 
+    // Watch for changes in currentAnswer from host context
+    useEffect(() => {
+        if (isHost && currentAnswer) {
+            setCorrectAnswer(currentAnswer)
+            console.log("Host answer updated in Round 1:", currentAnswer)
+        }
+    }, [currentAnswer, isHost]);
+
     return (
         <div
             className={`bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full flex flex-col items-center`}

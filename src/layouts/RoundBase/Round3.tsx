@@ -34,7 +34,7 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
     const [hiddenTopics, setHiddenTopics] = useState<string[]>([]);
     // const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const { selectedTopic, setSelectedTopic, currentQuestion, setCurrentQuestion, animationKey, setAnimationKey } = usePlayer()
-    const { currentQuestionIndex, setCurrentQuestionIndex } = useHost()
+    const { currentQuestionIndex, setCurrentQuestionIndex, currentAnswer } = useHost()
     const [playerCurrentQuestionIndex, setPlayerCurrentQuestionIndex] = useState<number>(-1)
     const tempQuestionListRef = useRef<Question[]>([]);
     const [tempQuestionList, setTempQuestionList] = useState<Question[]>([])
@@ -141,6 +141,14 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
 
         };
     }, []);
+
+    // Watch for changes in currentAnswer from host context
+    useEffect(() => {
+        if (isHost && currentAnswer) {
+            setCorrectAnswer(currentAnswer)
+            console.log("Host answer updated in Round 3:", currentAnswer)
+        }
+    }, [currentAnswer, isHost]);
 
     const isInitialMount = useRef(false)
     useEffect(() => {
@@ -253,6 +261,11 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
 
             const timeOut = setTimeout(() => {
                 setCurrentQuestion(questions.question)
+
+                // If host, use the currentAnswer from host context
+                if (isHost && currentAnswer) {
+                    setCorrectAnswer(currentAnswer)
+                }
             }, 1000)
 
 

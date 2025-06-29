@@ -198,6 +198,35 @@ export const getQuestionByRound = async (testName: string, round: string, roomId
   }
 };
 
+export const prefetchQuestion = async (testName: string, questionNumber: string, round: string, roomId: string, packetName?: string, difficulty?: string): Promise<any> => {
+  try {
+    let url = `http://localhost:8000/api/test/question/prefetch?test_name=${testName}&question_number=${questionNumber}&round=${round}&room_id=${roomId}`
+
+    if (packetName) {
+      url += `&packet_name=${packetName}`;
+    }
+    if (difficulty) {
+      url += `&difficulty=${difficulty}`;
+    }
+    const response = await axios.get(url, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to prefetch question with Status: ${response.status}`);
+    }
+
+    return response.data;
+
+  } catch (error) {
+    console.error('Error prefetching question:', error);
+    throw error;
+  }
+};
+
 export const getNextQuestion = async (testName: string, questionNumber: string, round: string, roomId: string, packetName?: string, // Optional param
   difficulty?: string ): Promise<any> => {
   try {

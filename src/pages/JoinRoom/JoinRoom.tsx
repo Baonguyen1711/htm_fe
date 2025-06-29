@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
+import http from '../../services/http';
 
 const JoinRoom = () => {
   const navigate = useNavigate();
@@ -14,6 +15,27 @@ const JoinRoom = () => {
       if (!roomId.trim()) {
         alert("Vui lòng nhập mã phòng");
         return;
+      }
+
+      // Validate room and password first
+      try {
+        const params: any = { room_id: roomId };
+        if (password) {
+          params.password = password;
+        }
+
+        await http.post('room/validate', false, {}, params);
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          alert("Phòng không tồn tại");
+          return;
+        } else if (error.response?.status === 403) {
+          alert("Mật khẩu phòng không đúng");
+          return;
+        } else {
+          alert("Lỗi khi kiểm tra phòng");
+          return;
+        }
       }
 
       signInWithoutPassword();
