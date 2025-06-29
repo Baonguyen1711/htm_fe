@@ -7,7 +7,7 @@ import { listenToBuzzing } from "../../../services/firebaseServices";
 import { usePlayer } from "../../../context/playerContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { listenToRoundStart } from "../../../services/firebaseServices";
-
+import FallBack from "../../../components/ui/FallBack";
 interface UserRound2Props {
   isSpectator?: boolean;
 }
@@ -82,59 +82,22 @@ function UserRound2({ isSpectator }: UserRound2Props) {
     }
   }, [initialGrid]);
 
-  // Listen for buzzing events
-  // useEffect(() => {
-
-
-  //   const unsubscribeBuzzing = listenToBuzzing(roomId, (playerName) => {
-  //     if (playerName) {
-  //       setBuzzedPlayer(playerName);
-  //       console.log("playerName", typeof playerName);
-
-  //       console.log(playerName, "đã bấm chuông")
-  //       setShowModal(true); // Show modal when a player buzzes
-  //     }
-  //   });
-
-  //   return () => {
-  //     unsubscribeBuzzing();
-  //   };
-  // }, [roomId]);
-
-  // // Close modal handler
-  // const handleCloseModal = () => {
-  //   setShowModal(false);
-  //   // Optionally clear buzzedPlayer if you want to reset it
-  //   setBuzzedPlayer("");
-  // };
-
   return (
-    <>
-      <ReactPlaceholder type="text" rows={3} ready={!loading}>
-        <User QuestionComponent={<Round2 initialGrid={initialGrid} isHost={false} isSpectator={isSpectator} />}
-          isSpectator={isSpectator} />
-      </ReactPlaceholder>
+  <>
+    {loading ? (
+      <FallBack />
+    ) : (
+      <User
+        QuestionComponent={
+          <Round2 initialGrid={initialGrid} isHost={false} isSpectator={isSpectator} />
+        }
+        isSpectator={isSpectator}
+      />
+    )}
 
-      {/* Modal */}
-      {/* {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
-              {`${buzzedPlayer} đã nhấn chuông trả lời`}
-            </h2>
-            <div className="flex justify-center">
-              <button
-                onClick={handleCloseModal}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
-    </>
-  );
+    {/* Modal ... */}
+  </>
+);
 }
 
 export default UserRound2;

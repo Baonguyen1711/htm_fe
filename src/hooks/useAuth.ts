@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -12,22 +12,34 @@ import {
 import {app} from "../firebase-config";
 // import { useAxiosAuth } from "../context/authContext";
 import { authenticateUser } from "../services/firebaseServices";
+import authService from "../services/auth.service";
+
 
 const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isMounted = useRef(true)
 
   // const { setAuthToken } = useAxiosAuth()
   useEffect(() => {
     const auth = getAuth(app);
     console.log("Current persistence:", auth)
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // if(isMounted.current) {
+      //   isMounted.current = false
+      //   return
+      // }
       if (user) {
         const uid = user.uid;
         console.log("uid", uid)
         const token = await user.getIdToken();
-        const response = await authenticateUser(token)
+        //await authenticateUser(token)
+        await authService.authenticateUser(
+          {
+            token: token
+          }
+        )
         // setAuthToken(token);
       } else {
         // setAuthToken(null);

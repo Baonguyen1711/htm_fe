@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
+import { spectatorJoin } from '../User/InformationForm/services';
+import { removeSpectator } from '../../services/firebaseServices';
 
 const SpectatorJoin = () => {
   const navigate = useNavigate();
@@ -17,6 +19,8 @@ const SpectatorJoin = () => {
 
       // Mock join room - replace with actual logic
       signInWithoutPassword(); // Call the login function
+      const response = await spectatorJoin(roomId)
+      removeSpectator(response.spectator_path)
       navigate(`/spectator?roomId=${roomId}&round=1`);
     } catch (error) {
       console.error("Error during joining room:", error);

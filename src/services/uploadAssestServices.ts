@@ -4,6 +4,8 @@ async function getPresignedUrl(extension: string, contentType: string) {
   console.log("extension",extension);
   console.log("contentType",contentType);
   
+
+  
   
   const response = await axios.get(`http://localhost:8000/api/s3/presigned-url?content_type=${contentType}&extension=${extension}`, {
     withCredentials: true,

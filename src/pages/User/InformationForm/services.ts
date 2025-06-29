@@ -277,3 +277,25 @@ export const deactivateRoom = async (roomId: string): Promise<any> => {
     throw error; // Quăng lỗi để xử lý ở nơi gọi hàm
   }
 };
+
+export const spectatorJoin = async (roomId: string) => {
+    try {
+    
+        const response = await axios.post(`http://localhost:8000/api/room/spectator/join?room_id=${roomId}`, {}, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+    
+        if (response.status !== 200) {
+          throw new Error(`Failed to join room with ID: ${roomId}, Status: ${response.status}`);
+        }
+    
+        // Phân tích dữ liệu từ response JSON
+        return response.data;
+    
+      } catch (error) {
+        console.error('Error fetching test data:', error);
+        throw error; // Quăng lỗi để xử lý ở nơi gọi hàm
+      }
+}

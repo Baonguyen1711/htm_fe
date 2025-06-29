@@ -1,12 +1,13 @@
 import React from "react";
 import { uploadTestToServer } from "./service";
+import testManageMentService from "../../../services/testManagement.service";
 
 const UploadTest: React.FC = () => {
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const fileInput = document.getElementById("fileUpload") as HTMLInputElement;
-    const testNameInput = document.getElementById("testName") as HTMLInputElement
+    const testNameInput = (document.getElementById("testName") as HTMLInputElement).value;
     const file = fileInput.files?.[0];
 
     if (!file) {
@@ -14,13 +15,8 @@ const UploadTest: React.FC = () => {
       return;
     }
 
-    uploadTestToServer(file, testNameInput.value)
-      .then((response) => {
-        console.log("Upload thành công:", response);
-      })
-      .catch((error) => {
-        console.error("Lỗi khi upload file:", error);
-      });
+    const response = await testManageMentService.uploadTestToServer(testNameInput,file)
+
   };
 
   return (

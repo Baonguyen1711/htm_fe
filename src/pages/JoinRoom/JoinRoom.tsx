@@ -15,8 +15,7 @@ const JoinRoom = () => {
         return;
       }
 
-      // Mock join room - replace with actual logic
-      signInWithoutPassword(); // Call the login function
+      signInWithoutPassword(); 
       navigate(`/user/info?roomid=${roomId}`);
     } catch (error) {
       console.error("Error during joining room:", error);

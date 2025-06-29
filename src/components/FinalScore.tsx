@@ -1,6 +1,7 @@
 import React, { useState, useEffect, ReactNode, useRef, useCallback } from 'react';
 import PlayerScore from '../components/PlayerScore';
 import Header from '../layouts/Header';
+import { updateHistory } from './services';
 
 
 interface PlayerScoreProps {

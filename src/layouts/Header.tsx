@@ -1,10 +1,15 @@
 import React from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { deletePath } from '../services/firebaseServices';
+import {
+    EyeIcon,
+} from "@heroicons/react/24/solid";
 
 interface RoundTab {
     isHost?: boolean;
+    spectatorCount?: number
 }
-const Header: React.FC<RoundTab> = ({ isHost }) => {
+const Header: React.FC<RoundTab> = ({ isHost, spectatorCount }) => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const roomId = searchParams.get("roomId") || "";
@@ -16,7 +21,7 @@ const Header: React.FC<RoundTab> = ({ isHost }) => {
         { key: "3", label: "BỨT PHÁ" },
         { key: "4", label: "CHINH PHỤC" },
         { key: "final", label: "Tổng kết điểm" },
-        { key: "turns", label: "Phân lượt" },
+        { key: "turn", label: "Phân lượt" },
     ];
 
 
@@ -47,13 +52,15 @@ const Header: React.FC<RoundTab> = ({ isHost }) => {
                             {roundTabs.map(tab => (
                                 <button
                                     key={tab.key}
-                                    onClick={() => {
-                                        if (["1", "2", "3", "4"].includes(tab.key)) {
+                                    onClick={async () => {
+                                        if (["1", "2", "3", "4", "turn"].includes(tab.key)) {
+                                            await deletePath(roomId, "questions");
+                                            await deletePath(roomId, "answers");
                                             navigate(`/host?round=${tab.key}&testName=${testName}&roomId=${roomId}`);
                                         }
 
-                                        if(tab.key === "final") {
-                                            navigate(`/host?round=final&roomId=${roomId}`);
+                                        if (tab.key === "final") {
+                                            navigate(`/host?round=final&roomId=${roomId}&testName=${testName}`);
                                         }
                                     }}
                                     className={`px-4 py-2 font-bold text-base rounded-lg transition-colors
@@ -71,7 +78,12 @@ const Header: React.FC<RoundTab> = ({ isHost }) => {
                 )}
 
                 {/* Right side: empty but takes same space as left for perfect centering */}
-                <div className="flex-1" />
+                <div className="flex justify-end flex-1">
+                    <div className="flex items-center bg-slate-800/70 backdrop-blur-sm px-3 py-1 rounded-full border border-blue-400/30 shadow-md">
+                        <EyeIcon className="w-5 h-5 mr-2 text-blue-300" />
+                        <span className="text-blue-100 font-medium">{spectatorCount}</span>
+                    </div>
+                </div>
             </div>
         </div>
     )

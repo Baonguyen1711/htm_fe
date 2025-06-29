@@ -3,6 +3,7 @@ import Play from '../../layouts/Play'
 import { RoundBase } from '../../type';
 import { listenToTimeStart, listenToQuestions, listenToAnswers, listenToSound, deletePath } from '../../services/firebaseServices';
 import { useSearchParams } from 'react-router-dom';
+import { useHost } from '../../context/hostContext';
 import { useTimeStart } from '../../context/timeListenerContext';
 import { usePlayer } from '../../context/playerContext';
 import PlayerAnswerInput from '../../components/ui/PlayerAnswerInput';
@@ -30,9 +31,9 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
     const [correctAnswer, setCorrectAnswer] = useState<string>("")
     const [isExpanded, setIsExpanded] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { timeLeft, startTimer, setTimeLeft } = useTimeStart();
-    const { setAnswerList, playerAnswerRef, position, animationKey, setAnimationKey } = usePlayer()
-
+    const { timeLeft, playerAnswerTime, startTimer, setTimeLeft } = useTimeStart();
+    const { setAnswerList, playerAnswerRef, position, animationKey, setAnimationKey, currentPlayerName, currentPlayerAvatar } = usePlayer()
+    const { currentAnswer } = useHost()
     useEffect(() => {
         console.log("playerAnswerRef.current", playerAnswerRef.current);
     }, [playerAnswerRef.current])
@@ -67,7 +68,7 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
 
     }, [])
 
-    const isInitialTimerMount = useRef(false)
+    const isInitialTimerMount = useRef(true)
     useEffect(() => {
         console.log("timeLeft", timeLeft);
 
@@ -79,13 +80,13 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
         if (timeLeft === 0) {
 
             setAnimationKey((prev: number) => prev + 1);
-            if (!isHost) {
+            if (!isHost && !isSpectator) {
                 console.log("playerAnswerRef.current", playerAnswerRef.current);
                 console.log("position", position);
 
 
                 // When timer runs out, do your clean up / game logic:
-                submitAnswer(roomId, playerAnswerRef.current, position)
+                submitAnswer(roomId, playerAnswerRef.current, position, playerAnswerTime, currentPlayerName, currentPlayerAvatar)
 
             }
             // If you want to reset timer, call startTimer again here or leave stopped
@@ -94,8 +95,18 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
     useEffect(() => {
         const unsubscribePlayers = listenToQuestions(roomId, (question) => {
             setCurrentQuestion(question)
+            console.log("isHost", isHost);
+            
+            console.log("current correcr Answer", currentAnswer);
+            
+            if (isHost) {
+                setCorrectAnswer(currentAnswer)
+            }
             console.log("current question", question)
             setAnswerList(null)
+            if (!isHost) {
+                setCorrectAnswer("")
+            }
 
         });
 
@@ -130,11 +141,6 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
                 audio.play();
             }
             setCorrectAnswer(`Đáp án: ${answer}`)
-            const timeOut = setTimeout(() => {
-                setCorrectAnswer("")
-            }, 4000)
-            console.log("answer", answer)
-            clearTimeout(timeOut)
         });
 
         // No need to set state here; it's handled by useState initializer

@@ -9,7 +9,11 @@ import { HostProvider } from './context/hostContext';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { TimeStartProvider } from './context/timeListenerContext';
 import { SoundProvider } from './context/soundContext';
-
+import FallBack from './components/ui/FallBack';
+import withRoleCheck from './routes/ProtectedRoute';
+import ProtectedRoute from './routes/ProtectedRoute';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const queryClient = new QueryClient();
@@ -20,11 +24,13 @@ const UserRound1 = React.lazy(() => import('./pages/User/UserRound1'))
 const UserRound2 = React.lazy(() => import('./pages/User/Round2/UserRound2'));
 const UserRound3 = React.lazy(() => import('./pages/User/Round3/UserRound3'));
 const UserRound4 = React.lazy(() => import('./pages/User/Round4/UserRound4'));
+const UserRoundTurn = React.lazy(() => import('./pages/User/RoundTurn/UserRoundTurn'));
 
 const HostRound1 = React.lazy(() => import('./pages/Host/Management/HostRound1'));
 const HostRound2 = React.lazy(() => import('./pages/Host/Management/HostRound2'));
 const HostRound3 = React.lazy(() => import('./pages/Host/Management/HostRound3'));
 const HostRound4 = React.lazy(() => import('./pages/Host/Management/HostRound4'));
+const HostRoundTurn = React.lazy(() => import('./pages/Host/Management/HostRoundTurn'));
 
 const Login = React.lazy(() => import('./pages/Login/Login'))
 const JoinRoom = React.lazy(() => import('./pages/JoinRoom/JoinRoom'))
@@ -43,6 +49,7 @@ function PlayComponent() {
   if (round === "2") return <UserRound2 />;
   if (round === "3") return <UserRound3 />;
   if (round === "4") return <UserRound4 />;
+  if (round === "turn") return <UserRoundTurn />;
   if (round === "final") return <PlayerFinalScore />;
 
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
@@ -56,6 +63,7 @@ function HostComponent() {
   if (round === "2") return <HostRound2 />;
   if (round === "3") return <HostRound3 />;
   if (round === "4") return <HostRound4 />;
+  if (round === "turn") return <HostRoundTurn />;
   if (round === "final") return <HostFinalScore />;
 
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
@@ -69,6 +77,7 @@ function SpectatorComponent() {
   if (round === "2") return <UserRound2 isSpectator={true} />;
   if (round === "3") return <UserRound3 isSpectator={true} />;
   if (round === "4") return <UserRound4 isSpectator={true} />;
+  if (round === "turn") return <UserRoundTurn isSpectator={true} />;
   if (round === "final") return <PlayerFinalScore />;
 
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
@@ -81,7 +90,7 @@ function App() {
   return (
     <>
 
-      <Suspense fallback={<LoadingSpinner />}>
+      <Suspense fallback={<FallBack />}>
         <QueryClientProvider client={queryClient}>
           <TimeStartProvider roomId={roomId}>
             <SoundProvider>
@@ -115,9 +124,9 @@ function App() {
                           <AxiosAuthProvider>
                             <Routes>
                               <Route path="/login" element={<Login />} />
-                              <Route path="dashboard" element={<Dashboard />} />
-                              <Route path="create_room" element={<CreateRoom />} />
-                              <Route path="" element={<HostComponent />} />
+                              <Route path="dashboard" element={<ProtectedRoute element={<Dashboard />} requireAccessToken={false} requireHost={true}/>} />
+                              <Route path="create_room" element={<ProtectedRoute element={<CreateRoom />} requireAccessToken={false} requireHost={true}/>} />
+                              <Route path="" element={<ProtectedRoute element={<HostComponent />} requireAccessToken={true}/>} />
                             </Routes>
                           </AxiosAuthProvider>
                         </HostProvider>
@@ -148,6 +157,7 @@ function App() {
 
 
         </QueryClientProvider>
+        <ToastContainer />
       </Suspense>
     </>
   );

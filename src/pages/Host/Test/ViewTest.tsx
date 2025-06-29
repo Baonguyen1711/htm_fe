@@ -3,6 +3,7 @@ import { getTest, getTestByUserId, updateQuestion, addNewQuestion } from './serv
 import { uploadFile } from '../../../services/uploadAssestServices';
 import { Question } from '../../../type';
 import { useQuery } from 'react-query';
+import testManageMentService from '../../../services/testManagement.service';
 
 const ViewTest: React.FC = () => {
   const [testList, setTestList] = useState<string[]>([]);
@@ -11,23 +12,26 @@ const ViewTest: React.FC = () => {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [editedQuestion, setEditedQuestion] = useState<Partial<Question>>({});
   const [isDataExisted, setIsDataExisted] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('round_1');
   const [testData, setTestData] = useState<{
     round_1: Question[];
     round_2: Question[];
     round_3: { [key: string]: Question[] };
     round_4: { [key: string]: Question[] };
+    turn: Question[];
   }>({
     round_1: [],
     round_2: [],
     round_3: {},
     round_4: {},
+    turn: []
   });
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
     const getTestList = async () => {
       try {
-        const testList = await getTestByUserId();
+        const testList = await testManageMentService.getTestNameByUser();
         localStorage.setItem("testList", JSON.stringify(testList));
         setTestList(testList);
       } catch (error) {
@@ -49,16 +53,17 @@ const ViewTest: React.FC = () => {
     }
     if (isDataExisted) return;
     try {
-      const data = await getTest(selectedTestName);
-      console.log("data",data);
-      localStorage.setItem("testId", data["round_1"][0]["testId"])
+      const data = await testManageMentService.getTestContent(selectedTestName);
+      console.log("data", data);
+      localStorage.setItem("testId", data["round_1"][0]["testId"]);
       console.log(localStorage.getItem("testId"));
-      
+
       setTestData({
         round_1: data.round_1 || [],
         round_2: data.round_2 || [],
         round_3: data.round_3 || {},
         round_4: data.round_4 || {},
+        turn: data.turn || [],
       });
       setIsDataExisted(true);
     } catch (error) {
@@ -68,6 +73,7 @@ const ViewTest: React.FC = () => {
         round_2: [],
         round_3: {},
         round_4: {},
+        turn: []
       });
     }
   };
@@ -131,7 +137,7 @@ const ViewTest: React.FC = () => {
         answer: '',
         type: '',
         imgUrl: '',
-        round: round?.toString()  || '',
+        round: round?.toString() || '',
         groupName: groupName || '',
       });
     }
@@ -182,7 +188,7 @@ const ViewTest: React.FC = () => {
         updatedTestData.round_4[difficulty] = updateQuestionInList(updatedTestData.round_4[difficulty]);
       }
       setTestData(updatedTestData);
-    }   
+    }
   };
 
   const handleCancel = () => {
@@ -192,6 +198,8 @@ const ViewTest: React.FC = () => {
   };
 
   const renderTable = (questions: Question[], title: string, round: string, groupName?: string) => {
+    console.log("questions", questions);
+    
     if (questions.length === 0 && !groupName) return null;
 
     return (
@@ -279,6 +287,23 @@ const ViewTest: React.FC = () => {
     );
   };
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'round_1':
+        return renderTable(testData.round_1, "NHỔ NEO", "round_1");
+      case 'round_2':
+        return renderTable(testData.round_2, "VƯỢT SÓNG", "round_2");
+      case 'round_3':
+        return renderGroupedTable(testData.round_3, "BỨC PHÁ", "round_3");
+      case 'round_4':
+        return renderGroupedTable(testData.round_4, "CHINH PHỤC", "round_4");
+      case 'turn':
+        return renderTable(testData.turn, "PHÂN LƯỢT", "round_5");
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -319,13 +344,34 @@ const ViewTest: React.FC = () => {
         </button>
       </div>
 
-      {/* Test Content */}
-      <div className="space-y-8">
-        {renderTable(testData.round_1, "Vòng 1", "round_1")}
-        {renderTable(testData.round_2, "Vòng 2", "round_2")}
-        {renderGroupedTable(testData.round_3, "Vòng 3", "round_3")}
-        {renderGroupedTable(testData.round_4, "Vòng 4", "round_4")}
+      {/* Tabs */}
+      <div className="mb-8">
+        <div className="flex border-b border-blue-400/30">
+          {[
+    { label: 'NHỔ NEO', key: 'round_1' },
+    { label: 'VƯỢT SÓNG', key: 'round_2' },
+    { label: 'BỨC PHÁ', key: 'round_3' },
+    { label: 'CHINH PHỤC', key: 'round_4' },
+    { label: 'PHÂN LƯỢT', key: 'turn' },
+  ].map((tab) => (
+            <button
+              key={tab.key}
+              className={`px-6 py-3 text-white font-medium text-sm transition-all duration-300 ${
+                activeTab === tab.key
+                  ? 'bg-gradient-to-r from-blue-600 to-cyan-500 border-b-2 border-cyan-400'
+                  : 'bg-slate-700/50 hover:bg-slate-600/50'
+              }`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
+      {/* Tab Content */}
+      <div className="space-y-8">
+        {renderTabContent()}
         {testData.round_1.length === 0 &&
           testData.round_2.length === 0 &&
           Object.keys(testData.round_3).length === 0 &&

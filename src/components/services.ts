@@ -1,5 +1,6 @@
 import axios from "axios";
 import { deletePath } from "../services/firebaseServices";
+import { toast } from 'react-toastify';
 
 export const sendGridToPlayers = async (grid: string[][], roomId: string) => {
     try {
@@ -28,6 +29,10 @@ export const sendGridToPlayers = async (grid: string[][], roomId: string) => {
 }
 
 export const goToNextRound = async (roomId: string, round: string, grid?: string[][]) => {
+    console.log("roomId in delete", roomId);
+
+    await deletePath(roomId, "questions");
+    await deletePath(roomId, "answers");
     try {
         const response = await axios.post(`http://localhost:8000/api/rooms/round?room_id=${roomId}&round=${round}`,
             {
@@ -211,12 +216,10 @@ export const resetBuzz = async (roomId: string) => {
     }
 }
 
-export const openObstacle = async (roomId: string, obstacleWord: string) => {
+export const openObstacle = async (roomId: string, obstacleWord: string, placementArray: any) => {
     try {
         const response = await axios.post(`http://localhost:8000/api/test/obstacle?room_id=${roomId}&obstacle=${obstacleWord}`,
-            {
-
-            },
+            placementArray,
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -374,6 +377,7 @@ export const sendCorrectAnswer = async (roomId: string, answer: string) => {
             });
 
         if (response.status !== 200) {
+            toast.error(`Gửi câu trả lời thất bại`);
             throw new Error(`Failed to go to next round, Status: ${response.status}`);
         }
 
@@ -385,6 +389,32 @@ export const sendCorrectAnswer = async (roomId: string, answer: string) => {
         throw error; // Quăng lỗi để xử lý ở nơi gọi hàm
     }
 }
+
+export const updateHistory = async (data: any) => {
+    try {
+        const response = await axios.post(`http://localhost:8000/api/history/update`,
+            data
+            ,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                withCredentials: true,
+            });
+
+        if (response.status !== 200) {
+            throw new Error(`Failed to go to next round, Status: ${response.status}`);
+        }
+
+        // Phân tích dữ liệu từ response JSON
+        return response.data;
+
+    } catch (error) {
+        console.error('Error fetching test data:', error);
+        throw error; // Quăng lỗi để xử lý ở nơi gọi hàm
+    }
+}
+
 
 export const openBuzz = async (roomId: string) => {
     try {

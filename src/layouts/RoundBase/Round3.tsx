@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Play from '../Play';
-import { RoundBase } from '../../type';
+import { Question, RoundBase } from '../../type';
 import { getPacketNames } from '../../components/services';
 import { useSearchParams } from 'react-router-dom';
-import { deletePath, listenToSound, listenToPackets, listenToQuestions, listenToCurrentQuestionsNumber, listenToTimeStart, listenToAnswers } from '../../services/firebaseServices';
+import { deletePath, listenToSound, listenToPackets, listenToQuestions, listenToSelectedPacket, listenToCurrentQuestionsNumber, listenToTimeStart, listenToAnswers } from '../../services/firebaseServices';
 import { usePlayer } from '../../context/playerContext';
 import { setCurrentPacketQuestion } from '../../components/services';
 import { useTimeStart } from '../../context/timeListenerContext';
@@ -26,6 +26,7 @@ interface QuestionComponentProps {
 
 
 const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false }) => {
+    const MAX_PACKET_QUESTION = 12
     const sounds = useSounds();
     const [topics, setTopics] = useState<string[]>([]);
     const [correctAnswer, setCorrectAnswer] = useState<string>("")
@@ -34,9 +35,13 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
     // const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const { selectedTopic, setSelectedTopic, currentQuestion, setCurrentQuestion, animationKey, setAnimationKey } = usePlayer()
     const { currentQuestionIndex, setCurrentQuestionIndex } = useHost()
+    const [playerCurrentQuestionIndex, setPlayerCurrentQuestionIndex] = useState<number>(-1)
+    const tempQuestionListRef = useRef<Question[]>([]);
+    const [tempQuestionList, setTempQuestionList] = useState<Question[]>([])
     const [searchParams] = useSearchParams()
     const testName = searchParams.get("testName") || ""
     const roomId = searchParams.get("roomId") || ""
+    const round = searchParams.get("round") || ""
     const isFirstMounted = useRef(true)
     const { timeLeft, startTimer, setTimeLeft } = useTimeStart();
     const salt = "HTMNBK2025";
@@ -58,6 +63,50 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
     }
 
     useEffect(() => {
+        console.log("currentQuestionIndex in round 3", playerCurrentQuestionIndex);
+        if (isHost) return
+        if (playerCurrentQuestionIndex == MAX_PACKET_QUESTION) {
+
+            const timeOut = setTimeout(() => {
+
+                setCurrentQuestion("");
+                setCorrectAnswer("")
+                setCurrentQuestion("")
+                setSelectedTopic(null);
+                setPlayerCurrentQuestionIndex(0)
+
+                console.log("clear at question 12");
+
+            }, 6000)
+        }
+    }, [playerCurrentQuestionIndex])
+
+    useEffect(() => {
+        console.log("currentQuestionIndex in round 3", currentQuestionIndex);
+        if (!isHost) return
+        if (currentQuestionIndex > MAX_PACKET_QUESTION) {
+
+
+
+            const timeOut = setTimeout(() => {
+                if (isHost) {
+                    setCurrentQuestionIndex("1")
+                    deletePath(roomId, "currentQuestions")
+                    deletePath(roomId, "current_correct_answer")
+                }
+
+                setCurrentQuestion("");
+                setCorrectAnswer("")
+                setCurrentQuestion("")
+                setSelectedTopic(null);
+
+                console.log("clear at question 12");
+
+            }, 6000)
+        }
+    }, [currentQuestionIndex])
+
+    useEffect(() => {
         const unsubscribePlayers = listenToSound(roomId, async (type) => {
 
             const audio = sounds[`${type}`];
@@ -77,7 +126,9 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
     useEffect(() => {
 
         const unsubscribePlayers = listenToAnswers(roomId, (answer) => {
-            setCorrectAnswer(`Đáp án: ${answer}`)
+            if (answer) {
+                setCorrectAnswer(`Đáp án: ${answer}`)
+            }
             const timeOut = setTimeout(() => {
                 setCorrectAnswer("")
             }, 1000)
@@ -136,7 +187,7 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
             // When timer runs out, do your clean up / game logic:
             if (isHost) {
                 deletePath(roomId, "currentQuestions")
-                deletePath(roomId, "answers")
+                deletePath(roomId, "current_correct_answer")
                 setCurrentQuestionIndex(1)
             }
             setCurrentQuestion("");
@@ -171,15 +222,48 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
         };
     }, []);
 
+    const isSelectedTopicFirstMounted = useRef(true)
+
+    useEffect(() => {
+        const unsubscribePlayers = listenToSelectedPacket(roomId, (packet) => {
+            console.log("packets", packet);
+            if (isSelectedTopicFirstMounted.current) {
+                isSelectedTopicFirstMounted.current = false
+                return
+            }
+            if (!isHost) {
+                setSelectedTopic(packet)
+            }
+            // setSelectedTopic(packets)
+        });
+
+        return () => {
+            unsubscribePlayers();
+        };
+    }, []);
+
     useEffect(() => {
 
         const unsubscribePlayers = listenToQuestions(roomId, (questions) => {
             console.log("questions", questions);
-
-            if (!isHost && questions.length > 0) {
-                setSelectedTopic(questions[0].packetName)
-                localStorage.setItem("questions", JSON.stringify(questions))
+            console.log("questions.question", questions.question);
+            if (!isHost) {
+                setPlayerCurrentQuestionIndex((prev:number) => (prev + 1))
             }
+
+            const timeOut = setTimeout(() => {
+                setCurrentQuestion(questions.question)
+            }, 1000)
+
+
+
+            // if (questions.length > 0) {
+            //     setSelectedTopic(questions[0].packetName)
+            //     console.log("questions", questions);
+            //     const currentQuestions = tempQuestionListRef.current
+            //     tempQuestionListRef.current = [...currentQuestions, ...questions];
+            //     localStorage.setItem("questions", JSON.stringify(questions))
+            // }
         });
 
         return () => {
@@ -187,45 +271,47 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
         };
     }, []);
 
-    useEffect(() => {
+    // useEffect(() => {
 
-        const unsubscribePlayers = listenToCurrentQuestionsNumber(roomId, (questionNumber) => {
-            console.log("questionNumber outside", questionNumber);
-            if (localStorage.getItem("questions")) {
-                const question = JSON.parse(localStorage.getItem("questions") || "")[questionNumber - 1]
-                if (question) {
-                    console.log("decodeQuestion(question.question)", decodeQuestion(question.question));
+    //     const unsubscribePlayers = listenToCurrentQuestionsNumber(roomId, (questionNumber) => {
+    //         console.log("questionNumber outside", questionNumber);
+    //         if (localStorage.getItem("questions")) {
+    //             console.log("tempQuestionList",tempQuestionListRef.current);
 
-                    const timeOut = setTimeout(() => {
-                        setCurrentQuestion(decodeQuestion(question.question))
-                    }, 1000)
+    //             const question = tempQuestionListRef.current[questionNumber - 1].question;
+
+    //             if (question) {
+    //                 console.log("decodeQuestion(question.question)", question);
+
+    //                 const timeOut = setTimeout(() => {
+    //                     setCurrentQuestion(question)
+    //                 }, 1000)
 
 
 
-                    if (questionNumber === 12) {
-                        {
-                            console.log("questionNumber inside", questionNumber);
-                            setCurrentPacketQuestion(roomId, 1)
-                            setCurrentQuestion("")
-                            setSelectedTopic(null)
-                            setCorrectAnswer("")
-                            localStorage.removeItem("questions")
-                        }
-                    }
-                }
-            }
-        });
+    //                 if (questionNumber === 12) {
+    //                     {
+    //                         console.log("questionNumber inside", questionNumber);
+    //                         setCurrentPacketQuestion(roomId, 1)
+    //                         setCurrentQuestion("")
+    //                         setSelectedTopic(null)
+    //                         setCorrectAnswer("")
+    //                         localStorage.removeItem("questions")
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     });
 
-        return () => {
-            unsubscribePlayers();
-        };
-    }, []);
+    //     return () => {
+    //         unsubscribePlayers();
+    //     };
+    // }, []);
 
     const handleTopicSelect = async (topic: string) => {
         console.log("topic", topic);
         if (isHost) {
-            const questions = await setSelectedPacketToPlayer(roomId, topic, testName)
-            localStorage.setItem("questions", JSON.stringify(questions))
+            await setSelectedPacketToPlayer(roomId, topic)
         }
         if (!isHost) return; // Non-host users cannot select topics
         setSelectedTopic(topic);
@@ -272,12 +358,12 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
                 </div>
             ) : (
                 <div className="w-full text-center">
-                    <h2 className="text-xl font-bold">{selectedTopic}</h2>
+                    <h2 className="text-xl font-bold text-white">{selectedTopic ? selectedTopic : ""}</h2>
                     <div className="my-4">
-                        <p className="text-lg mt-2">
+                        <p className="text-lg mt-2 text-white">
                             {currentQuestion ? currentQuestion : ""}
                         </p>
-                        <p className="text-lg mt-2">
+                        <p className="text-lg mt-2 text-white">
                             {correctAnswer ? correctAnswer : ""}
                         </p>
                     </div>
@@ -298,3 +384,4 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
 // }
 
 export default QuestionBoxRound3
+

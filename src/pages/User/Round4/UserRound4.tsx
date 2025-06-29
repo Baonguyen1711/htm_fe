@@ -4,6 +4,7 @@ import { listenToRoundStart } from '../../../services/firebaseServices';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePlayer } from '../../../context/playerContext';
+import PlayerQuestionBoxRound4 from '../../../layouts/RoundBase/Player/PlayerQuestionBoxRound4';
 const exampleGrid = [
     ['!', '', '?', '', '!'],
     ['', '?', '!', '', '?'],
@@ -31,8 +32,8 @@ function UserRound4({ isSpectator }: UserRound4Props) {
     const navigate = useNavigate();
     const roomId = searchParams.get("roomId") || "";
     const round = searchParams.get("round") || "";
-    const { setInitialGrid } = usePlayer()
-
+    const { initialGrid , setInitialGrid } = usePlayer()
+    const [loading, setLoading] = useState(true);
     const isFirstCallback = useRef(true);
     const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
 
@@ -80,10 +81,18 @@ function UserRound4({ isSpectator }: UserRound4Props) {
             unsubscribePlayers();
         };
     }, [roomId]);
+
+    useEffect(() => {
+    if (initialGrid && initialGrid.length > 0) {
+      console.log("initialGrid", initialGrid);
+
+      setLoading(false);
+    }
+  }, [initialGrid]);
     return (
         // <Round4 isHost={false}/>
         <User
-            QuestionComponent={<Round4 questions={exampleQuestions} initialGrid={exampleGrid} isHost={false} isSpectator={isSpectator} />}
+            QuestionComponent={<PlayerQuestionBoxRound4 questions={exampleQuestions} initialGrid={initialGrid} isHost={false} isSpectator={isSpectator} />}
             isSpectator={isSpectator}
         />
     );

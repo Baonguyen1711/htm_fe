@@ -10,10 +10,14 @@ import { deletePath } from "../services/firebaseServices";
 import { round } from "react-placeholder/lib/placeholders";
 import { useSounds } from "./soundContext";
 import { playSound } from "../components/services";
+import { listenToScores } from "../services/firebaseServices";
+import { toast } from 'react-toastify';
+import { setSelectedPacketToPlayer } from "../layouts/services";
 // Create a context for Axios with Authentication
 const HostContext = createContext<any>(null);
 
 export const HostProvider = ({ children }: { children: React.ReactNode }) => {
+  const testId = localStorage.getItem("testId") || ""
   const sounds = useSounds();
   const spotsNumber = [1, 2, 3, 4]
   const [searchParams] = useSearchParams()
@@ -36,8 +40,30 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
   const [timeLeft, setTimeLeft] = useState(30);
   const [hostInitialGrid, setHostInitialGrid] = useState<string[][]>([])
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState<Number>(0)
+  const [numberOfSelectedRow, setNumberOfSelectedRow] = useState<Number>(0)
+  const [mode, setMode] = useState<"manual" | "auto">("manual")
+  const [rules, setRules] = useState({
+    round1: [15, 10, 10, 10],
+    round2: [15, 10, 10, 10],
+    round3: 10,
+    round4: [10, 20, 30]
+  })
   const [animationKey, setAnimationKey] = useState(0);
-  
+
+  useEffect(() => {
+    const unsubscribeScores = listenToScores(hostRoomId, (scoreList) => {
+      if (Array.isArray(scoreList)) {
+        console.log("Received scoreList:", scoreList);
+
+        setPlayerScores(scoreList);
+      }
+      console.log("Updated scoreList:", scoreList);
+    })
+
+    return () => {
+      unsubscribeScores()
+    }
+  }, [])
 
   const handleScoreAdjust = (index: string, amount: number, isCorrect: boolean, playerName: string, avatar: string) => {
     console.log("playerScores before update ", playerScores);
@@ -65,36 +91,18 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleNextQuestion = async (topic?: string, difficulty?: string, number?: string) => {
     if (currentRound === "3") {
-      let answer = ""
-      console.log("currentQuestionIndex", currentQuestionIndex);
-      console.log("type currentQuestionIndex", typeof currentQuestionIndex);
-
-
-      if (currentQuestionIndex != "1") {
-        console.log("currentQuestionIndex", currentQuestionIndex);
-        console.log("[parseInt(currentQuestionIndex) - 2]", JSON.parse(localStorage.getItem("questions") || "")[parseInt(currentQuestionIndex) - 2]);
-
-        answer = JSON.parse(localStorage.getItem("questions") || "")[parseInt(currentQuestionIndex) - 2].answer || ""
-        console.log("answer", answer);
+      if(currentAnswer!=""){
+        sendCorrectAnswer(hostRoomId, currentAnswer)
       }
-
-      console.log("currentQuestionIndex", currentQuestionIndex);
-
-
-      sendCorrectAnswer(hostRoomId, answer)
-
-      if (currentQuestionIndex === "12") {
-        setCurrentQuestionIndex("1")
-        setCurrentPacketQuestion(hostRoomId, parseInt(currentQuestionIndex));
-        sendCorrectAnswer(hostRoomId, "")
+      if(parseInt(currentQuestionIndex) >12) {
+        setCurrentAnswer("")
         return
       }
-      setTimeout(() => {
-        setCurrentPacketQuestion(hostRoomId, parseInt(currentQuestionIndex));
-        setCurrentQuestionIndex((prev) => (parseInt(prev) + 1).toString());
-      }, 1000);
-
-      alert('Moving to the next question!');
+      
+      setCurrentQuestionIndex((prev) => (parseInt(prev) + 1).toString())
+      const question = await getNextQuestion(testName, currentQuestionIndex, currentRound, hostRoomId, topic)
+      setCurrentAnswer(question.answer)
+     
       return
     }
 
@@ -102,39 +110,21 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
       const question = await getNextQuestion(testName, number, currentRound, hostRoomId, undefined, difficulty)
       setCurrentAnswer(question.answer)
       console.log(question)
-      alert('Moving to the next question!')
       return
     }
     setCurrentQuestionIndex((prev) => (parseInt(prev) + 1).toString())
     const question = await getNextQuestion(testName, currentQuestionIndex, currentRound, hostRoomId)
     setCurrentAnswer(question.answer)
-    console.log(question)
-    alert('Moving to the next question!');
+    console.log("question.answer", question.answer)
   };
 
   const handleShowAnswer = async () => {
     await sendAnswerToPlayer(hostRoomId)
-    alert("answer sent!")
   };
 
   const handleStartTime = async () => {
     console.log("start time on ", hostRoomId);
-    // if (currentRound === "2") {
-    //   const playSound = async () => {
-    //     const audio = sounds[`timer_2`];
-    //     if (audio) {
-    //       console.log("Attempting to play sound");
-    //       try {
-    //         await audio.play();
-    //         console.log("Sound played successfully");
-    //       } catch (err) {
-    //         console.error("Failed to play sound:", err);
-    //       }
-    //     }
-    //   }
 
-    //   playSound()
-    // }
 
     if (currentRound === "1") {
       playSound(hostRoomId, "timer_1");
@@ -152,25 +142,33 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
       playSound(hostRoomId, "timer_4");
     }
 
+    if (currentRound === "turn") {
+      playSound(hostRoomId, "timer_1");
+    }
+
     await startTime(hostRoomId);
-    alert("time started!");
   }
 
   const handleStartRound = async (round: string, roomId: string, grid?: string[][]) => {
     if (grid) {
       console.log("grid", grid)
       await goToNextRound(roomId, round, grid)
-      alert("grid sent!")
       return;
     }
-    await goToNextRound(roomId, round)
+    console.log("roomId", roomId);
 
+    if (round !== "1") {
+
+    }
+    await deletePath(roomId, "questions");
+    await deletePath(roomId, "answers");
+    await goToNextRound(roomId, round)
 
   }
 
   const handleCorrectAnswer = async (answer: string) => {
     await sendCorrectAnswer(hostRoomId, answer)
-    alert("correct answer sent!")
+    toast.success("Đã gửi câu trả lời đúng đến người chơi!");
   }
 
 
@@ -182,7 +180,7 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
   // };
 
   return (
-    <HostContext.Provider value={{ animationKey, setCurrentAnswer, handleScoreAdjust, handleNextQuestion, handleStartRound, currentQuestionIndex, setCurrentQuestionIndex, playerFlashes, setPlayerFlashes, playerScores, setPlayerScores, spotsNumber, handleShowAnswer, handleStartTime, hostInitialGrid, setHostInitialGrid, currentQuestionNumber, setCurrentQuestionNumber, handleCorrectAnswer, currentAnswer }}>
+    <HostContext.Provider value={{ numberOfSelectedRow, setNumberOfSelectedRow, rules, setRules, mode, setMode, animationKey, currentAnswer, setCurrentAnswer, handleScoreAdjust, handleNextQuestion, handleStartRound, currentQuestionIndex, setCurrentQuestionIndex, playerFlashes, setPlayerFlashes, playerScores, setPlayerScores, spotsNumber, handleShowAnswer, handleStartTime, hostInitialGrid, setHostInitialGrid, currentQuestionNumber, setCurrentQuestionNumber, handleCorrectAnswer }}>
       {children}
     </HostContext.Provider>
   );

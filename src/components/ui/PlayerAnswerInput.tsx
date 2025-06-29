@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Question } from "../../type";
 import { usePlayer } from "../../context/playerContext";
+import { useTimeStart } from "../../context/timeListenerContext";
 
 interface PlayerAnswerInputProps {
     isHost: boolean;
@@ -9,6 +10,7 @@ interface PlayerAnswerInputProps {
 
 const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, question }) => {
     const inputRef = useRef<HTMLInputElement>(null);
+    const {timeElapsed, setPlayerAnswerTime} = useTimeStart()
     const [playerAnswer, setPlayerAnswer] = useState("");
     const {playerAnswerRef} = usePlayer()
 
@@ -16,6 +18,7 @@ const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, question 
         if (event.key === "Enter") {
             const inputElement = event.target as HTMLInputElement;
             playerAnswerRef.current = inputElement.value;
+            setPlayerAnswerTime(timeElapsed)
             setPlayerAnswer(playerAnswerRef.current)
             inputElement.value = "";
         }
@@ -46,7 +49,7 @@ const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, question 
                 placeholder="Type your answer..."
                 onKeyDown={handleKeyDown}
             />
-            <p className="mt-2 text-lg">
+            <p className="mt-2 text-lg text-white">
                 {playerAnswer? `Your answer: ${playerAnswer}`: ""}
             </p>
         </div>

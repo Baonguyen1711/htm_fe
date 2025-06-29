@@ -12,6 +12,7 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
   const [startedListening, setStartedListening] = useState<boolean>(false)
   const [players, setPlayers] = useState<User[]>([]);
   const [currentPlayerName, setCurrentPlayerName] = useState<string>("")
+  const [currentPlayerAvatar, setCurrentPlayerAvatar] = useState<string>("")
   const [roomId, setRoomId] = useState<string>("")
   const [playerScores, setPlayerScores] = useState<number[]>([0, 0, 0, 0]);
   const [position,setPosition] = useState<string>("")
@@ -29,6 +30,7 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
   const [answerList, setAnswerList] = useState<Answer[]>([])
   const [initialGrid, setInitialGrid] = useState<string[][]>([])
   const [animationKey, setAnimationKey] = useState(0);
+  const [roomRule, setRoomRules] = useState(null)
   
 
 //   const triggerPlayerFlash = (index: number, isCorrect: boolean) => {
@@ -47,7 +49,7 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
 //     }, 3000);
 // };
   return (
-    <PlayerContext.Provider value={{ animationKey, setAnimationKey,players, setPlayers, roomId, setRoomId, playersArray, setPlayerArray, playerFlashes, setPlayerFlashes,position, setPosition, startedListening, setStartedListening,scoreList, setScoreList, setInitialGrid, initialGrid, setCurrentPlayerName, currentPlayerName, selectedTopic, setSelectedTopic, easyQuestionNumber,setEasyQuestionNumber, mediumQuestionNumber, setMediumQuestionNumber, hardQuestionNumber, setHardQuestionNumber, level,setLevel, currentQuestion, setCurrentQuestion, answerList, setAnswerList, playerAnswerRef }}>
+    <PlayerContext.Provider value={{ currentPlayerAvatar, setCurrentPlayerAvatar,roomRule, setRoomRules,animationKey, setAnimationKey,players, setPlayers, roomId, setRoomId, playersArray, setPlayerArray, playerFlashes, setPlayerFlashes,position, setPosition, startedListening, setStartedListening,scoreList, setScoreList, setInitialGrid, initialGrid, setCurrentPlayerName, currentPlayerName, selectedTopic, setSelectedTopic, easyQuestionNumber,setEasyQuestionNumber, mediumQuestionNumber, setMediumQuestionNumber, hardQuestionNumber, setHardQuestionNumber, level,setLevel, currentQuestion, setCurrentQuestion, answerList, setAnswerList, playerAnswerRef }}>
       {children}
     </PlayerContext.Provider>
   );

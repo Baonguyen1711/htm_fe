@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import UploadExam from './UploadTest';
 import ViewTest from './ViewTest';
 import SetupMatch from './SetUpMatch';
+import ViewHistory from './History';
 import useAuth from '../../../hooks/useAuth';
 
 const HostManagement: React.FC = () => {
@@ -66,6 +67,16 @@ const HostManagement: React.FC = () => {
               >
                 Thiết Lập Phòng
               </button>
+              <button
+                onClick={() => setActiveTab('history')}
+                className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  activeTab === 'history' 
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg' 
+                    : 'text-blue-200 hover:bg-blue-600/20 hover:text-white'
+                }`}
+              >
+                Lịch sử trận đấu
+              </button>
             </div>
           </div>
 
@@ -74,6 +85,7 @@ const HostManagement: React.FC = () => {
             {activeTab === 'upload' && <UploadExam/>}
             {activeTab === 'view' && <ViewTest />}
             {activeTab === 'setup' && <SetupMatch />}
+            {activeTab === 'history' && <ViewHistory />}
           </div>
         </div>
       </div>

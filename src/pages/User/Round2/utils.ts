@@ -360,6 +360,12 @@ export const generateGrid = async (wordArr: string[], cellWidth: number) => {
   console.log("topBound", topBound);
   console.log("bottomBound", bottomBound);
 
+  const placementArray = wordsActive.map((word)=> ({
+    ...word,
+    x: word.x = word.x - topBound ,
+    y: word.y = word.y - leftBound 
+  }))
+
 
   const slicedBoard: string[][] = board.slice(topBound, bottomBound + 1).map(row =>
     row.slice(leftBound, rightBound + 1)
@@ -374,6 +380,6 @@ export const generateGrid = async (wordArr: string[], cellWidth: number) => {
 
   return {
     grid: slicedBoard,
-    placementArray: wordsActive
+    placementArray: placementArray
   };
 }

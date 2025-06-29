@@ -2,6 +2,7 @@ import Play from "../Play";
 import React, { useState, useEffect, useRef } from "react";
 import { renderGrid } from "./utils";
 import { usePlayer } from "../../context/playerContext";
+import { useHost } from "../../context/hostContext";
 import { setSelectedRow, setCorrectRow, setIncorectRow } from "../../components/services";
 import { deletePath, listenToTimeStart, listenToBuzzing, listenToSound, listenToCorrectRow, listenToIncorrectRow, listenToSelectRow, listenToQuestions, listenToObstacle } from "../../services/firebaseServices";
 import { useSearchParams } from "react-router-dom";
@@ -66,14 +67,23 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
   isHost = false,
 }) => {
   console.log("initialGrid inside player", initialGrid);
-  const { startTimer, timeLeft, setTimeLeft } = useTimeStart();
+  let testId = ""
+  if (isHost) {
+    testId = localStorage.getItem("testId") || ""
+  }
+  const { startTimer, timeLeft, setTimeLeft, playerAnswerTime } = useTimeStart();
   const sounds = useSounds();
   const [searchParams] = useSearchParams();
-  const { setInitialGrid, animationKey, setAnimationKey, playerAnswerRef, position, setAnswerList } = usePlayer();
+  const { setInitialGrid, animationKey, setAnimationKey, playerAnswerRef, position, setAnswerList, currentPlayerAvatar, currentPlayerName } = usePlayer();
+  const [numberPositions, setNumberPositions] = useState<{
+    rowIndex: number,
+    colIndex: number,
+    index: string
+  }[]>([])
   const roomId = searchParams.get("roomId") || "";
   const testName = searchParams.get("testName") || ""
   const GRID_SIZE = 30;
-
+  const { numberOfSelectedRow, setNumberOfSelectedRow } = useHost()
   const [grid, setGrid] = useState<string[][]>([[]]);
   const [hintWords, setHintWords] = useState<WordObj[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<Question>()
@@ -99,7 +109,9 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
       return;
     }
     if (timeLeft === 0) {
-      submitAnswer(roomId, playerAnswerRef.current, position)
+      if (!isHost && !isSpectator) {
+        submitAnswer(roomId, playerAnswerRef.current, position, playerAnswerTime, currentPlayerName, currentPlayerAvatar)
+      }
 
       setAnimationKey((prev: number) => prev + 1);
 
@@ -134,7 +146,19 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
 
       setHintWords(result.placementArray)
       setGrid(result.grid)
-
+      const numberPositionArray: any = []
+      result.grid.map((row, rowIndex) =>
+        row.map((cell, colIndex) => {
+          if (result.grid[rowIndex][colIndex].includes("number")) {
+            numberPositionArray.push({
+              rowIndex: rowIndex,
+              colIndex: colIndex,
+              index: result.grid[rowIndex][colIndex].replace("number", "")
+            })
+          }
+        }
+        )
+      );
       const blankGrid = result.grid.map((row, rowIndex) =>
         row.map((cell, colIndex) =>
           result.grid[rowIndex][colIndex].includes("number") ? cell : // Keep "numberX"
@@ -258,6 +282,23 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
           console.log("board", result.grid);
           setHintWords(result.placementArray)
           setGrid(result.grid)
+          const numberPositionArray: any = []
+
+          result.grid.map((row, rowIndex) =>
+            row.map((cell, colIndex) => {
+              if (result.grid[rowIndex][colIndex].includes("number")) {
+                numberPositionArray.push({
+                  rowIndex: rowIndex,
+                  colIndex: colIndex,
+                  index: result.grid[rowIndex][colIndex].replace("number", "")
+                })
+              }
+            }
+            )
+          );
+          console.log("numberPositionArray", numberPositionArray);
+
+          setNumberPositions(numberPositionArray)
 
           const blankGrid = result.grid.map((row, rowIndex) =>
             row.map((cell, colIndex) =>
@@ -282,12 +323,16 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
   const revealCells = (
     rowIndex: number,
     colIndex: number,
-    action: "open" | "correct" | "incorrect",
+    action: "open" | "correct" | "incorrect" | "all",
     hintWordNumber?: string
   ) => {
     if (!isHost) return;
+    console.log("hintWordNumber", hintWordNumber);
 
     const hintWordIndex = hintWordNumber ? parseInt(hintWordNumber) : -1;
+
+    console.log("hintWordIndex", hintWordIndex);
+
     const hintWord = hintWords.find(
       (word) =>
         (word.index === hintWordIndex)
@@ -322,12 +367,17 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
 
           if (!grid[rowIndex][col].includes("number")) {
             if (action === "open") {
-              newStyles[key] = { background: "bg-yellow-200", textColor: "text-transparent" };
+              console.log("numberOfSelectedRow", numberOfSelectedRow);
+
+              if (!newStyles[key] || newStyles[key].textColor !== "text-black") {
+                newStyles[key] = { background: "bg-yellow-200", textColor: "text-transparent" };
+              }
+
               if (hintWordNumber) {
                 setSelectedRow(roomId, hintWordNumber, true, wordLength)
                 handleNextQuestion(testName, hintWordNumber.toString(), "2", roomId)
               }
-            } else if (action === "correct") {
+            } else if (action === "correct" || action === "all") {
               newStyles[key] = { background: "bg-yellow-200", textColor: "text-black" };
               let indexInTarget = []
               if (hintWordArray)
@@ -358,8 +408,9 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
 
 
 
-
-                setCorrectRow(roomId, hintWordNumber, hintWord.string.slice(2, hintWord.string.length - 1), encodeURIComponent(JSON.stringify(indexInTarget)), true, wordLength)
+                if (action === "correct") {
+                  setCorrectRow(roomId, hintWordNumber, hintWord.string.slice(2, hintWord.string.length - 1), encodeURIComponent(JSON.stringify(indexInTarget)), true, wordLength)
+                }
               }
             } else if (action === "incorrect") {
               newStyles[key] = { background: "bg-gray-400", textColor: "text-transparent" };
@@ -378,12 +429,17 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
           // Skip number cells to preserve their appearance
           if (!grid[row][colIndex].includes("number")) {
             if (action === "open") {
-              newStyles[key] = { background: "bg-yellow-200", textColor: "text-transparent" };
+              console.log("numberOfSelectedRow", numberOfSelectedRow);
+
+
+              if (!newStyles[key] || newStyles[key].textColor !== "text-black") {
+                newStyles[key] = { background: "bg-yellow-200", textColor: "text-transparent" };
+              }
               if (hintWordNumber) {
                 setSelectedRow(roomId, hintWordNumber, false, wordLength)
                 handleNextQuestion(testName, hintWordNumber.toString(), "2", roomId)
               }
-            } else if (action === "correct") {
+            } else if (action === "correct" || action === "all") {
               newStyles[key] = { background: "bg-yellow-200", textColor: "text-black" };
               let indexInTarget = []
               if (hintWordArray)
@@ -402,7 +458,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                     }
                   }
                 }
-              if (hintWordArray && hintWordNumber)
+              if (hintWordArray && hintWordNumber && action === "correct")
                 setCorrectRow(roomId, hintWordNumber, hintWord.string.slice(2, hintWord.string.length - 1), encodeURIComponent(JSON.stringify(indexInTarget)), false, wordLength)
             } else if (action === "incorrect") {
               newStyles[key] = { background: "bg-gray-400", textColor: "text-transparent" };
@@ -426,7 +482,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     colIndex: number,
     action: "open" | "incorrect" | "correct",
     selectedRowNumber: string,
-    markedCharacterIndex: number[],
+    markedCharacterIndex?: number[],
     isRow?: boolean,
     wordLength?: number, // For open and incorrect
     correctAnswer?: string, // For correct
@@ -451,8 +507,8 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
           console.log("col", col);
           console.log("col-colIndex", col - colIndex - 1);
 
-          console.log("markedCharacterIndex.includes(col)", markedCharacterIndex.includes(col - colIndex));
-
+          console.log("markedCharacterIndex.includes(col)", markedCharacterIndex?.includes(col - colIndex));
+          console.log(`grid[${rowIndex}][${col}]`, grid[rowIndex][col]);
 
 
           // Skip empty and number cells
@@ -464,7 +520,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
             } else if (action === "correct") {
               newStyles[key] = {
                 background: "bg-yellow-200",
-                textColor: markedCharacterIndex.includes(col - colIndex - 1) ? "text-red-600" : "text-black"
+                textColor: markedCharacterIndex?.includes(col - colIndex - 1) ? "text-red-600" : "text-black"
               };
             }
           }
@@ -474,9 +530,12 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
         for (let row = rowIndex + 1; row <= rowIndex + length; row++) {
           const key = `${row}-${colIndex}`;
           console.log("markedCharacterIndex", markedCharacterIndex);
-          console.log("col", row);
-          console.log("row-rowIndex", row - rowIndex - 1);
-          console.log("markedCharacterIndex.includes(col)", markedCharacterIndex.includes(row - rowIndex));
+          console.log("row", row);
+          console.log("colIndex", colIndex);
+          console.log("grid", grid);
+
+          console.log(`grid[${row}][${colIndex}]`, grid[row][colIndex]);
+
           // Skip empty and number cells
           if (grid[row][colIndex] !== "" && !grid[row][colIndex]?.includes("number")) {
             if (action === "open") {
@@ -486,7 +545,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
             } else if (action === "correct") {
               newStyles[key] = {
                 background: "bg-yellow-200",
-                textColor: markedCharacterIndex.includes(row - rowIndex - 1) ? "text-red-600" : "text-black"
+                textColor: markedCharacterIndex?.includes(row - rowIndex - 1) ? "text-red-600" : "text-black"
               };
             }
           }
@@ -497,14 +556,28 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
 
     // For "correct", update grid to show the actual word
     if (action === "correct" && correctAnswer) {
+      console.log("correctAnswer", correctAnswer);
+
       setGrid((prevGrid) => {
         const newGrid = prevGrid.map((row) => [...row]);
         if (isRow) {
           for (let col = colIndex + 1, i = 0; col <= colIndex + length && i < correctAnswer.length; col++, i++) {
+            console.log("i", i);
+            console.log("newGrid", newGrid);
+
+
+            console.log("correctAnswer[i]", correctAnswer[i]);
+            console.log("newGrid[rowIndex][col]", newGrid[rowIndex][col]);
+
             newGrid[rowIndex][col] = correctAnswer[i];
           }
         } else {
           for (let row = rowIndex + 1, i = 0; row <= rowIndex + length && i < correctAnswer.length; row++, i++) {
+            console.log("correctAnswer[i]", correctAnswer[i]);
+            console.log("newGrid[row][colIndex]", newGrid[row][colIndex]);
+            console.log("i", i);
+            console.log("newGrid", newGrid);
+
             newGrid[row][colIndex] = correctAnswer[i];
           }
         }
@@ -512,34 +585,32 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
       });
     }
   };
-  // useEffect(() => {
-  //   if (hintWordArray) {
-  //     hintWordArray.forEach((word, index) => {
-  //       console.log(`Word ${index}: '${word}' has length: ${word.length}`);
-  //       console.log([...word]);
-  //     });
-  //     const lengthArray = hintWordArray.map((word) => word.length);
-  //     setHintWordsLength(lengthArray);
-  //   }
-  // }, [hintWordArray]);
 
 
 
   useEffect(() => {
-    const unsubscribePlayers = listenToObstacle(roomId, (obstacle) => {
+    let isInitialCall = true;
+    const unsubscribePlayers = listenToObstacle(roomId, (data) => {
       // setCurrentQuestion(question)
       // console.log("current question", question)
-      const obstacleRevealed = {
-        "question": obstacle
+      if (isInitialCall) {
+        isInitialCall = false;
+        return; // Skip the initial snapshot
       }
-
+      const obstacleRevealed = {
+        "question": data.obstacle
+      }
       setCurrentQuestion(obstacleRevealed)
-      for (let row = 0; row < grid.length; row++) {
-        for (let col = 0; col < grid[row].length; col++) {
-          if (grid[row][col].includes("number")) {
-            revealCellsForPlayer(row, col, "correct", grid[row][col].replace("number", ""), [])
-          }
-        }
+      const placementArray = data.placementArray
+
+      console.log("placement array for player", placementArray);
+
+
+      console.log("grid in obstacle", grid);
+
+      // const numberPositions = data.numberPositions
+      for (var word of placementArray) {
+        revealCellsForPlayer(word.row_index, word.col_index, "correct", word.index, [], word.is_row, undefined, word.word)
       }
     });
 
@@ -547,7 +618,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     return () => {
       unsubscribePlayers();
     };
-  }, []);
+  }, [roomId, grid]);
 
   useEffect(() => {
     const unsubscribePlayers = listenToQuestions(roomId, (question) => {
@@ -629,6 +700,11 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
         return;
       }
 
+      console.log("row index for correct", rowIndex);
+      console.log("col index for correct", colIndex);
+
+
+
       revealCellsForPlayer(rowIndex, colIndex, "incorrect", data.selected_row_number, [], data.is_row, data.word_length);
     });
 
@@ -654,6 +730,8 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
         if (audio) {
           audio.play();
         }
+        console.log("grid in correct", grid);
+
 
         console.log("isInitialCall after", isInitialCall);
         let rowIndex = -1;
@@ -675,6 +753,9 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
           console.warn(`Number cell number${data.selected_row_number} not found`);
           return;
         }
+        console.log("row index for correct", rowIndex);
+        console.log("col index for correct", colIndex);
+
 
         revealCellsForPlayer(rowIndex, colIndex, "correct", data.selected_row_number, data.marked_character_index, data.is_row, undefined, data.correct_answer);
       }
@@ -717,18 +798,32 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
   };
 
   const handleOpenObstacle = async () => {
-    if (!isHost || !hintWords || !hintWordArray) return;
+    if (!isHost || !hintWords || !hintWordArray || !numberPositions) return;
+    console.log("hintWords in obstacle", hintWords);
 
-    for (let row = 0; row < grid.length; row++) {
-      for (let col = 0; col < grid[row].length; col++) {
-        if (Number.isFinite(Number(grid[row][col]))) {
-          revealCells(row, col, "correct", grid[row][col])
-        }
-      }
+    for (var word of hintWords) {
+      revealCells(word.x, word.y, "all", word.index.toString())
     }
+    // for (let row = 0; row < grid.length; row++) {
+    //   for (let col = 0; col < grid[row].length; col++) {
+    //     if (Number.isFinite(Number(grid[row][col]))) {
+    //       revealCells(row, col, "correct", grid[row][col])
+    //     }
+    //   }
+    // }
+
+    const playerPlacementArray = hintWords.map((word) => (
+      {
+        "row_index": word.dir === 1 ? word.x : word.x + 1,
+        "col_index": word.dir === 1 ? word.y + 1 : word.y,
+        "index": word.index,
+        "is_row": word.dir === 1 ? true : false,
+        "word": word.string.slice(2, word.string.length - 1)
+      }
+    ))
     if (obstacleWord) {
 
-      await openObstacle(roomId, obstacleWord)
+      await openObstacle(roomId, obstacleWord, playerPlacementArray)
     }
   }
 
@@ -820,8 +915,10 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                       >
                         <button
                           className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                          onClick={() =>
+                          onClick={() => {
+                            setNumberOfSelectedRow((prev: number) => prev + 1)
                             handleMenuAction("open", rowIndex, colIndex, cell.replace("number", ""))
+                          }
                           }
                         >
                           SELECT

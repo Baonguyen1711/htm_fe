@@ -20,7 +20,7 @@ function CreateRoom() {
       >
         <div className="absolute inset-0 bg-black/50"></div>
       </div> */}
-      <Header/>
+      {/* <Header/> */}
 
       {/* Cards */}
       {/* <div className="relative flex justify-center gap-6 py-10 -mt-40 max-w-5xl mx-auto">

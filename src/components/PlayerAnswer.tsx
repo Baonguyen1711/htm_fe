@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { usePlayer } from '../context/playerContext';
 import { User, Answer, Score } from '../type';
-import { listenToBroadcastedAnswer, listenToOpenBuzz } from '../services/firebaseServices';
+import { listenToCurrentTurn, listenToBroadcastedAnswer, listenToOpenBuzz } from '../services/firebaseServices';
 import { useSearchParams } from 'react-router-dom';
 import { buzzing, setStar } from './services';
 import { closeBuzz } from './services';
@@ -22,6 +22,18 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
 
     const [isButtonEnabled, setIsButtonEnabled] = useState(round === "2")
     const [isStarButtonEnabled, setIsStarButtonEnabled] = useState(true)
+    const [currentTurn, setCurrentTurn] = useState<number | null>(null);
+
+    useEffect(() => {
+        const unsubscribeCurrentTurn = listenToCurrentTurn(roomId, (turn) => {
+            setCurrentTurn(turn);
+            console.log("currentTurn", turn);
+        });
+
+        return () => {
+            unsubscribeCurrentTurn();
+        };
+    }, [roomId]);
 
     const handleBuzz = async () => {
         console.log("currentPlayerName", currentPlayerName);
@@ -143,21 +155,31 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
                         ? answerList.find((answer: Answer) => parseInt(answer.stt) === spotNumber)
                         : null;
 
+                    // Highlight if currentTurn matches this spotNumber
+                    const isCurrent = currentTurn !== null && Number(currentTurn) === spotNumber;
+
                     if (player) {
                         return (
                             <div
                                 key={spotNumber}
-                                className={`flex flex-col items-center justify-between bg-slate-800/80 rounded-xl p-4 min-h-[180px] shadow-md transition-all duration-200 ${playerFlash ? playerFlash.flashColor : ""}`}
+                                className={`flex items-center w-full min-h-[180px] bg-slate-800/80 rounded-xl p-4 shadow-md border border-slate-700/50 transition-all duration-200 ${playerFlash ? playerFlash.flashColor : ""} ${isCurrent ? "ring-4 ring-yellow-400 border-yellow-400" : ""}`}
                             >
                                 <img
                                     src={player.avatar}
                                     alt="Player"
-                                    className="w-16 h-16 rounded-full"
+                                    className="w-16 h-16 rounded-full border-2 border-white mr-4"
                                 />
-                                <p className="text-white mt-2 min-h-[1.5rem] text-center">
-                                    {answer?.answer || ""}
-                                </p>
-                                <p className="text-white text-center">{`player_${player.stt}: ${player.userName}`}</p>
+                                <div className="flex flex-col flex-1">
+                                    <p className="text-white font-bold border-b border-slate-700/50 pb-1">
+                                        {`player_${player.stt}: ${player.userName}`}
+                                    </p>
+                                    <p className="text-white border-b border-slate-700/50 pb-1 mt-1">
+                                        {answer?.answer || ""}
+                                    </p>
+                                    <p className="text-gray-400 text-sm mt-1">
+                                        {answer?.time ? `${answer.time}s` : ""}
+                                    </p>
+                                </div>
                             </div>
                         )
                     }

@@ -258,6 +258,62 @@ export const getRoomById = async (): Promise<any> => {
   }
 };
 
+export const getHistoryById = async (): Promise<any> => {
+  try {
+    const response = await axios.get(`http://localhost:8000/api/history/retrive`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true,
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to fetch test with Status: ${response.status}`);
+    }
+    
+    // Access the response data
+    console.log(response.data);
+
+    // Phân tích dữ liệu từ response JSO
+    return response.data;
+
+  } catch (error) {
+    console.error('Error fetching test data:', error);
+    throw error; // Quăng lỗi để xử lý ở nơi gọi hàm
+  }
+};
+
+export const setRoomRules = async (roomId: string, roomRules: any): Promise<any> => {
+  try {
+    console.log("roomRules before sending", roomRules);
+    
+    const response = await axios.post(`http://localhost:8000/api/test/score/rules?room_id=${roomId}`, 
+        roomRules
+      ,
+      {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      withCredentials: true,
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to fetch test with Status: ${response.status}`);
+    }
+    
+    // Access the response data
+    console.log(response.data);
+
+    // Phân tích dữ liệu từ response JSO
+    return response.data;
+
+  } catch (error) {
+    console.error('Error fetching test data:', error);
+    throw error; // Quăng lỗi để xử lý ở nơi gọi hàm
+  }
+};
+
+
 export const createRoom = async (expiredTime: number): Promise<any> => {
   try {
     const response = await axios.post(`http://localhost:8000/api/room/create?expired_time=${expiredTime}`,{}, {

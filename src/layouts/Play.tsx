@@ -2,7 +2,7 @@ import React, { useState, useEffect, ReactNode, useRef, useCallback } from 'reac
 import Header from './Header';
 import { usePlayer } from '../context/playerContext';
 import { Answer, User } from '../type';
-import { deletePath, addPlayerToRoom, listenToPlayers, listenToScores, listenToAnswers, listenToTimeStart, listenToBroadcastedAnswer, setupOnDisconnect, listenToRoundStart } from '../services/firebaseServices';
+import { deletePath, addPlayerToRoom, listenToRules,listenToPlayers, listenToSpectatorJoin, listenToScores, listenToAnswers, listenToTimeStart, listenToBroadcastedAnswer, setupOnDisconnect, listenToRoundStart } from '../services/firebaseServices';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { submitAnswer } from './services';
 import { getNextQuestion } from '../pages/Host/Test/service';
@@ -12,6 +12,9 @@ import PlayerScore from '../components/PlayerScore';
 import HostScore from '../components/PlayerAnswer';
 import { setCurrentPacketQuestion } from '../components/services';
 import { useTimeStart } from '../context/timeListenerContext';
+import {
+    EyeIcon,
+} from "@heroicons/react/24/solid";
 import '../index.css';
 
 
@@ -38,7 +41,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         { key: "3", label: "BỨT PHÁ" },
         { key: "4", label: "CHINH PHỤC" },
         { key: "summary", label: "Tổng kết điểm" },
-        { key: "turns", label: "Phân lượt" },
+        { key: "turn", label: "Phân lượt" },
     ];
 
     const roundTime = {
@@ -46,16 +49,18 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         "2": 15,
         "3": 60,
         "4": 15,
+        "turn": 10,
     }
 
     const navigate = useNavigate()
     const playerAnswerRef = useRef("");
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [spectatorCount, setSpectatorCount] = useState<number>(0)
     const [userId, setUserId] = useState(localStorage.getItem("userId"))
     const [params] = useSearchParams()
-    const round = (params.get("round") as "1" | "2" | "3" | "4") || "1"
-    const { players, setPlayers, setRoomId, playersArray, setPlayerArray, position, setCurrentQuestion, selectedTopic, setSelectedTopic, setScoreList } = usePlayer()
+    const round = (params.get("round") as "1" | "2" | "3" | "4" | "turn") || "1"
+    const { players, setPlayers, setRoomId, playersArray, roomRules, setRoomRules, setPlayerArray, position, setCurrentQuestion, selectedTopic, setSelectedTopic, setScoreList } = usePlayer()
     const { playerScores, setPlayerScores, animationKey, setAnimationKey } = useHost()
     const isMounted = useRef(false);
     const { timeLeft, startTimer } = useTimeStart();
@@ -129,8 +134,31 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         };
     }, [roomId, userId]);
 
+    useEffect(() => {
+        const unsubscribeSpectator = listenToSpectatorJoin(roomId, (count) => {
+            console.log("spectator", count);
+            
+            setSpectatorCount(count)
+        })
+
+        return () => {
+            unsubscribeSpectator()
+        }
+    }, [])
+
+    useEffect(() => {
+        const unsubscribeRules = listenToRules(roomId, (data) => {
+            console.log(data);
+            setRoomRules(data)
+        })
+
+        return () => {
+            unsubscribeRules()
+        }
+    }, [round, roomId])
 
 
+    const isFull = useRef(false)
     useEffect(() => {
         const unsubscribePlayers = listenToPlayers(roomId, (updatedPlayers) => {
             console.log("updatedPlayers", updatedPlayers)
@@ -142,7 +170,13 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
 
                 const initialScoreList = [...playersList]
                 const scoreInitKey = `scoreInit_${roomId}_round1`;
-                if (!localStorage.getItem(scoreInitKey)) {
+                const isFull = localStorage.getItem(`is_${roomId}_full`)
+
+                if (isFull != "true") {
+                    console.log("isFull inside", isFull);
+
+                    console.log("initialScoreList", initialScoreList);
+
                     for (var score of initialScoreList) {
                         score["score"] = "0";
                         score["isCorrect"] = false;
@@ -151,7 +185,10 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
                     console.log("initialScoreList", initialScoreList);
                     setScoreList(initialScoreList)
                     setPlayerScores(initialScoreList)
-                    localStorage.setItem(scoreInitKey, "true");
+
+                    if (initialScoreList.length == 2) {
+                        localStorage.setItem(`is_${roomId}_full`, "true")
+                    }
                 }
 
                 // const currentPlayer = playersList.find((player: any) => player.uid === userId);
@@ -194,9 +231,8 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
             </div>
 
             {/* Content overlay */}
-                <div className="relative z-10 flex flex-col min-h-full">
-                <Header isHost={isHost} />
-
+            <div className="relative z-10 flex flex-col min-h-full">
+                <Header isHost={isHost} spectatorCount={spectatorCount} />
 
                 <div className="flex flex-1 p-4 gap-4">
                     <div className="w-full lg:w-4/5 flex flex-col">

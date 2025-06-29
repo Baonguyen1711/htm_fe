@@ -2,6 +2,7 @@ import Round4 from '../../../layouts/RoundBase/Round4';
 
 import React from 'react';
 import Host from '../../../layouts/Host/Host';
+import HostQuestionBoxRound4 from '../../../layouts/RoundBase/Host/HostQuestionBoxRound4';
 
 import Play from '../../../layouts/Play';// Importing the shared Play component
 
@@ -26,7 +27,7 @@ const exampleQuestions = [
 const HostRound4: React.FC = () => {
     return (
         <Host
-            QuestionComponent ={<Round4 questions={exampleQuestions} initialGrid={exampleGrid} isHost={true}/>}
+            QuestionComponent ={<HostQuestionBoxRound4 questions={exampleQuestions} initialGrid={exampleGrid} isHost={true}/>}
         />
 
     )

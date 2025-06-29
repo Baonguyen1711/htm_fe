@@ -4,6 +4,7 @@ import { useSounds } from '../../context/soundContext';
 import { listenToSound } from '../../services/firebaseServices';
 import { useSearchParams } from 'react-router-dom';
 import { deletePath } from '../../services/firebaseServices';
+
 const PlayerFinalScore: React.FC = () => {
     const sounds = useSounds();
     const [searchParams] = useSearchParams();

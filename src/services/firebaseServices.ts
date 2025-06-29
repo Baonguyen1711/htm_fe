@@ -163,11 +163,11 @@ export const listenToStar = (roomId: string, callback: (data: string) => void): 
   return unsubscribe; // Trả về hàm unsubscribe để cleanup
 };
 
-export const listenToObstacle = (roomId: string, callback: (data: string) => void): Unsubscribe => {
+export const listenToObstacle = (roomId: string, callback: (data: any) => void): Unsubscribe => {
   const obstaclessRef: DatabaseReference = ref(database, `rooms/${roomId}/obstacles`);
   console.log("questiónsRef ref", obstaclessRef)
   const unsubscribe: Unsubscribe = onValue(obstaclessRef, (snapshot) => {
-    const data: string = snapshot.val() || {};
+    const data: any = snapshot.val() || {};
     console.log("data", data)
     callback(data);
   });
@@ -185,6 +185,28 @@ export const listenToPackets = (roomId: string, callback: (data: string[]) => vo
   return unsubscribe; // Trả về hàm unsubscribe để cleanup
 };
 
+export const listenToSelectedPacket = (roomId: string, callback: (data: string) => void): Unsubscribe => {
+  const packetsRef: DatabaseReference = ref(database, `rooms/${roomId}/selectedPacket`);
+  console.log("packetsRef", packetsRef)
+  const unsubscribe: Unsubscribe = onValue(packetsRef, (snapshot) => {
+    const data: string = snapshot.val() || {};
+    console.log("data", data)
+    callback(data);
+  });
+  return unsubscribe; // Trả về hàm unsubscribe để cleanup
+};
+
+
+export const listenToCurrentTurn = (roomId: string, callback: (data: number) => void): Unsubscribe => {
+  const turnRefs: DatabaseReference = ref(database, `rooms/${roomId}/turn`);
+  console.log("turnRefs", turnRefs)
+  const unsubscribe: Unsubscribe = onValue(turnRefs, (snapshot) => {
+    const data: number = snapshot.val() || {};
+    console.log("data", data)
+    callback(data);
+  });
+  return unsubscribe; // Trả về hàm unsubscribe để cleanup
+};
 
 export const listenToAnswers = (roomId: string, callback: (data: string) => void): Unsubscribe => {
   const answerRef: DatabaseReference = ref(database, `rooms/${roomId}/answers`);
@@ -285,6 +307,15 @@ export const listenToScores = (roomId: string, callback: (data: Score[]) => void
   return unsubscribe;
 };
 
+export const listenToHistory = (roomId: string, callback: (data: any) => void): Unsubscribe => {
+  const historyRefs: DatabaseReference = ref(database, `rooms/${roomId}/round_scores`);
+  const unsubscribe: Unsubscribe = onValue(historyRefs, (snapshot) => {
+    const data: any = snapshot.val() || {};
+    callback(data);
+  });
+  return unsubscribe;
+};
+
 export const listenToGrid = (roomId: string, callback: (data: string[][]) => void): Unsubscribe => {
   const scoresRef: DatabaseReference = ref(database, `rooms/${roomId}/grid`);
   const unsubscribe: Unsubscribe = onValue(scoresRef, (snapshot) => {
@@ -353,6 +384,30 @@ export const listenToBroadcastedAnswer = (roomId: string, callback: (data: Answe
   return unsubscribe;
 };
 
+export const listenToSpectatorJoin = (roomId: string, callback: (count: number) => void): Unsubscribe => {
+  const spectatorRef: DatabaseReference = ref(database, `rooms/${roomId}/spectators`);
+  const unsubscribe: Unsubscribe = onValue(spectatorRef, (snapshot) => {
+    console.log("spectatorRef",spectatorRef);
+    
+    console.log("snapshot",snapshot);
+    
+    console.log("snapshot size", snapshot.size);
+    
+    const count = snapshot.size;
+    callback(count);
+  });
+  return unsubscribe;
+};
+
+export const listenToRules = (roomId: string, callback: (data: any) => void): Unsubscribe => {
+  const rulesRef: DatabaseReference = ref(database, `rooms/${roomId}/rules`);
+  const unsubscribe: Unsubscribe = onValue(rulesRef, (snapshot) => {
+    const data: any = snapshot.val() || {};
+    callback(data);
+  });
+  return unsubscribe;
+};
+
 // export const listenToScore = (roomId: string, callback: (data: Answer[]) => void): Unsubscribe => {
 //   const scoresRef: DatabaseReference = ref(database, `rooms/${roomId}/scores`);
 //   const unsubscribe: Unsubscribe = onValue(scoresRef, (snapshot) => {
@@ -369,6 +424,21 @@ export const addPlayerToRoom = async (roomId: string, uid: string, playerData: P
     data: playerData, // e.g., { username: "Player1", points: 10 }
   });
 };
+
+export const removeSpectator = async (path: string): Promise<void> => {
+  const spectatorRef: DatabaseReference = ref(database, path)
+  const disconnectHandler = onDisconnect(spectatorRef);
+
+  disconnectHandler
+    .remove()
+    .then(() => {
+      console.log(`onDisconnect handler set for user with path ${path}`);
+    })
+    .catch((error) => {
+      console.error("Failed to set onDisconnect handler:", error);
+    });
+};
+
 
 export const authenticateUser = async (token: string) => {
   try {
