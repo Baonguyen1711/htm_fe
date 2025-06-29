@@ -27,6 +27,7 @@ const SetupMatch: React.FC = () => {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [roomPassword, setRoomPassword] = useState<string>('');
+  const [maxPlayers, setMaxPlayers] = useState<number>(4);
 
   const [createdRoomId, setCreatedRoomId] = useState<string>('');
   const [testList] = useState<[]>(JSON.parse(localStorage.getItem('testList') || '[]'));
@@ -78,7 +79,7 @@ const SetupMatch: React.FC = () => {
   };
 
   const handleConfirmCreateRoom = async () => {
-    const data = await roomService.createRoom(2, roomPassword || undefined);
+    const data = await roomService.createRoom(2, roomPassword || undefined, maxPlayers);
     const newRoom: Room = {
       roomId: data.result.roomId,
       isActive: data.result.isActive,
@@ -94,6 +95,7 @@ const SetupMatch: React.FC = () => {
     setCreatedRoomId(data.result.roomId);
     setShowCreateModal(false);
     setRoomPassword('');
+    setMaxPlayers(4);
     setShowModal(true);
   };
 
@@ -418,8 +420,22 @@ const SetupMatch: React.FC = () => {
                 placeholder="Mật khẩu phòng (để trống nếu không cần)"
                 value={roomPassword}
                 onChange={(e) => setRoomPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm mb-6"
+                className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm mb-4"
               />
+              <div className="mb-6">
+                <label className="block text-blue-200/70 text-sm mb-2">Số lượng người chơi tối đa:</label>
+                <select
+                  value={maxPlayers}
+                  onChange={(e) => setMaxPlayers(parseInt(e.target.value))}
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
+                >
+                  <option value={4}>4 người chơi</option>
+                  <option value={5}>5 người chơi</option>
+                  <option value={6}>6 người chơi</option>
+                  <option value={7}>7 người chơi</option>
+                  <option value={8}>8 người chơi</option>
+                </select>
+              </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowCreateModal(false)}

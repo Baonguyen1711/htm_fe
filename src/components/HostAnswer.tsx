@@ -19,10 +19,21 @@ function HostAnswer() {
     const [searchParams] = useSearchParams();
     const round = searchParams.get("round") || "1";
     const roomId = searchParams.get("roomId") || "1";
-    const spots = [1, 2, 3, 4];
+
+    // Generate spots array based on number of players (up to 8)
+    const maxPlayers = playersArray ? Math.max(4, playersArray.length) : 4;
+    const spots = Array.from({ length: Math.min(maxPlayers, 8) }, (_, i) => i + 1);
     const isFirstMounted = useRef(true)
     const isAnswerListFirstMounted = useRef(true)
-    const [turnAssignments, setTurnAssignments] = useState<{ [spot: number]: number | null }>({ 1: null, 2: null, 3: null, 4: null });
+    // Initialize turn assignments based on max players
+    const initializeTurnAssignments = () => {
+        const assignments: { [spot: number]: number | null } = {};
+        for (let i = 1; i <= Math.min(maxPlayers, 8); i++) {
+            assignments[i] = null;
+        }
+        return assignments;
+    };
+    const [turnAssignments, setTurnAssignments] = useState<{ [spot: number]: number | null }>(initializeTurnAssignments());
 
     const handleAssignTurn = (spot: number, turnNumber: number) => {
         setTurnAssignments((prev) => {
@@ -82,7 +93,7 @@ function HostAnswer() {
     return (
         <div className="flex gap-6">
             {/* Left: Player grid */}
-            <div className="grid grid-cols-2 gap-4 flex-1">
+            <div className={`grid ${spots.length > 4 ? 'grid-cols-4 grid-rows-2' : 'grid-cols-2'} gap-4 flex-1`}>
                 {spots.map((spotNumber) => {
                     const player = playerList.find((p: User) => parseInt(p.stt) === spotNumber);
                     const playerScore = playerScores.find((score: Score) => score.stt === spotNumber.toString());

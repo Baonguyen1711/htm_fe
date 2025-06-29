@@ -14,7 +14,7 @@ export const PlayerProvider = ({ children }: { children: React.ReactNode }) => {
   const [currentPlayerName, setCurrentPlayerName] = useState<string>("")
   const [currentPlayerAvatar, setCurrentPlayerAvatar] = useState<string>("")
   const [roomId, setRoomId] = useState<string>("")
-  const [playerScores, setPlayerScores] = useState<number[]>([0, 0, 0, 0]);
+  const [playerScores, setPlayerScores] = useState<number[]>([0, 0, 0, 0, 0, 0, 0, 0]); // Support up to 8 players
   const [position,setPosition] = useState<string>("")
   const [playerFlashes, setPlayerFlashes] = useState<Score[]>([]);
   const [scoreList, setScoreList] = useState<Score[]>([]);

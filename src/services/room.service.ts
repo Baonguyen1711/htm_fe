@@ -12,10 +12,13 @@ class RoomService {
         return await http.get("rooms", true)
     }
 
-    async createRoom(expiredTime: number, password?: string) {
+    async createRoom(expiredTime: number, password?: string, maxPlayers?: number) {
         const params: any = {expired_time: expiredTime};
         if (password) {
             params.password = password;
+        }
+        if (maxPlayers) {
+            params.max_players = maxPlayers;
         }
         return await http.post(
             `${this.baseEndpoint}/create`,

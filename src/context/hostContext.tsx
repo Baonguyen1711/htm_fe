@@ -19,14 +19,14 @@ const HostContext = createContext<any>(null);
 export const HostProvider = ({ children }: { children: React.ReactNode }) => {
   const testId = localStorage.getItem("testId") || ""
   const sounds = useSounds();
-  const spotsNumber = [1, 2, 3, 4]
+  const spotsNumber = [1, 2, 3, 4, 5, 6, 7, 8] // Support up to 8 players
   const [searchParams] = useSearchParams()
   const currentRound = searchParams.get("round") || ""
   const testName = searchParams.get("testName") || ""
   const hostRoomId = searchParams.get("roomId") || ""
   const navigate = useNavigate()
   const [playerScores, setPlayerScores] = useState<Score[]>(
-    Array(4).fill(null).map(() => ({
+    Array(8).fill(null).map(() => ({ // Initialize for 8 players
       score: "0",
       isCorrect: false,
       playerName: "",

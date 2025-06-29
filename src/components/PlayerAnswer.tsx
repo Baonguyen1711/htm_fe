@@ -16,7 +16,9 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
     const sounds = useSounds()
     const { playersArray, playerFlashes, setPlayerFlashes, roomId, triggerPlayerFlash, scoreList, setScoreList, position, currentPlayerName, answerList, setAnswerList } = usePlayer()
 
-    const spots = [1, 2, 3, 4]
+    // Generate spots array based on number of players (up to 8)
+    const maxPlayers = playersArray ? Math.max(4, playersArray.length) : 4;
+    const spots = Array.from({ length: Math.min(maxPlayers, 8) }, (_, i) => i + 1);
     const [searchParams] = useSearchParams()
     const round = searchParams.get("round") || "1"
 
@@ -143,7 +145,7 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
                 </div>
 
             )}
-            <div className="grid grid-cols-4 gap-6 mt-4 w-full">
+            <div className={`grid ${spots.length > 4 ? 'grid-cols-4 grid-rows-2' : 'grid-cols-4'} gap-6 mt-4 w-full`}>
                 {spots.map((spotNumber: number) => {
                     const storedPlayers = localStorage.getItem("playerList");
                     const array = playersArray !== null
