@@ -25,6 +25,8 @@ const SetupMatch: React.FC = () => {
   const [selectedTestName, setSelectedTestName] = useState<string>('');
   const [rooms, setRooms] = useState<Room[]>([]);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+  const [roomPassword, setRoomPassword] = useState<string>('');
 
   const [createdRoomId, setCreatedRoomId] = useState<string>('');
   const [testList] = useState<[]>(JSON.parse(localStorage.getItem('testList') || '[]'));
@@ -71,8 +73,12 @@ const SetupMatch: React.FC = () => {
     getRooms();
   }, []);
 
-  const handleCreateRoom = async () => {
-    const data = await roomService.createRoom(2);
+  const handleCreateRoom = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleConfirmCreateRoom = async () => {
+    const data = await roomService.createRoom(2, roomPassword || undefined);
     const newRoom: Room = {
       roomId: data.result.roomId,
       isActive: data.result.isActive,
@@ -86,6 +92,8 @@ const SetupMatch: React.FC = () => {
     };
     setRooms([...rooms, newRoom]);
     setCreatedRoomId(data.result.roomId);
+    setShowCreateModal(false);
+    setRoomPassword('');
     setShowModal(true);
   };
 
@@ -396,6 +404,40 @@ const SetupMatch: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Create Room Modal */}
+      {showCreateModal && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-800/90 backdrop-blur-sm border border-blue-400/50 rounded-xl p-8 shadow-2xl sm:max-w-md w-full mx-4">
+            <div className="text-center">
+              <div className="text-4xl mb-4">🏠</div>
+              <h3 className="text-2xl font-semibold text-white mb-4">Tạo Phòng Mới</h3>
+              <p className="text-blue-200/70 mb-4">Nhập mật khẩu cho phòng (tùy chọn):</p>
+              <input
+                type="password"
+                placeholder="Mật khẩu phòng (để trống nếu không cần)"
+                value={roomPassword}
+                onChange={(e) => setRoomPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm mb-6"
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 font-medium transition-colors duration-300"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleConfirmCreateRoom}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-500 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-emerald-600 font-medium transition-all duration-300 shadow-lg hover:shadow-green-500/25"
+                >
+                  Tạo Phòng
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Success Modal */}
       {showModal && (

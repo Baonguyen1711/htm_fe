@@ -6,6 +6,7 @@ import useAuth from '../../hooks/useAuth';
 const JoinRoom = () => {
   const navigate = useNavigate();
   const [roomId, setRoomId] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const { signInWithoutPassword } = useAuth();
 
   const handleJoinRoom = async () => {
@@ -15,8 +16,12 @@ const JoinRoom = () => {
         return;
       }
 
-      signInWithoutPassword(); 
-      navigate(`/user/info?roomid=${roomId}`);
+      signInWithoutPassword();
+      const params = new URLSearchParams({ roomid: roomId });
+      if (password) {
+        params.append('password', password);
+      }
+      navigate(`/user/info?${params.toString()}`);
     } catch (error) {
       console.error("Error during joining room:", error);
     }
@@ -71,6 +76,28 @@ const JoinRoom = () => {
                 </div>
                 <p className="text-blue-300/60 text-xs mt-1 text-center">
                   Nhập mã phòng gồm 6 chữ số
+                </p>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="password">
+                  Mật khẩu phòng
+                </label>
+                <div className="relative">
+                  <input
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
+                    type="password"
+                    id="password"
+                    placeholder="Nhập mật khẩu phòng (nếu có)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50">
+                    🔐
+                  </span>
+                </div>
+                <p className="text-blue-300/60 text-xs mt-1 text-center">
+                  Để trống nếu phòng không có mật khẩu
                 </p>
               </div>
 

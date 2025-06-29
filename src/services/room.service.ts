@@ -12,23 +12,31 @@ class RoomService {
         return await http.get("rooms", true)
     }
 
-    async createRoom(expiredTime: number) {
+    async createRoom(expiredTime: number, password?: string) {
+        const params: any = {expired_time: expiredTime};
+        if (password) {
+            params.password = password;
+        }
         return await http.post(
-            `${this.baseEndpoint}/create`, 
+            `${this.baseEndpoint}/create`,
             true,
             {
-                
+
             },
-            {expired_time: expiredTime}
+            params
         )
     }
 
-    async joinRoom(roomId: string, userInfo: User) {
+    async joinRoom(roomId: string, userInfo: User, password?: string) {
+        const params: any = {room_id: roomId};
+        if (password) {
+            params.password = password;
+        }
         return await http.post(
             `${this.baseEndpoint}/join`,
             true,
             userInfo,
-            {room_id: roomId}
+            params
         )
     }
 }

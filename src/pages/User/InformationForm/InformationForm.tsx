@@ -13,6 +13,7 @@ const InformationForm = () => {
   const [playerNumber, setPlayerNumber] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null); // sẽ lưu key trả về
   const [uploading, setUploading] = useState(false);
+  const [password, setPassword] = useState(searchParams.get("password") || "");
   const { setPlayers, setRoomId, setPosition, setCurrentPlayerName, setCurrentPlayerAvatar } = usePlayer();
 
   const defaultAvatar = "https://via.placeholder.com/100";
@@ -43,7 +44,7 @@ const InformationForm = () => {
           userName: username,
           stt: playerNumber,
           avatar: avatar,
-        });
+        }, password || undefined);
 
         console.log("result", result);
 
@@ -135,6 +136,28 @@ const InformationForm = () => {
                     🔒
                   </span>
                 </div>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="roomPassword">
+                  Mật khẩu phòng
+                </label>
+                <div className="relative">
+                  <input
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
+                    type="password"
+                    id="roomPassword"
+                    placeholder="Nhập mật khẩu phòng (nếu có)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50">
+                    🔐
+                  </span>
+                </div>
+                <p className="text-blue-300/60 text-xs mt-1">
+                  Để trống nếu phòng không có mật khẩu
+                </p>
               </div>
 
               <div className="mb-4 text-center">
