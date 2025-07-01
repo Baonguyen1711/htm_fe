@@ -64,6 +64,17 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
 
   return (
     <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full max-w-3xl mx-auto">
+
+      {/* CNV Display for Host */}
+      {isHost && obstacleWord && (
+        <div className="mb-4 p-3 bg-red-900/30 border border-red-400/50 rounded-lg">
+          <div className="text-red-300 text-sm font-medium mb-1">Chướng ngại vật (CNV):</div>
+          <div className="text-red-400 text-lg font-bold tracking-wider">
+            {obstacleWord.toUpperCase()}
+          </div>
+        </div>
+      )}
+
       <div
         className="grid [grid-template-columns:repeat(var(--cols),32px)] [grid-auto-rows:max-content] gap-1 max-h-[750px] overflow-y-auto overflow-visible"
         style={{ '--cols': grid[0]?.length || 1 } as React.CSSProperties}
@@ -74,7 +85,7 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
               const cellKey = `${rowIndex}-${colIndex}`;
               const cellStyle = cellStyles[cellKey] || {
                 background: cell === '' || cell === ' ' ? 'transparent' : 'bg-white',
-                textColor: typeof cell === 'string' && cell.includes('number') ? 'text-blue-400' : 'text-transparent',
+                textColor: typeof cell === 'string' && cell.includes('number') ? 'text-blue-400' : (isHost ? 'text-black' : 'text-transparent'),
               };
 
               const showMenu =
@@ -93,16 +104,8 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
                     className={`w-8 h-8 flex items-center justify-center text-lg font-semibold select-none rounded-lg overflow-visible
                       ${typeof cell === 'string' && cell.includes('number') ? 'text-blue-400 border-none' : ''}
                       ${typeof cell === 'string' && cell.includes('number') ? '' : cellStyle.background}
-                      ${typeof cell === 'string' && cell.includes('number') ? 'text-blue-400' : cellStyle.textColor}
-                      ${
-                        obstacleWord?.includes(cell as string) &&
-                        cellStyle.textColor === 'text-black' &&
-                        typeof cell === 'string' &&
-                        !cell.includes('number') &&
-                        isNaN(Number(cell))
-                          ? 'font-bold text-red-400'
-                          : ''
-                      }`}
+                      ${typeof cell === 'string' && cell.includes('number') ? 'text-blue-400' : (isHost ? 'text-black' : cellStyle.textColor)}
+`}
                     onClick={() => {
                       if (isHost) {
                         if (typeof cell === 'string' && cell.includes('number')) {

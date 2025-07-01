@@ -489,3 +489,14 @@ export const deletePath = async (roomId: string, path: string): Promise<void> =>
       console.error(`Failed to delete ${path} for room ${roomId}:`, error);
     });
 };
+
+// Listen for rules display changes
+export const listenToRoundRules = (roomId: string, callback: (data: any) => void): Unsubscribe => {
+  const rulesRef: DatabaseReference = ref(database, `rooms/${roomId}/showRules`);
+  const unsubscribe: Unsubscribe = onValue(rulesRef, (snapshot) => {
+    const data: any = snapshot.val() || null;
+    console.log("Rules data:", data);
+    callback(data);
+  });
+  return unsubscribe;
+};

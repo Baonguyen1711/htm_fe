@@ -2,13 +2,14 @@ import React, { useState, useEffect, ReactNode, useRef, useCallback } from 'reac
 import Header from './Header';
 import { usePlayer } from '../context/playerContext';
 import { Answer, User } from '../type';
-import { deletePath, addPlayerToRoom, listenToRules,listenToPlayers, listenToSpectatorJoin, listenToScores, listenToAnswers, listenToTimeStart, listenToBroadcastedAnswer, setupOnDisconnect, listenToRoundStart } from '../services/firebaseServices';
+import { deletePath, addPlayerToRoom, listenToRules,listenToPlayers, listenToSpectatorJoin, listenToScores, listenToAnswers, listenToTimeStart, listenToBroadcastedAnswer, setupOnDisconnect, listenToRoundStart, listenToRoundRules } from '../services/firebaseServices';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { submitAnswer } from './services';
 import { getNextQuestion } from '../pages/Host/Test/service';
 import { useHost } from '../context/hostContext';
 import HostManagement from '../components/HostManagement';
 import PlayerScore from '../components/PlayerScore';
+import RulesModal from '../components/RulesModal';
 import HostScore from '../components/PlayerAnswer';
 import { setCurrentPacketQuestion } from '../components/services';
 import { useTimeStart } from '../context/timeListenerContext';
@@ -57,11 +58,13 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [spectatorCount, setSpectatorCount] = useState<number>(0)
+    const [showRulesModal, setShowRulesModal] = useState(false);
+    const [rulesRound, setRulesRound] = useState("1");
     const [userId, setUserId] = useState(localStorage.getItem("userId"))
     const [params] = useSearchParams()
     const round = (params.get("round") as "1" | "2" | "3" | "4" | "turn") || "1"
     const { players, setPlayers, setRoomId, playersArray, roomRules, setRoomRules, setPlayerArray, position, setCurrentQuestion, selectedTopic, setSelectedTopic, setScoreList } = usePlayer()
-    const { playerScores, setPlayerScores, animationKey, setAnimationKey } = useHost()
+    const { playerScores, setPlayerScores, animationKey, setAnimationKey, mode, rules } = useHost()
     const isMounted = useRef(false);
     const { timeLeft, startTimer } = useTimeStart();
 
@@ -149,16 +152,25 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     }, [])
 
     useEffect(() => {
-        const unsubscribeRules = listenToRules(roomId, (data) => {
-            console.log(data);
+        const unsubscribeRules = listenToRoundRules(roomId, (data) => {
+            console.log("Rules data received:", data);
             setRoomRules(data)
+
+            // Show modal when host triggers it, regardless of round matching
+            if (data && data.show) {
+                setRulesRound(data.round);
+                setShowRulesModal(true);
+            } else {
+                setShowRulesModal(false);
+            }
         })
 
         return () => {
             unsubscribeRules()
         }
-    }, [round, roomId])
+    }, [roomId])
 
+    // Remove auto-clear logic to allow proper modal synchronization between clients
 
     const isFull = useRef(false)
     useEffect(() => {
@@ -309,6 +321,18 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
                     </div>
                 )}
             </div>
+
+            {/* Rules Modal */}
+            <RulesModal
+                isOpen={showRulesModal}
+                onClose={() => {
+                    setShowRulesModal(false);
+                    // Don't clear Firebase data - let each client manage their own modal state
+                }}
+                round={rulesRound}
+                mode={mode}
+                roomRules={rules}
+            />
         </div>
     );
 };

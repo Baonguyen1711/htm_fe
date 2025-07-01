@@ -52,6 +52,7 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
     round4: [10, 20, 30]
   })
   const [animationKey, setAnimationKey] = useState(0);
+  const [playerColors, setPlayerColors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const unsubscribeScores = listenToScores(hostRoomId, (scoreList) => {
@@ -266,6 +267,7 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
     await deletePath(roomId, "current_correct_answer"); // Clear current answer
     await deletePath(roomId, "turn"); // Clear turn assignments
     await deletePath(roomId, "isModified"); // Clear isModified state
+    // Don't clear showRules here - let host control modal display manually
     await goToNextRound(roomId, round)
 
   }
@@ -298,7 +300,7 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
   // };
 
   return (
-    <HostContext.Provider value={{ numberOfSelectedRow, setNumberOfSelectedRow, rules, setRules, mode, setMode, animationKey, currentAnswer, setCurrentAnswer, prefetchedQuestion, prefetchedAnswer, showCurrentAnswer, setShowCurrentAnswer, handleScoreAdjust, handleNextQuestion, handleStartRound, currentQuestionIndex, setCurrentQuestionIndex, playerFlashes, setPlayerFlashes, playerScores, setPlayerScores, spotsNumber, handleShowAnswer, handleStartTime, hostInitialGrid, setHostInitialGrid, currentQuestionNumber, setCurrentQuestionNumber, handleCorrectAnswer }}>
+    <HostContext.Provider value={{ numberOfSelectedRow, setNumberOfSelectedRow, rules, setRules, mode, setMode, animationKey, currentAnswer, setCurrentAnswer, prefetchedQuestion, prefetchedAnswer, showCurrentAnswer, setShowCurrentAnswer, handleScoreAdjust, handleNextQuestion, handleStartRound, currentQuestionIndex, setCurrentQuestionIndex, playerFlashes, setPlayerFlashes, playerScores, setPlayerScores, spotsNumber, handleShowAnswer, handleStartTime, hostInitialGrid, setHostInitialGrid, currentQuestionNumber, setCurrentQuestionNumber, handleCorrectAnswer, playerColors, setPlayerColors }}>
       {children}
     </HostContext.Provider>
   );

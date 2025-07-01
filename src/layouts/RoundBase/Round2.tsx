@@ -166,6 +166,8 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
         )
       );
       setInitialGrid(blankGrid)
+
+      // Host can see all text by default due to updated render logic
     }
 
   }
@@ -307,6 +309,8 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
             )
           );
           setInitialGrid(blankGrid)
+
+          // Host can see all text by default due to updated render logic
         }
       }
 
@@ -327,7 +331,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     hintWordNumber?: string
   ) => {
     if (!isHost) return;
-    console.log("hintWordNumber", hintWordNumber);
+    console.log("revealCells called with action:", action, "hintWordNumber:", hintWordNumber);
 
     const hintWordIndex = hintWordNumber ? parseInt(hintWordNumber) : -1;
 
@@ -350,6 +354,13 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     const wordLength = hintWord.string.length - 3;
     const startIndex = isRow ? colIndex + 1 : rowIndex + 1;
 
+    console.log("Debug revealCells:");
+    console.log("- hintWord.string:", hintWord.string);
+    console.log("- wordLength:", wordLength);
+    console.log("- startIndex:", startIndex);
+    console.log("- isRow:", isRow);
+    console.log("- action:", action);
+
     const handleNextQuestion = async (testName: string, hintWordIndex: string, round: string, roomId: string) => {
       await getNextQuestion(testName, hintWordIndex, round, roomId)
     }
@@ -357,13 +368,11 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     setCellStyles((prev) => {
       const newStyles = { ...prev };
       if (isRow) {
+        console.log(`Processing row from col ${startIndex} to ${startIndex + wordLength - 1}`);
         for (let col = startIndex; col < startIndex + wordLength; col++) {
           if (col == GRID_SIZE) break
           const key = `${rowIndex}-${col}`;
-          // Skip number cells to preserve their appearance
-          console.log("grid[rowIndex][col]", grid[rowIndex][col])
-          console.log("rowIndex", rowIndex);
-          console.log("col", col);
+          console.log(`Processing cell [${rowIndex}][${col}] = "${grid[rowIndex][col]}", key: ${key}`);
 
           if (!grid[rowIndex][col].includes("number")) {
             if (action === "open") {
@@ -846,6 +855,16 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
           ? currentQuestion.question
           : ""}
       </div>
+
+      {/* CNV Display for Host */}
+      {isHost && obstacleWord && (
+        <div className="mb-4 p-3 bg-red-900/30 border border-red-400/50 rounded-lg">
+          <div className="text-red-300 text-sm font-medium mb-1">Chướng ngại vật (CNV):</div>
+          <div className="text-red-400 text-lg font-bold tracking-wider">
+            {obstacleWord.toUpperCase()}
+          </div>
+        </div>
+      )}
       <div className="grid  [grid-template-columns:repeat(var(--cols),32px)] [grid-auto-rows:max-content]  gap-1 max-h-[750px] overflow-y-auto overflow-visible"
         style={{ '--cols': grid[0]?.length || 1 } as React.CSSProperties}
       >
@@ -860,7 +879,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                 const cellKey = `${rowIndex}-${colIndex}`;
                 const cellStyle = cellStyles[cellKey] || {
                   background: cell === "" || cell === " " ? "transparent" : "bg-white",
-                  textColor: cell.includes("number") ? "text-blue-400" : "text-transparent",
+                  textColor: cell.includes("number") ? "text-blue-400" : (isHost ? "text-black" : "text-transparent"),
                 };
 
                 const showMenu =
@@ -875,13 +894,8 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                       className={`w-8 h-8 flex items-center justify-center text-lg font-semibold select-none rounded-lg overflow-visible   
                   ${cell.includes("number") ? "text-blue-400 border-none" : ""}
                   ${cell.includes("number") ? "" : cellStyle.background}
-                  ${cell.includes("number") ? "text-blue-400" : cellStyle.textColor}
-                  ${obstacleWord?.includes(cell) &&
-                          cellStyle.textColor === "text-black" &&
-                          !cell.includes("number") &&
-                          isNaN(Number(cell))
-                          ? "font-bold text-red-400"
-                          : ""}
+                  ${cell.includes("number") ? "text-blue-400" : (isHost ? "text-black" : cellStyle.textColor)}
+
                 `}
                       onClick={() => {
                         if (isHost) {

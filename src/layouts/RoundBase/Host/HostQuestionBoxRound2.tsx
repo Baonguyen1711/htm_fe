@@ -121,6 +121,8 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                 )
             );
             setInitialGrid(blankGrid)
+
+            // Host can see all text by default due to updated render logic
         }
 
     }
@@ -162,15 +164,12 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     const handleOpenObstacle = async () => {
         if (!isHost || !hintWords || !hintWordArray) return;
 
-        for (let row = 0; row < grid.length; row++) {
-            for (let col = 0; col < grid[row].length; col++) {
-                if (Number.isFinite(Number(grid[row][col]))) {
-                    revealCells(row, col, "correct", grid[row][col])
-                }
-            }
+        // Reveal all horizontal rows immediately
+        for (const hintWord of hintWords) {
+            revealCells(hintWord.x, hintWord.y, "all", hintWord.index.toString())
         }
-        if (obstacleWord) {
 
+        if (obstacleWord) {
             //await openObstacle(roomId, obstacleWord, pla)
         }
     }

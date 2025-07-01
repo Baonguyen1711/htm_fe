@@ -80,12 +80,12 @@ export function useGameListenersRound2({
             if (isHost) {
               console.log("hintWordArray", hintWordArray);
               console.log("obstacle", obstacleWord);
-    
+
               const result = await generateGrid(hintWordArray, 30)
               console.log("board", result.grid);
               setHintWords(result.placementArray)
               setGrid(result.grid)
-    
+
               const blankGrid = result.grid.map((row, rowIndex) =>
                 row.map((cell, colIndex) =>
                   result.grid[rowIndex][colIndex].includes("number") ? cell : // Keep "numberX"
@@ -93,14 +93,16 @@ export function useGameListenersRound2({
                 )
               );
               setInitialGrid(blankGrid)
+
+              // Host can see all text by default due to updated render logic
             }
           }
-    
+
           if (initialGrid) {
             setGrid(initialGrid)
           }
         }
-    
+
         generateInitialGrid()
       }, [hintWordArray, obstacleWord, initialGrid])
 
@@ -134,7 +136,7 @@ export function useGameListenersRound2({
     const revealCells = (
         rowIndex: number,
         colIndex: number,
-        action: "open" | "correct" | "incorrect",
+        action: "open" | "correct" | "incorrect" | "all",
         hintWordNumber?: string
     ) => {
         if (!isHost) return;
@@ -157,6 +159,13 @@ export function useGameListenersRound2({
         const wordLength = hintWord.string.length - 3;
         const startIndex = isRow ? colIndex + 1 : rowIndex + 1;
 
+        console.log("Debug revealCells (hook):");
+        console.log("- hintWord.string:", hintWord.string);
+        console.log("- wordLength:", wordLength);
+        console.log("- startIndex:", startIndex);
+        console.log("- isRow:", isRow);
+        console.log("- action:", action);
+
         const handleNextQuestion = async (testName: string, hintWordIndex: string, round: string, roomId: string) => {
             await getNextQuestion(testName, hintWordIndex, round, roomId)
         }
@@ -164,9 +173,11 @@ export function useGameListenersRound2({
         setCellStyles((prev) => {
             const newStyles = { ...prev };
             if (isRow) {
+                console.log(`Processing row from col ${startIndex} to ${startIndex + wordLength - 1} (hook)`);
                 for (let col = startIndex; col < startIndex + wordLength; col++) {
                     if (col == GRID_SIZE) break
                     const key = `${rowIndex}-${col}`;
+                    console.log(`Processing cell [${rowIndex}][${col}] = "${grid[rowIndex][col]}", key: ${key} (hook)`);
 
                     if (!grid[rowIndex][col].includes("number")) {
                         if (action === "open") {
@@ -175,7 +186,7 @@ export function useGameListenersRound2({
                                 setSelectedRow(roomId, hintWordNumber, true, wordLength)
                                 handleNextQuestion(testName, hintWordNumber.toString(), "2", roomId)
                             }
-                        } else if (action === "correct") {
+                        } else if (action === "correct" || action === "all") {
                             newStyles[key] = { background: "bg-yellow-200", textColor: "text-black" };
                             let indexInTarget = []
                             if (hintWordArray)
@@ -188,7 +199,7 @@ export function useGameListenersRound2({
                                         }
                                     }
                                 }
-                            if (hintWordArray && hintWordNumber) {
+                            if (hintWordArray && hintWordNumber && action === "correct") {
                                 setCorrectRow(roomId, hintWordNumber, hintWord.string.slice(2, hintWord.string.length - 1), encodeURIComponent(JSON.stringify(indexInTarget)), true, wordLength)
                             }
                         } else if (action === "incorrect") {
@@ -211,7 +222,7 @@ export function useGameListenersRound2({
                                 setSelectedRow(roomId, hintWordNumber, false, wordLength)
                                 handleNextQuestion(testName, hintWordNumber.toString(), "2", roomId)
                             }
-                        } else if (action === "correct") {
+                        } else if (action === "correct" || action === "all") {
                             newStyles[key] = { background: "bg-yellow-200", textColor: "text-black" };
                             let indexInTarget = []
                             if (hintWordArray)
@@ -225,7 +236,7 @@ export function useGameListenersRound2({
                                         }
                                     }
                                 }
-                            if (hintWordArray && hintWordNumber)
+                            if (hintWordArray && hintWordNumber && action === "correct")
                                 setCorrectRow(roomId, hintWordNumber, hintWord.string.slice(2, hintWord.string.length - 1), encodeURIComponent(JSON.stringify(indexInTarget)), false, wordLength)
                         } else if (action === "incorrect") {
                             newStyles[key] = { background: "bg-gray-400", textColor: "text-transparent" };

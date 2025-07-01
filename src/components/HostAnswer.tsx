@@ -15,7 +15,7 @@ function HostAnswer() {
     const [mode, setMode] = useState<string>("")
     const [selectedPlayer, setSelectedPlayer] = useState<User | null>(null);
     const { playersArray, playerFlashes, answerList, setAnswerList, level, selectedTopic } = usePlayer();
-    const { handleScoreAdjust, playerScores, setPlayerScores, handleNextQuestion, numberOfSelectedRow } = useHost();
+    const { handleScoreAdjust, playerScores, setPlayerScores, handleNextQuestion, numberOfSelectedRow, playerColors } = useHost();
     const [searchParams] = useSearchParams();
     const round = searchParams.get("round") || "1";
     const roomId = searchParams.get("roomId") || "1";
@@ -105,11 +105,21 @@ function HostAnswer() {
                             onClick={() => setSelectedPlayer(player)}
                             className={`flex items-center w-full min-h-[180px] bg-slate-800/80 rounded-xl p-4 shadow-md border border-slate-700/50 transition-all duration-200 ${isCurrent ? "ring-4 ring-yellow-400 border-yellow-400" : ""}`}
                         >
-                            <img
-                                src={player.avatar}
-                                alt="Player"
-                                className="w-16 h-16 rounded-full border-2 border-white mr-4"
-                            />
+                            <div className="relative mr-4">
+                                <img
+                                    src={player.avatar}
+                                    alt="Player"
+                                    className="w-16 h-16 rounded-full border-2 border-white"
+                                />
+                                {/* Color indicator for Round 4 */}
+                                {round === "4" && playerColors[player.stt] && (
+                                    <div
+                                        className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white shadow-lg"
+                                        style={{ backgroundColor: playerColors[player.stt] }}
+                                        title={`Màu của ${player.userName}`}
+                                    ></div>
+                                )}
+                            </div>
                             <div className="flex flex-col flex-1">
                                 <p className="text-white font-bold border-b border-slate-700/50 pb-1">
                                     {`player_${player.stt}: ${player.userName}`}
@@ -166,7 +176,17 @@ function HostAnswer() {
                 {selectedPlayer ? (
                     <>
                         <div className="bg-slate-700 rounded-xl p-4 text-white shadow">
-                            <img src={selectedPlayer.avatar} alt="Selected" className="w-16 h-16 rounded-full mx-auto" />
+                            <div className="relative mx-auto w-16 h-16">
+                                <img src={selectedPlayer.avatar} alt="Selected" className="w-16 h-16 rounded-full" />
+                                {/* Color indicator for Round 4 */}
+                                {round === "4" && playerColors[selectedPlayer.stt] && (
+                                    <div
+                                        className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white shadow-lg"
+                                        style={{ backgroundColor: playerColors[selectedPlayer.stt] }}
+                                        title={`Màu của ${selectedPlayer.userName}`}
+                                    ></div>
+                                )}
+                            </div>
                             <p className="text-center font-bold mt-2">{selectedPlayer.userName}</p>
                             <p className="text-center">Player_{selectedPlayer.stt}</p>
                         </div>

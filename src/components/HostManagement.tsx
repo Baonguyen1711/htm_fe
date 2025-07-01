@@ -6,6 +6,7 @@ import { openBuzz } from './services';
 import { playSound } from './services';
 import { deletePath } from '../services/firebaseServices';
 import { updateScore } from '../pages/Host/Management/service';
+import http from '../services/http';
 import {
     CheckCircleIcon,
     BellAlertIcon,
@@ -15,9 +16,15 @@ import {
     PlayCircleIcon,
     SpeakerWaveIcon,
     MusicalNoteIcon,
+    DocumentTextIcon,
+    EyeSlashIcon,
+    QuestionMarkCircleIcon,
+    PaintBrushIcon,
 } from "@heroicons/react/24/solid";
 import { toast } from 'react-toastify';
 import HostQuestionPreview from './HostQuestionPreview';
+import HostGuideModal from './HostGuideModal';
+import PlayerColorSelector from './PlayerColorSelector';
 
 const HostManagement = () => {
     const {
@@ -31,7 +38,9 @@ const HostManagement = () => {
         setPlayerScores,
         currentQuestionIndex,
         setCurrentQuestionIndex,
-        hostInitialGrid
+        hostInitialGrid,
+        playerColors,
+        setPlayerColors
     } = useHost();
 
     const { initialGrid, selectedTopic, easyQuestionNumber, mediumQuestionNumber, hardQuestionNumber, setEasyQuestionNumber, setMediumQuestionNumber, setHardQuestionNumber, level } = usePlayer()
@@ -43,6 +52,9 @@ const HostManagement = () => {
     const testName = searchParams.get("testName") || "1"
     const roomId = searchParams.get("roomId") || "1"
     const [inGameQuestionIndex, setInGameQuestionIndex] = useState<number>(0);
+    const [showingRules, setShowingRules] = useState(false);
+    const [showGuideModal, setShowGuideModal] = useState(false);
+    const [showColorSelector, setShowColorSelector] = useState(false);
     const handleRoundChange = async (delta: number) => {
         console.log("currentRound", currentRound)
         const newRound = parseInt(currentRound) + delta;
@@ -54,10 +66,43 @@ const HostManagement = () => {
         await deletePath(roomId, "answers");
         await deletePath(roomId, "turn"); // Clear turn assignments
         await deletePath(roomId, "isModified"); // Clear isModified state
+        // Don't clear showRules here - let host control modal display manually
+        setShowingRules(false); // Reset rules button state
+    };
+
+    const handleToggleRules = async () => {
+        try {
+            if (showingRules) {
+                // Hide rules
+                await http.post('room/rules/hide', true, {}, { room_id: roomId });
+                setShowingRules(false);
+                toast.success('Đã ẩn luật thi');
+            } else {
+                // Show rules
+                await http.post('room/rules/show', true, {}, {
+                    room_id: roomId,
+                    round_number: currentRound
+                });
+                setShowingRules(true);
+                toast.success(`Đã hiển thị luật thi vòng ${currentRound}`);
+            }
+        } catch (error) {
+            console.error('Error toggling rules:', error);
+            toast.error('Lỗi khi thay đổi hiển thị luật thi');
+        }
+    };
+
+    const handleSavePlayerColors = (colors: Record<string, string>) => {
+        setPlayerColors(colors);
+        toast.success('Đã lưu màu cho thí sinh!');
     };
 
     useEffect(() => {
         setInGameQuestionIndex(0);
+        // Clear rules when entering new round to prevent auto-show
+        setShowingRules(false);
+        // Also clear rules from Firebase to ensure clean state
+        http.post('room/rules/hide', true, {}, { room_id: roomId }).catch(console.error);
     }, [currentRound]);
 
     return (
@@ -65,6 +110,35 @@ const HostManagement = () => {
 
             {/* Host Question Preview */}
             <HostQuestionPreview />
+
+            {/* Guide and Color Selection */}
+            <div className="flex items-center justify-between mb-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600/50">
+                <div className="flex items-center space-x-3">
+                    <button
+                        onClick={() => setShowGuideModal(true)}
+                        className="flex items-center bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105 font-medium text-sm"
+                        title="Hướng dẫn host"
+                    >
+                        <QuestionMarkCircleIcon className="w-5 h-5 mr-2" />
+                        Hướng dẫn
+                    </button>
+
+                    {currentRound === "4" && (
+                        <button
+                            onClick={() => setShowColorSelector(true)}
+                            className="flex items-center bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105 font-medium text-sm"
+                            title="Chọn màu cho thí sinh"
+                        >
+                            <PaintBrushIcon className="w-5 h-5 mr-2" />
+                            Chọn màu
+                        </button>
+                    )}
+                </div>
+
+                <div className="text-gray-400 text-sm">
+                    Vòng {currentRound} - {currentRound === "1" ? "NHỔ NEO" : currentRound === "2" ? "VƯỢT SÓNG" : currentRound === "3" ? "BỨT PHÁ" : currentRound === "4" ? "CHINH PHỤC" : "PHÂN LƯỢT"}
+                </div>
+            </div>
 
             {/* Host actions - First row */}
             <div className="flex flex-col gap-3 lg:gap-4 mb-4">
@@ -243,7 +317,37 @@ const HostManagement = () => {
 
                     CHẠY ÂM THANH MỞ ĐẦU
                 </button>
+                <button
+                    onClick={handleToggleRules}
+                    className={`flex items-center ${
+                        showingRules
+                            ? 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 border-red-400/50'
+                            : 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 border-green-400/50'
+                    } text-white p-2 lg:p-3 rounded-lg shadow-md border transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full`}
+                >
+                    {showingRules ? (
+                        <EyeSlashIcon className="w-4 h-4 mr-2" />
+                    ) : (
+                        <DocumentTextIcon className="w-4 h-4 mr-2" />
+                    )}
+                    {showingRules ? 'ẨN LUẬT THI' : 'HIỂN THỊ LUẬT THI'}
+                </button>
             </div>
+
+            {/* Modals */}
+            <HostGuideModal
+                isOpen={showGuideModal}
+                onClose={() => setShowGuideModal(false)}
+                round={currentRound}
+            />
+
+            <PlayerColorSelector
+                isOpen={showColorSelector}
+                onClose={() => setShowColorSelector(false)}
+                players={playerScores}
+                onSaveColors={handleSavePlayerColors}
+                currentColors={playerColors}
+            />
         </div>
     );
 };

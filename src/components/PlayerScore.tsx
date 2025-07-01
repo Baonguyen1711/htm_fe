@@ -4,7 +4,11 @@ import { usePlayer } from '../context/playerContext';
 import { listenToScores } from '../services/firebaseServices';
 import { useSearchParams } from 'react-router-dom';
 
-function PlayerScore() {
+interface PlayerScoreProps {
+    playerColors?: Record<string, string>;
+}
+
+function PlayerScore({ playerColors = {} }: PlayerScoreProps) {
     const {scoreList, setScoreList, setPlayerFlashes } = usePlayer();
     const prevOrder = useRef<{ [name: string]: number }>({});
     const [params] = useSearchParams();
@@ -62,11 +66,21 @@ function PlayerScore() {
                             <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full text-white font-bold text-sm mr-3">
                                 {index + 1}
                             </div>
-                            <img
-                                src={player.avatar}
-                                alt={player.playerName}
-                                className="w-10 h-10 rounded-full mr-3 border-2 border-blue-400/50"
-                            />
+                            <div className="relative mr-3">
+                                <img
+                                    src={player.avatar}
+                                    alt={player.playerName}
+                                    className="w-10 h-10 rounded-full border-2 border-blue-400/50"
+                                />
+                                {/* Color indicator for Round 4 */}
+                                {round === "4" && player.stt && playerColors[player.stt] && (
+                                    <div
+                                        className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-lg"
+                                        style={{ backgroundColor: playerColors[player.stt] }}
+                                        title={`Màu của ${player.playerName}`}
+                                    ></div>
+                                )}
+                            </div>
                             <div className="flex-1">
                                 <p className="text-white font-semibold text-sm mb-1">{player.playerName}</p>
                                 <div className="bg-gradient-to-r from-blue-600/50 to-cyan-500/50 backdrop-blur-sm text-white text-center py-1 px-3 rounded-lg font-mono text-sm border border-blue-400/30">
