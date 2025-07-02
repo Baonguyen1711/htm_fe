@@ -86,12 +86,12 @@ const PlayerColorSelector: React.FC<PlayerColorSelectorProps> = ({
       />
 
       {/* Modal */}
-      <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-purple-400/30 max-w-4xl w-full mx-4 max-h-[85vh] overflow-hidden">
+      <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-purple-400/30 max-w-5xl w-full mx-4 max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <PaintBrushIcon className="w-8 h-8 text-white" />
-            <h2 className="text-xl font-bold text-white">
+            <PaintBrushIcon className="w-6 h-6 text-white" />
+            <h2 className="text-lg font-bold text-white">
               Chọn màu cho thí sinh - Vòng 4
             </h2>
           </div>
@@ -99,13 +99,13 @@ const PlayerColorSelector: React.FC<PlayerColorSelectorProps> = ({
             onClick={onClose}
             className="text-white hover:text-gray-300 transition-colors p-1 rounded-lg hover:bg-white/10"
           >
-            <XMarkIcon className="w-6 h-6" />
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[70vh]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-4 overflow-y-auto max-h-[75vh]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {players.map((player, index) => (
               <div
                 key={player.stt || index}
@@ -145,7 +145,7 @@ const PlayerColorSelector: React.FC<PlayerColorSelectorProps> = ({
                 </div>
 
                 {/* Color Options */}
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
                   {AVAILABLE_COLORS.map((color) => {
                     const isUsed = usedColors.has(color.value);
                     const isSelected = selectedColors[player.stt] === color.value;
@@ -157,11 +157,11 @@ const PlayerColorSelector: React.FC<PlayerColorSelectorProps> = ({
                         onClick={() => !isDisabled && handleColorSelect(player.stt, color.value)}
                         disabled={isDisabled}
                         className={`
-                          relative w-12 h-12 rounded-lg border-2 transition-all duration-200
-                          ${isSelected 
-                            ? 'border-white scale-110 shadow-lg' 
-                            : isDisabled 
-                              ? 'border-gray-600 opacity-50 cursor-not-allowed' 
+                          relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg border-2 transition-all duration-200 flex-shrink-0
+                          ${isSelected
+                            ? 'border-white scale-110 shadow-lg'
+                            : isDisabled
+                              ? 'border-gray-600 opacity-50 cursor-not-allowed'
                               : 'border-gray-400 hover:border-white hover:scale-105'
                           }
                         `}
@@ -199,23 +199,23 @@ const PlayerColorSelector: React.FC<PlayerColorSelectorProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="bg-slate-800/80 px-6 py-4 border-t border-slate-600/50">
-          <div className="flex justify-between items-center">
+        <div className="bg-slate-800/80 px-4 py-3 border-t border-slate-600/50">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             <div className="text-gray-400 text-sm">
               Đã chọn: {Object.keys(selectedColors).length}/{players.length} thí sinh
             </div>
             <div className="flex space-x-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors text-sm"
               >
                 Hủy
               </button>
               <button
                 onClick={handleSave}
-                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
+                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105 text-sm"
               >
-                Lưu màu
+                ✓ Xác nhận màu
               </button>
             </div>
           </div>

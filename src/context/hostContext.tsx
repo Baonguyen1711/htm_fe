@@ -194,17 +194,12 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
         }
         nextQuestionNumber = (currentNum + 1).toString()
       } else if (currentRound === "4" && difficulty) {
-        // For round 4, we need the current question number to calculate next
+        // For round 4, calculate question number based on dynamic level configuration
         const currentNum = parseInt(currentQuestionIndex)
-        if (difficulty === "Dễ") {
-          nextQuestionNumber = (currentNum + 1).toString()
-        } else if (difficulty === "Trung bình") {
-          nextQuestionNumber = (20 + currentNum + 1).toString()
-        } else if (difficulty === "Khó") {
-          nextQuestionNumber = (40 + currentNum + 1).toString()
-        } else {
-          return // Unknown difficulty
-        }
+        nextQuestionNumber = (currentNum + 1).toString()
+
+        // Note: The actual question mapping will be handled by the backend
+        // based on room configuration when the question is requested
       } else {
         // For other rounds, increment from current index
         nextQuestionNumber = (parseInt(currentQuestionIndex) + 1).toString()

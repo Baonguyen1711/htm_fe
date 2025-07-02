@@ -9,13 +9,15 @@ import { useSearchParams } from 'react-router-dom';
 import { openBuzz } from './services';
 import { setCurrrentTurnToPlayer } from '../layouts/services';
 import { toast } from 'react-toastify';
+import SimpleColorPicker from './SimpleColorPicker';
+
 
 function HostAnswer() {
     const [turn, setTurn] = useState<number>(0);
     const [mode, setMode] = useState<string>("")
     const [selectedPlayer, setSelectedPlayer] = useState<User | null>(null);
     const { playersArray, playerFlashes, answerList, setAnswerList, level, selectedTopic } = usePlayer();
-    const { handleScoreAdjust, playerScores, setPlayerScores, handleNextQuestion, numberOfSelectedRow, playerColors } = useHost();
+    const { handleScoreAdjust, playerScores, setPlayerScores, handleNextQuestion, numberOfSelectedRow, playerColors, setPlayerColors } = useHost();
     const [searchParams] = useSearchParams();
     const round = searchParams.get("round") || "1";
     const roomId = searchParams.get("roomId") || "1";
@@ -90,6 +92,20 @@ function HostAnswer() {
     const storedPlayers = localStorage.getItem("playerList");
     const playerList = playersArray || (storedPlayers ? JSON.parse(storedPlayers) : []);
 
+    // Handle color change
+    const handleColorChange = (playerStt: string, color: string) => {
+        const newColors = { ...playerColors };
+        if (color) {
+            newColors[playerStt] = color;
+        } else {
+            delete newColors[playerStt];
+        }
+        setPlayerColors(newColors);
+    };
+
+    // Get used colors
+    const usedColors = new Set<string>(Object.values(playerColors));
+
     return (
         <div className="flex gap-6">
             {/* Left: Player grid */}
@@ -111,13 +127,16 @@ function HostAnswer() {
                                     alt="Player"
                                     className="w-16 h-16 rounded-full border-2 border-white"
                                 />
-                                {/* Color indicator for Round 4 */}
-                                {round === "4" && playerColors[player.stt] && (
-                                    <div
-                                        className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white shadow-lg"
-                                        style={{ backgroundColor: playerColors[player.stt] }}
-                                        title={`Màu của ${player.userName}`}
-                                    ></div>
+                                {/* Color picker for Round 4 */}
+                                {round === "4" && (
+                                    <div className="absolute -bottom-1 -right-1">
+                                        <SimpleColorPicker
+                                            playerStt={player.stt}
+                                            currentColor={playerColors[player.stt]}
+                                            onColorChange={handleColorChange}
+                                            usedColors={usedColors}
+                                        />
+                                    </div>
                                 )}
                             </div>
                             <div className="flex flex-col flex-1">

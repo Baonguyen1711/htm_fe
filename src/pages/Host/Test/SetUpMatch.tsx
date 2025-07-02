@@ -17,6 +17,11 @@ interface Room {
     round3: number;
     round4: number[]
   };
+  round4Levels?: {
+    easy: boolean;
+    medium: boolean;
+    hard: boolean;
+  };
 }
 
 const SetupMatch: React.FC = () => {
@@ -39,6 +44,20 @@ const SetupMatch: React.FC = () => {
   };
 
   const handleStartClick = async (roomId: string, testName: string) => {
+    // Find the room to check configuration
+    const room = rooms.find(r => r.roomId === roomId);
+    if (!room) {
+      alert('Không tìm thấy thông tin phòng!');
+      return;
+    }
+
+    // Check if we have enough questions for Round 4
+    const minQuestionsNeeded = maxPlayers * 5 * 3; // n * 5 * 3
+    if (minQuestionsNeeded > 60) {
+      alert(`Số lượng người chơi quá lớn! Cần tối thiểu ${minQuestionsNeeded} câu hỏi nhưng chỉ có 60 câu hỏi trong bộ đề. Vui lòng giảm số lượng người chơi xuống tối đa ${Math.floor(60 / 15)} người.`);
+      return;
+    }
+
     setRoomId(roomId);
     const response = await authService.getAccessToken({
       roomId: roomId,
@@ -49,7 +68,14 @@ const SetupMatch: React.FC = () => {
     const accessToken = response.accessToken;
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem(`mode_${roomId}`, mode)
-    setRoomRules(roomId, rules)
+
+    // Save room configuration including round4Levels
+    const roomConfig = {
+      ...rules,
+      round4Levels: room.round4Levels
+    };
+    setRoomRules(roomId, roomConfig)
+
     navigate(`/host?round=1&roomId=${roomId}&testName=${testName}`);
   };
 
@@ -66,6 +92,11 @@ const SetupMatch: React.FC = () => {
             round2: [15, 10, 10, 10],
             round3: 10,
             round4: [10, 20, 30]
+          },
+          round4Levels: {
+            easy: true,
+            medium: true,
+            hard: true
           },
         })),
       );
@@ -89,6 +120,11 @@ const SetupMatch: React.FC = () => {
         round2: [15, 10, 10, 10],
         round3: 10,
         round4: [10, 20, 30]
+      },
+      round4Levels: {
+        easy: true,
+        medium: true,
+        hard: true
       },
     };
     setRooms([...rooms, newRoom]);
@@ -143,6 +179,35 @@ const SetupMatch: React.FC = () => {
     );
   };
 
+  const handleRound4LevelChange = (
+    roomId: string,
+    level: 'easy' | 'medium' | 'hard',
+    checked: boolean
+  ) => {
+    setRooms((prevRooms) =>
+      prevRooms.map((room) => {
+        if (room.roomId === roomId) {
+          const currentLevels = room.round4Levels || { easy: true, medium: true, hard: true };
+          const newLevels = {
+            ...currentLevels,
+            [level]: checked
+          };
+
+          // Ensure at least one level is selected
+          const selectedCount = Object.values(newLevels).filter(Boolean).length;
+          if (selectedCount === 0) {
+            return room; // Don't allow deselecting all levels
+          }
+
+          return {
+            ...room,
+            round4Levels: newLevels,
+          };
+        }
+        return room;
+      })
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,115 +314,126 @@ const SetupMatch: React.FC = () => {
                     </select>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name={`mode-${room.roomId}`}
-                          value="manual"
-                          checked={room.mode === 'manual'}
-                          onChange={() => {
-                            handleModeChange(room.roomId, 'manual')
-                            setMode('manual')
-                          }}
-                          className="text-blue-400 focus:ring-blue-400"
-                        />
-                        <span className="text-white">Thủ công</span>
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name={`mode-${room.roomId}`}
-                          value="auto"
-                          checked={room.mode === 'auto'}
-                          onChange={() => {
-                            handleModeChange(room.roomId, 'auto')
-                            setMode("auto")
-                          }}
-                          className="text-blue-400 focus:ring-blue-400"
-                        />
-                        <span className="text-white">Tự động chấm theo thời gian</span>
-                      </label>
+                    <div className="mb-4">
+                      <h4 className="text-white font-medium mb-2">Chế độ chấm điểm (Vòng 1 & 2)</h4>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={`mode-${room.roomId}`}
+                            value="manual"
+                            checked={room.mode === 'manual'}
+                            onChange={() => {
+                              handleModeChange(room.roomId, 'manual')
+                              setMode('manual')
+                            }}
+                            className="text-blue-400 focus:ring-blue-400"
+                          />
+                          <span className="text-white">Thủ công</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={`mode-${room.roomId}`}
+                            value="auto"
+                            checked={room.mode === 'auto'}
+                            onChange={() => {
+                              handleModeChange(room.roomId, 'auto')
+                              setMode("auto")
+                            }}
+                            className="text-blue-400 focus:ring-blue-400"
+                          />
+                          <span className="text-white">Tự động chấm theo thời gian</span>
+                        </label>
 
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name={`mode-${room.roomId}`}
-                          value="adaptive"
-                          checked={room.mode === 'adaptive'}
-                          onChange={() => {
-                            handleModeChange(room.roomId, 'adaptive')
-                            setMode("adaptive")
-                          }}
-                          className="text-blue-400 focus:ring-blue-400"
-                        />
-                        <span className="text-white">Tự động chấm theo số lượng</span>
-                      </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={`mode-${room.roomId}`}
+                            value="adaptive"
+                            checked={room.mode === 'adaptive'}
+                            onChange={() => {
+                              handleModeChange(room.roomId, 'adaptive')
+                              setMode("adaptive")
+                            }}
+                            className="text-blue-400 focus:ring-blue-400"
+                          />
+                          <span className="text-white">Tự động chấm theo số lượng</span>
+                        </label>
+                      </div>
                     </div>
-                    {room.mode === 'auto' && (
-                      <div className="mt-4 bg-slate-600/30 p-4 rounded-lg">
-                        <h4 className="text-white font-medium mb-2">Cấu hình điểm</h4>
-                        {/* Round 1 */}
-                        <div className="mb-4">
-                          <h5 className="text-blue-200 font-medium">Vòng 1</h5>
-                          <div className="grid grid-cols-4 gap-2">
-                            {['Top 1', 'Top 2', 'Top 3', 'Top 4'].map((label, index) => (
-                              <div key={index} className="flex flex-col">
-                                <label className="text-blue-200 text-sm">{label}</label>
-                                <input
-                                  type="number"
-                                  value={room.roundScores.round1[index]}
-                                  onChange={(e) =>
-                                    handleScoreChange(room.roomId, 'round1', index, parseInt(e.target.value))
-                                  }
-                                  className="w-full px-2 py-1 bg-slate-600/50 border border-blue-400/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                  min="0"
-                                />
-                              </div>
-                            ))}
+                    {/* Configuration for all rounds */}
+                    <div className="mt-4 bg-slate-600/30 p-4 rounded-lg">
+                      <h4 className="text-white font-medium mb-2">Cấu hình điểm</h4>
 
+                      {/* Round 1 & 2 - Only show when auto mode */}
+                      {room.mode === 'auto' && (
+                        <>
+                          {/* Round 1 */}
+                          <div className="mb-4">
+                            <h5 className="text-blue-200 font-medium">Vòng 1 (Chấm theo thời gian)</h5>
+                            <div className="grid grid-cols-4 gap-2">
+                              {['Top 1', 'Top 2', 'Top 3', 'Top 4'].map((label, index) => (
+                                <div key={index} className="flex flex-col">
+                                  <label className="text-blue-200 text-sm">{label}</label>
+                                  <input
+                                    type="number"
+                                    value={room.roundScores.round1[index]}
+                                    onChange={(e) =>
+                                      handleScoreChange(room.roomId, 'round1', index, parseInt(e.target.value))
+                                    }
+                                    className="w-full px-2 py-1 bg-slate-600/50 border border-blue-400/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    min="0"
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                        {/* Round 2 */}
-                        <div className="mb-4">
-                          <h5 className="text-blue-200 font-medium">Vòng 2</h5>
-                          <div className="grid grid-cols-4 gap-2">
-                            {['Top 1', 'Top 2', 'Top 3', 'Top 4'].map((label, index) => (
-                              <div key={index} className="flex flex-col">
-                                <label className="text-blue-200 text-sm">{label}</label>
-                                <input
-                                  type="number"
-                                  value={room.roundScores.round2[index]}
-                                  onChange={(e) =>
-                                    handleScoreChange(room.roomId, 'round2', index, parseInt(e.target.value))
-                                  }
-                                  className="w-full px-2 py-1 bg-slate-600/50 border border-blue-400/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                  min="0"
-                                />
-                              </div>
-                            ))}
+
+                          {/* Round 2 */}
+                          <div className="mb-4">
+                            <h5 className="text-blue-200 font-medium">Vòng 2 (Chấm theo thời gian)</h5>
+                            <div className="grid grid-cols-4 gap-2">
+                              {['Top 1', 'Top 2', 'Top 3', 'Top 4'].map((label, index) => (
+                                <div key={index} className="flex flex-col">
+                                  <label className="text-blue-200 text-sm">{label}</label>
+                                  <input
+                                    type="number"
+                                    value={room.roundScores.round2[index]}
+                                    onChange={(e) =>
+                                      handleScoreChange(room.roomId, 'round2', index, parseInt(e.target.value))
+                                    }
+                                    className="w-full px-2 py-1 bg-slate-600/50 border border-blue-400/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    min="0"
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           </div>
+                        </>
+                      )}
+
+                      {/* Round 3 & 4 - Always show */}
+                      {/* Round 3 */}
+                      <div className="mb-4">
+                        <h5 className="text-blue-200 font-medium">Vòng 3 (Custom)</h5>
+                        <div className="flex flex-col">
+                          <label className="text-blue-200 text-sm">Điểm cho tất cả câu hỏi</label>
+                          <input
+                            type="number"
+                            value={room.roundScores.round3}
+                            onChange={(e) =>
+                              handleScoreChange(room.roomId, 'round3', null, parseInt(e.target.value))
+                            }
+                            className="w-full px-2 py-1 bg-slate-600/50 border border-blue-400/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            min="0"
+                          />
                         </div>
-                        {/* Round 3 */}
-                        <div className="mb-4">
-                          <h5 className="text-blue-200 font-medium">Vòng 3</h5>
-                          <div className="flex flex-col">
-                            <label className="text-blue-200 text-sm">Điểm cho tất cả câu hỏi</label>
-                            <input
-                              type="number"
-                              value={room.roundScores.round3}
-                              onChange={(e) =>
-                                handleScoreChange(room.roomId, 'round3', null, parseInt(e.target.value))
-                              }
-                              className="w-full px-2 py-1 bg-slate-600/50 border border-blue-400/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-                              min="0"
-                            />
-                          </div>
-                        </div>
-                        {/* Round 4 */}
-                        {/* Round 4 */}
-                        <div className="mb-4">
-                          <h5 className="text-blue-200 font-medium">Vòng 4</h5>
+                      </div>
+
+                      {/* Round 4 */}
+                      <div className="mb-4">
+                        <h5 className="text-blue-200 font-medium">Vòng 4 - Điểm số (Custom)</h5>
                           <div className="grid grid-cols-3 gap-2">
                             {['Dễ', 'Trung bình', 'Khó'].map((label, index) => (
                               <div key={index} className="flex flex-col">
@@ -376,14 +452,41 @@ const SetupMatch: React.FC = () => {
                           </div>
                         </div>
 
+                      {/* Round 4 Levels */}
+                      <div className="mb-4">
+                        <h5 className="text-blue-200 font-medium mb-2">Vòng 4 - Mức độ câu hỏi</h5>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { key: 'easy', label: 'Dễ (ô trống)', symbol: '□' },
+                            { key: 'medium', label: 'Trung bình (!)', symbol: '!' },
+                            { key: 'hard', label: 'Khó (?)', symbol: '?' }
+                          ].map((level) => (
+                            <div key={level.key} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={`${room.roomId}-${level.key}`}
+                                checked={room.round4Levels?.[level.key as keyof typeof room.round4Levels] || false}
+                                onChange={(e) =>
+                                  handleRound4LevelChange(room.roomId, level.key as 'easy' | 'medium' | 'hard', e.target.checked)
+                                }
+                                className="w-4 h-4 text-blue-600 bg-slate-600 border-blue-400 rounded focus:ring-blue-500"
+                              />
+                              <label htmlFor={`${room.roomId}-${level.key}`} className="text-blue-200 text-sm flex items-center">
+                                <span className="mr-1 font-mono text-lg">{level.symbol}</span>
+                                {level.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-blue-300 text-xs mt-2">
+                          * Cần tối thiểu {(room.round4Levels?.easy ? 1 : 0) + (room.round4Levels?.medium ? 1 : 0) + (room.round4Levels?.hard ? 1 : 0) > 1 ?
+                            `${Math.ceil(60 / ((room.round4Levels?.easy ? 1 : 0) + (room.round4Levels?.medium ? 1 : 0) + (room.round4Levels?.hard ? 1 : 0)))} câu hỏi mỗi mức` :
+                            '60 câu hỏi'} cho {maxPlayers} người chơi
+                        </p>
                       </div>
-                    )}
+                    </div>
 
-                    {room.mode === "adaptive" && (
-                      <div className="mt-4 bg-slate-600/30 p-4 rounded-lg">
-                        <h4 className="text-white font-medium mb-2">Số điểm giảm dần theo số lượng thí sinh trả lời đúng</h4>
-                      </div>
-                    )}
+
                   </td>
                   <td className="px-6 py-4">
                     <button
