@@ -4,7 +4,7 @@ import axios from "axios";
 export const submitAnswer = async (roomId: string, answer: string, stt: string, answerTime: number, playerName: string, avatar: string): Promise<any> => {
   try {
 
-    const response = await axios.post(`http://localhost:8000/api/test/submit?room_id=${roomId}`, {
+    const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/submit?room_id=${roomId}`, {
       "answer": answer,
       "stt": stt,
       "time": Number(answerTime),
@@ -34,7 +34,7 @@ export const submitAnswer = async (roomId: string, answer: string, stt: string, 
 export const setSelectedPacketToPlayer = async (roomId: string, packetName: string): Promise<any> => {
   try {
 
-    const url = `http://localhost:8000/api/test/packet/set?room_id=${roomId}&packet_name=${packetName}`
+    const url = `https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/packet/set?room_id=${roomId}&packet_name=${packetName}`
 
     const response = await axios.post(url, {
 
@@ -61,7 +61,7 @@ export const setSelectedPacketToPlayer = async (roomId: string, packetName: stri
 export const setCurrrentTurnToPlayer = async (roomId: string, turn: number): Promise<any> => {
   try {
 
-    const url = `http://localhost:8000/api/room/turn?room_id=${roomId}&turn=${turn}`
+    const url = `https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/room/turn?room_id=${roomId}&turn=${turn}`
 
     const response = await axios.post(url, {
 

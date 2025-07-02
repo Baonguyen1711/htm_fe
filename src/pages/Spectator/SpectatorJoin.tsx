@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { spectatorJoin } from '../User/InformationForm/services';
+import authService from '../../services/auth.service';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { removeSpectator } from '../../services/firebaseServices';
 
 const SpectatorJoin = () => {
@@ -17,8 +19,41 @@ const SpectatorJoin = () => {
         return;
       }
 
-      // Mock join room - replace with actual logic
-      signInWithoutPassword(); // Call the login function
+      // Sign in anonymously first and wait for auth token to be set
+      await signInWithoutPassword();
+
+      // Wait for Firebase auth state to change and authToken cookie to be set
+      const auth = getAuth();
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          unsubscribe();
+          reject(new Error("Authentication timeout"));
+        }, 10000); // 10 second timeout
+
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            try {
+              // Get the Firebase ID token and send it to backend to set cookie
+              const token = await user.getIdToken();
+              await authService.authenticateUser({ token });
+              console.log("Auth token cookie set successfully");
+              clearTimeout(timeout);
+              unsubscribe();
+              resolve();
+            } catch (error) {
+              console.error("Error setting auth token:", error);
+              clearTimeout(timeout);
+              unsubscribe();
+              reject(error);
+            }
+          }
+        });
+      }).catch((authError) => {
+        console.error("Authentication failed:", authError);
+        alert("Lỗi xác thực. Vui lòng thử lại.");
+        return;
+      });
+
       const response = await spectatorJoin(roomId)
       removeSpectator(response.spectator_path)
       navigate(`/spectator?roomId=${roomId}&round=1`);

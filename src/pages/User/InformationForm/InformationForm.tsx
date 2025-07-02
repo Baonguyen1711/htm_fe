@@ -4,6 +4,7 @@ import { joinRoom } from "./services";
 import { usePlayer } from "../../../context/playerContext";
 import { uploadFile } from "../../../services/uploadAssestServices";
 import roomService from "../../../services/room.service";
+import useTokenRefresh from "../../../hooks/useTokenRefresh";
 
 const InformationForm = () => {
   const [searchParams] = useSearchParams();
@@ -17,6 +18,9 @@ const InformationForm = () => {
   const { setPlayers, setRoomId, setPosition, setCurrentPlayerName, setCurrentPlayerAvatar } = usePlayer();
 
   const defaultAvatar = "https://via.placeholder.com/100";
+
+  // Initialize token refresh for player
+  useTokenRefresh();
 
   // Xử lý upload file lên S3 và lưu key trả về
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {

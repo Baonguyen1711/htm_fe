@@ -1,4 +1,5 @@
 import axios from "axios";
+import tokenRefreshService from "./tokenRefresh.service";
 
 class Http {
     baseUrl: string | undefined
@@ -17,6 +18,16 @@ class Http {
     ) {
         try {
             const isFormData = data instanceof FormData;
+
+            // Get valid access token (refresh if needed) for authenticated requests
+            let authHeaders = {};
+            if (withCredentials) {
+                const validToken = await tokenRefreshService.getValidAccessToken();
+                if (validToken) {
+                    authHeaders = { 'Authorization': `Bearer ${validToken}` };
+                }
+            }
+
             const response = await axios.request({
                 method,
                 url: `${this.baseUrl}/${endpoint}`,
@@ -24,14 +35,41 @@ class Http {
                 params,
                 withCredentials,
                 headers: {
-
-                ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-                ...headers,
+                    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+                    ...authHeaders,
+                    ...headers,
                 },
             })
 
             return response.data
-        } catch (error) {
+        } catch (error: any) {
+            // If we get 401 and it's an authenticated request, try to refresh token
+            if (error.response?.status === 401 && withCredentials) {
+                console.log('Received 401, attempting token refresh...');
+
+                const newToken = await tokenRefreshService.refreshAccessToken();
+                if (newToken) {
+                    console.log('Token refreshed, retrying request...');
+
+                    // Retry the request with new token
+                    const authHeaders = { 'Authorization': `Bearer ${newToken}` };
+                    const retryResponse = await axios.request({
+                        method,
+                        url: `${this.baseUrl}/${endpoint}`,
+                        data,
+                        params,
+                        withCredentials,
+                        headers: {
+                            ...(data instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+                            ...authHeaders,
+                            ...headers,
+                        },
+                    });
+
+                    return retryResponse.data;
+                }
+            }
+
             throw error
         }
     }

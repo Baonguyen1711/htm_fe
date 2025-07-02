@@ -25,6 +25,7 @@ import { toast } from 'react-toastify';
 import HostQuestionPreview from './HostQuestionPreview';
 import HostGuideModal from './HostGuideModal';
 import PlayerColorSelector from './PlayerColorSelector';
+import useTokenRefresh from '../hooks/useTokenRefresh';
 
 const HostManagement = () => {
     const {
@@ -55,6 +56,9 @@ const HostManagement = () => {
     const [showingRules, setShowingRules] = useState(false);
     const [showGuideModal, setShowGuideModal] = useState(false);
     const [showColorSelector, setShowColorSelector] = useState(false);
+
+    // Initialize token refresh for host
+    useTokenRefresh();
     const handleRoundChange = async (delta: number) => {
         console.log("currentRound", currentRound)
         const newRound = parseInt(currentRound) + delta;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { createRoom, getRoomById, deactivateRoom } from './service';
+import tokenRefreshService from '../../../services/tokenRefresh.service';
 import { useNavigate } from 'react-router-dom';
 import { usePlayer } from '../../../context/playerContext';
 import { useHost } from '../../../context/hostContext';
@@ -11,6 +11,7 @@ interface Room {
   roomId: string;
   isActive: boolean;
   mode: 'manual' | 'auto' | "adaptive";
+  selectedTestName: string;
   roundScores: {
     round1: number[];
     round2: number[];
@@ -27,7 +28,6 @@ interface Room {
 const SetupMatch: React.FC = () => {
   const navigate = useNavigate();
   const [currentRound, setCurrentRound] = useState<string>('');
-  const [selectedTestName, setSelectedTestName] = useState<string>('');
   const [rooms, setRooms] = useState<Room[]>([]);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
@@ -37,10 +37,12 @@ const SetupMatch: React.FC = () => {
   const [createdRoomId, setCreatedRoomId] = useState<string>('');
   const [testList] = useState<[]>(JSON.parse(localStorage.getItem('testList') || '[]'));
   const { setRoomId } = usePlayer();
-  const { mode, setMode, rules, setRules } = useHost()
+  const { setMode } = useHost()
 
-  const handleTestChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTestName(event.target.value);
+  const handleTestChange = (roomId: string, testName: string) => {
+    setRooms(rooms.map((room) =>
+      room.roomId === roomId ? { ...room, selectedTestName: testName } : room
+    ));
   };
 
   const handleStartClick = async (roomId: string, testName: string) => {
@@ -67,11 +69,14 @@ const SetupMatch: React.FC = () => {
 
     const accessToken = response.accessToken;
     localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem(`mode_${roomId}`, mode)
+    localStorage.setItem(`mode_${roomId}`, room.mode)
+
+    // Start auto-refresh timer for the new access token
+    tokenRefreshService.startAutoRefresh(accessToken);
 
     // Save room configuration including round4Levels
     const roomConfig = {
-      ...rules,
+      ...room.roundScores,
       round4Levels: room.round4Levels
     };
     setRoomRules(roomId, roomConfig)
@@ -115,6 +120,7 @@ const SetupMatch: React.FC = () => {
       roomId: data.result.roomId,
       isActive: data.result.isActive,
       mode: 'manual',
+      selectedTestName: '',
       roundScores: {
         round1: [15, 10, 10, 10],
         round2: [15, 10, 10, 10],
@@ -167,7 +173,8 @@ const SetupMatch: React.FC = () => {
           }
 
           console.log("new roundScores:", newRoundScores);
-          setRules(newRoundScores)
+          // Only set rules for the specific room being modified
+          // setRules(newRoundScores) - removed to prevent applying to all rooms
 
           return {
             ...room,
@@ -297,11 +304,11 @@ const SetupMatch: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <select
-                      id="testSelect"
-                      name="testSelect"
+                      id={`testSelect-${room.roomId}`}
+                      name={`testSelect-${room.roomId}`}
                       className="bg-slate-600/50 border border-blue-400/30 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
-                      value={selectedTestName}
-                      onChange={handleTestChange}
+                      value={room.selectedTestName}
+                      onChange={(e) => handleTestChange(room.roomId, e.target.value)}
                     >
                       <option value="" disabled className="bg-slate-700">
                         -- Chọn bộ đề --
@@ -491,7 +498,7 @@ const SetupMatch: React.FC = () => {
                   <td className="px-6 py-4">
                     <button
                       className="bg-gradient-to-r from-yellow-600 to-orange-500 text-white px-4 py-2 rounded-lg hover:from-yellow-700 hover:to-orange-600 font-medium transition-all duration-300 shadow-lg hover:shadow-yellow-500/25"
-                      onClick={() => handleStartClick(room.roomId, selectedTestName)}
+                      onClick={() => handleStartClick(room.roomId, room.selectedTestName)}
                     >
                       🚀 BẮT ĐẦU
                     </button>
@@ -512,7 +519,7 @@ const SetupMatch: React.FC = () => {
 
       {/* Create Room Modal */}
       {showCreateModal && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 flex items-start justify-center bg-black/50 backdrop-blur-sm z-50 pt-20">
           <div className="bg-slate-800/90 backdrop-blur-sm border border-blue-400/50 rounded-xl p-8 shadow-2xl sm:max-w-md w-full mx-4">
             <div className="text-center">
               <div className="text-4xl mb-4">🏠</div>
@@ -560,7 +567,7 @@ const SetupMatch: React.FC = () => {
 
       {/* Success Modal */}
       {showModal && (
-        <div className="absolute inset-0 flex items-baseline justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 flex items-start justify-center bg-black/50 backdrop-blur-sm z-40 pt-20">
           <div className="bg-slate-800/90 backdrop-blur-sm border border-blue-400/50 rounded-xl p-8 shadow-2xl sm:max-w-md w-full mx-4">
             <div className="text-center">
               <div className="text-4xl mb-4">🎉</div>

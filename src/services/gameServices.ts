@@ -3,7 +3,7 @@ import axios from 'axios';
 import { deletePath } from './firebaseServices';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api';
 
 // Game Management Services
 export const gameServices = {

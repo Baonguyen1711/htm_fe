@@ -58,7 +58,7 @@ const ProtectedRoute: React.FC<{ element: ReactNode, requireAccessToken?: boolea
 
                 try {
                     const response = await axios.post<VerifyResponse>(
-                        `http://localhost:8000/api/auth/verify`,
+                        `https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/auth/verify`,
                         {},
                         {
                             headers: {

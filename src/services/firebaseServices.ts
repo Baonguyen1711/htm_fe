@@ -442,7 +442,7 @@ export const removeSpectator = async (path: string): Promise<void> => {
 
 export const authenticateUser = async (token: string) => {
   try {
-    const response = await axios.post("http://localhost:8000/api/auth",
+    const response = await axios.post("https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/auth",
       JSON.stringify({ token }),
       {
         withCredentials: true, // Important for cookies

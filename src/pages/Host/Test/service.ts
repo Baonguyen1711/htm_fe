@@ -6,7 +6,7 @@ import axios from "axios";
 export const getTest = async (testName: string): Promise<any> => {
   try {
     
-    const response = await axios.get(`http://localhost:8000/api/test/${testName}`, {
+    const response = await axios.get(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/${testName}`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -78,7 +78,7 @@ export const uploadTestToServer = async (file: File, testName: string): Promise<
 export const getTestByUserId = async (): Promise<any> => {
   try {
 
-    const response = await axios.get(`http://localhost:8000/api/test/user`, {
+    const response = await axios.get(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/user`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -104,7 +104,7 @@ export const getTestByUserId = async (): Promise<any> => {
 export const updateQuestion = async (updateQuestion: Partial<Question>, question_id: string): Promise<any> => {
   try {
 
-    const response = await axios.put(`http://localhost:8000/api/test/update/${question_id}`,updateQuestion ,{
+    const response = await axios.put(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/update/${question_id}`,updateQuestion ,{
       method: 'PUT', // Phương thức HTTP
       headers: {
         'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ export const updateQuestion = async (updateQuestion: Partial<Question>, question
 export const addNewQuestion = async (updateQuestion: Partial<Question>): Promise<any> => {
   try {
 
-    const response = await axios.post(`http://localhost:8000/api/test/question/add`,updateQuestion ,{
+    const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/question/add`,updateQuestion ,{
       headers: {
         'Content-Type': 'application/json',
       },
@@ -166,7 +166,7 @@ export const getQuestionByRound = async (testName: string, round: string, roomId
     // if (!authToken) {
     //   throw new Error("No token found. Please log in.");
     // }
-    let url = `http://localhost:8000/api/test/question/round?test_name=${testName}&round=${round}&room_id=${roomId}`
+    let url = `https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/question/round?test_name=${testName}&round=${round}&room_id=${roomId}`
 
     if (packetName) {
       url += `&packet_name=${packetName}`;
@@ -200,7 +200,7 @@ export const getQuestionByRound = async (testName: string, round: string, roomId
 
 export const prefetchQuestion = async (testName: string, questionNumber: string, round: string, roomId: string, packetName?: string, difficulty?: string): Promise<any> => {
   try {
-    let url = `http://localhost:8000/api/test/question/prefetch?test_name=${testName}&question_number=${questionNumber}&round=${round}&room_id=${roomId}`
+    let url = `https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/question/prefetch?test_name=${testName}&question_number=${questionNumber}&round=${round}&room_id=${roomId}`
 
     if (packetName) {
       url += `&packet_name=${packetName}`;
@@ -230,7 +230,7 @@ export const prefetchQuestion = async (testName: string, questionNumber: string,
 export const getNextQuestion = async (testName: string, questionNumber: string, round: string, roomId: string, packetName?: string, // Optional param
   difficulty?: string ): Promise<any> => {
   try {
-    let url = `http://localhost:8000/api/test/question?test_name=${testName}&question_number=${questionNumber}&round=${round}&room_id=${roomId}`
+    let url = `https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/question?test_name=${testName}&question_number=${questionNumber}&round=${round}&room_id=${roomId}`
 
     if (packetName) {
       url += `&packet_name=${packetName}`;
@@ -264,7 +264,7 @@ export const getNextQuestion = async (testName: string, questionNumber: string, 
 
 export const getRoomById = async (): Promise<any> => {
   try {
-    const response = await axios.get(`http://localhost:8000/api/rooms`, {
+    const response = await axios.get(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/rooms`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -289,7 +289,7 @@ export const getRoomById = async (): Promise<any> => {
 
 export const getHistoryById = async (): Promise<any> => {
   try {
-    const response = await axios.get(`http://localhost:8000/api/history/retrive`, {
+    const response = await axios.get(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/history/retrive`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -316,7 +316,7 @@ export const setRoomRules = async (roomId: string, roomRules: any): Promise<any>
   try {
     console.log("roomRules before sending", roomRules);
     
-    const response = await axios.post(`http://localhost:8000/api/test/score/rules?room_id=${roomId}`, 
+    const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/score/rules?room_id=${roomId}`, 
         roomRules
       ,
       {
@@ -345,7 +345,7 @@ export const setRoomRules = async (roomId: string, roomRules: any): Promise<any>
 
 export const createRoom = async (expiredTime: number): Promise<any> => {
   try {
-    const response = await axios.post(`http://localhost:8000/api/room/create?expired_time=${expiredTime}`,{}, {
+    const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/room/create?expired_time=${expiredTime}`,{}, {
       headers: {
         'Content-Type': 'application/json',
       },

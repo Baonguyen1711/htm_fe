@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import http from '../../services/http';
+import authService from '../../services/auth.service';
+import tokenRefreshService from '../../services/tokenRefresh.service';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 const JoinRoom = () => {
   const navigate = useNavigate();
@@ -38,12 +41,62 @@ const JoinRoom = () => {
         }
       }
 
-      signInWithoutPassword();
-      const params = new URLSearchParams({ roomid: roomId });
-      if (password) {
-        params.append('password', password);
+      // Sign in anonymously first and wait for auth token to be set
+      await signInWithoutPassword();
+
+      // Wait for Firebase auth state to change and authToken cookie to be set
+      const auth = getAuth();
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          unsubscribe();
+          reject(new Error("Authentication timeout"));
+        }, 10000); // 10 second timeout
+
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            try {
+              // Get the Firebase ID token and send it to backend to set cookie
+              const token = await user.getIdToken();
+              await authService.authenticateUser({ token });
+              console.log("Auth token cookie set successfully");
+              clearTimeout(timeout);
+              unsubscribe();
+              resolve();
+            } catch (error) {
+              console.error("Error setting auth token:", error);
+              clearTimeout(timeout);
+              unsubscribe();
+              reject(error);
+            }
+          }
+        });
+      }).catch((authError) => {
+        console.error("Authentication failed:", authError);
+        alert("Lỗi xác thực. Vui lòng thử lại.");
+        return;
+      });
+
+      // Get access token for the room
+      try {
+        const tokenResponse = await authService.getAccessToken({ roomId });
+        console.log("Access token obtained:", tokenResponse);
+
+        // Store access token
+        localStorage.setItem('accessToken', tokenResponse.accessToken);
+
+        // Start auto-refresh timer for the new access token
+        tokenRefreshService.startAutoRefresh(tokenResponse.accessToken);
+
+        const params = new URLSearchParams({ roomid: roomId });
+        if (password) {
+          params.append('password', password);
+        }
+        navigate(`/user/info?${params.toString()}`);
+      } catch (tokenError) {
+        console.error("Error getting access token:", tokenError);
+        alert("Lỗi khi lấy quyền truy cập phòng");
+        return;
       }
-      navigate(`/user/info?${params.toString()}`);
     } catch (error) {
       console.error("Error during joining room:", error);
     }

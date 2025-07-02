@@ -7,7 +7,7 @@ async function getPresignedUrl(extension: string, contentType: string) {
 
   
   
-  const response = await axios.get(`http://localhost:8000/api/s3/presigned-url?content_type=${contentType}&extension=${extension}`, {
+  const response = await axios.get(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/s3/presigned-url?content_type=${contentType}&extension=${extension}`, {
     withCredentials: true,
   });
 
@@ -32,7 +32,7 @@ async function uploadFileToS3(preSignedUrl: string, file: File) {
 
 async function notifyBackendFileUploaded(key: string, description: string) {
   const response = await axios.post(
-    'http://localhost:8000/api/s3/save-file-key',
+    'https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/s3/save-file-key',
     {fileKey: key, description: description },
     {
       headers: { 'Content-Type': 'application/json' },
