@@ -4,6 +4,7 @@ import { deletePath } from '../services/firebaseServices';
 import {
     EyeIcon,
 } from "@heroicons/react/24/solid";
+import { useHost } from '../context/hostContext';
 
 interface RoundTab {
     isHost?: boolean;
@@ -23,6 +24,8 @@ const Header: React.FC<RoundTab> = ({ isHost, spectatorCount }) => {
         { key: "final", label: "Tổng kết điểm" },
         { key: "turn", label: "Phân lượt" },
     ];
+
+    const {setCurrentAnswer} = useHost()
 
 
     return (
@@ -54,12 +57,14 @@ const Header: React.FC<RoundTab> = ({ isHost, spectatorCount }) => {
                                     key={tab.key}
                                     onClick={async () => {
                                         if (["1", "2", "3", "4", "turn"].includes(tab.key)) {
+                                            setCurrentAnswer("")
                                             await deletePath(roomId, "questions");
                                             await deletePath(roomId, "answers");
                                             navigate(`/host?round=${tab.key}&testName=${testName}&roomId=${roomId}`);
                                         }
 
                                         if (tab.key === "final") {
+                                            setCurrentAnswer("")
                                             navigate(`/host?round=final&roomId=${roomId}&testName=${testName}`);
                                         }
                                     }}

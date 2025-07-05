@@ -5,7 +5,7 @@ import axios from "axios";
 export const joinRoom = async (roomId: string, userInfo: User) => {
     try {
     
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/room/join?room_id=${roomId}`, userInfo, {
+        const response = await axios.post(`http://127.0.0.1:8000/api/room/join?room_id=${roomId}`, userInfo, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -281,7 +281,7 @@ export const deactivateRoom = async (roomId: string): Promise<any> => {
 export const spectatorJoin = async (roomId: string) => {
     try {
     
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/room/spectator/join?room_id=${roomId}`, {}, {
+        const response = await axios.post(`http://127.0.0.1:8000/api/room/spectator/join?room_id=${roomId}`, {}, {
           headers: {
             'Content-Type': 'application/json',
           },

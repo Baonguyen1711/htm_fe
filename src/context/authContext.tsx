@@ -28,7 +28,7 @@ export const AxiosAuthProvider = ({ children }: { children: React.ReactNode }) =
 
   const getAxiosInstance = () => {
     const axiosInstance = axios.create({
-      baseURL: "https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app", // Replace with your API endpoint
+      baseURL: "http://127.0.0.1:8000", // Replace with your API endpoint
     });
 
     // Add an interceptor to attach the token

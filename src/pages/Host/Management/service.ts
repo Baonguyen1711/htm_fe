@@ -5,7 +5,7 @@ import axios from "axios";
 export const sendAnswerToPlayer = async (roomId: string): Promise<any> => {
   try {
 
-    const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/broadcast?room_id=${roomId}`, {}, {
+    const response = await axios.post(`http://127.0.0.1:8000/api/test/broadcast?room_id=${roomId}`, {}, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -52,7 +52,7 @@ export const updateScore = async (roomId: string, scoreList: Score[], mode: stri
     if (is_obstacle_correct) params.append("is_obstacle_correct", is_obstacle_correct);
     if (obstacle_point) params.append("obstacle_point", obstacle_point.toString());
 
-    const url = `https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/score?${params.toString()}`;
+    const url = `http://127.0.0.1:8000/api/test/score?${params.toString()}`;
 
     console.log("mode", mode);
     
@@ -81,7 +81,7 @@ export const updateScore = async (roomId: string, scoreList: Score[], mode: stri
 
 export const startTime = async (roomId: string): Promise<any> => {
   try {
-    const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/time?room_id=${roomId}`, {}, {
+    const response = await axios.post(`http://127.0.0.1:8000/api/test/time?room_id=${roomId}`, {}, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -103,7 +103,7 @@ export const startTime = async (roomId: string): Promise<any> => {
 
 export const resetBuzz = async (roomId: string) => {
   try {
-    const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/buzz/reset?room_id=${roomId}`,
+    const response = await axios.post(`http://127.0.0.1:8000/api/buzz/reset?room_id=${roomId}`,
       {
 
       },

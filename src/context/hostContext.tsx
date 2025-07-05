@@ -34,8 +34,10 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
       isModified: false
     }))
   );
+  const [selectedPlayer, setSelectedPlayer] = useState<User | null>(null);
   const [playerFlashes, setPlayerFlashes] = useState(Array(playerScores.length).fill(""));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<string>("1")
+  const [inGameQuestionIndex, setInGameQuestionIndex] = useState<number>(0);
   const [currentAnswer, setCurrentAnswer] = useState<string>("")
   const [prefetchedQuestion, setPrefetchedQuestion] = useState<any>(null)
   const [prefetchedAnswer, setPrefetchedAnswer] = useState<string>("")
@@ -94,8 +96,8 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleNextQuestion = async (topic?: string, difficulty?: string, number?: string) => {
-    // If a specific question number is provided (for crash recovery), jump to that question
-    if (number && number !== currentQuestionIndex) {
+
+    if (number && number !== currentQuestionIndex && number !== "0") {
       console.log(`Jumping to specific question: ${number}`)
       setCurrentQuestionIndex(number)
 
@@ -295,7 +297,7 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
   // };
 
   return (
-    <HostContext.Provider value={{ numberOfSelectedRow, setNumberOfSelectedRow, rules, setRules, mode, setMode, animationKey, currentAnswer, setCurrentAnswer, prefetchedQuestion, prefetchedAnswer, showCurrentAnswer, setShowCurrentAnswer, handleScoreAdjust, handleNextQuestion, handleStartRound, currentQuestionIndex, setCurrentQuestionIndex, playerFlashes, setPlayerFlashes, playerScores, setPlayerScores, spotsNumber, handleShowAnswer, handleStartTime, hostInitialGrid, setHostInitialGrid, currentQuestionNumber, setCurrentQuestionNumber, handleCorrectAnswer, playerColors, setPlayerColors }}>
+    <HostContext.Provider value={{ selectedPlayer, setSelectedPlayer, numberOfSelectedRow, setNumberOfSelectedRow, rules, setRules, mode, setMode, animationKey, currentAnswer, setCurrentAnswer, prefetchedQuestion, prefetchedAnswer, showCurrentAnswer, setShowCurrentAnswer, handleScoreAdjust, handleNextQuestion, handleStartRound, currentQuestionIndex, setCurrentQuestionIndex, playerFlashes, setPlayerFlashes, playerScores, setPlayerScores, spotsNumber, handleShowAnswer, handleStartTime, hostInitialGrid, setHostInitialGrid, currentQuestionNumber, setCurrentQuestionNumber, handleCorrectAnswer, playerColors, setPlayerColors, inGameQuestionIndex, setInGameQuestionIndex }}>
       {children}
     </HostContext.Provider>
   );

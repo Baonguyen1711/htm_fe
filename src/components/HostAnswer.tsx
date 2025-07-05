@@ -15,9 +15,8 @@ import SimpleColorPicker from './SimpleColorPicker';
 function HostAnswer() {
     const [turn, setTurn] = useState<number>(0);
     const [mode, setMode] = useState<string>("")
-    const [selectedPlayer, setSelectedPlayer] = useState<User | null>(null);
     const { playersArray, playerFlashes, answerList, setAnswerList, level, selectedTopic } = usePlayer();
-    const { handleScoreAdjust, playerScores, setPlayerScores, handleNextQuestion, numberOfSelectedRow, playerColors, setPlayerColors } = useHost();
+    const { handleScoreAdjust, playerScores, setPlayerScores, handleNextQuestion, numberOfSelectedRow, playerColors, setPlayerColors, selectedPlayer, setSelectedPlayer } = useHost();
     const [searchParams] = useSearchParams();
     const round = searchParams.get("round") || "1";
     const roomId = searchParams.get("roomId") || "1";
@@ -263,28 +262,7 @@ function HostAnswer() {
                                         </div>
                                     )
                                 }
-                                {
-                                    round === "3" && (
-                                        <div className="flex flex-wrap gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    updateScore(roomId, [], "auto", "3", turn.toString(), "true")
-                                                    handleNextQuestion(selectedTopic)
-                                                }}
-                                                className="bg-green-600 hover:bg-green-700 text-white flex-1 min-w-[120px] rounded py-2">
-                                                Đúng
-                                            </button>
-                                            <button
-                                                onClick={async () => {
-                                                    handleNextQuestion(selectedTopic)
-                                                }}
-                                                className="bg-red-600 hover:bg-red-700 text-white flex-1 min-w-[120px] rounded py-2"
-                                            >
-                                                Sai
-                                            </button>
-                                        </div>
-                                    )
-                                }
+                                {/* Round 3 buttons moved to Round3.tsx for better UX */}
                                 {round === "4" && (
                                     <div className="flex flex-wrap gap-2">
                                         <button

@@ -1,5 +1,5 @@
 import { ref, onValue, set, database, serverTimestamp } from "../firebase-config"
-import { DatabaseReference, Unsubscribe, onDisconnect, remove } from "firebase/database";
+import { DatabaseReference, Unsubscribe, onDisconnect, remove, get } from "firebase/database";
 import { User, Question, Answer, Score } from "../type";
 import axios from "axios";
 import { useEffect } from "react";
@@ -442,7 +442,7 @@ export const removeSpectator = async (path: string): Promise<void> => {
 
 export const authenticateUser = async (token: string) => {
   try {
-    const response = await axios.post("https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/auth",
+    const response = await axios.post("http://127.0.0.1:8000/api/auth",
       JSON.stringify({ token }),
       {
         withCredentials: true, // Important for cookies
@@ -498,5 +498,46 @@ export const listenToRoundRules = (roomId: string, callback: (data: any) => void
     console.log("Rules data:", data);
     callback(data);
   });
+  return unsubscribe;
+};
+
+// Used topics management for Round 3
+export const setUsedTopic = (roomId: string, topic: string) => {
+  const usedTopicsRef: DatabaseReference = ref(database, `rooms/${roomId}/usedTopics`);
+
+  // Get current used topics and add the new one
+  get(usedTopicsRef).then((snapshot) => {
+    const currentUsedTopics = snapshot.val() || [];
+    if (!currentUsedTopics.includes(topic)) {
+      const updatedTopics = [...currentUsedTopics, topic];
+      set(usedTopicsRef, updatedTopics);
+    }
+  });
+};
+
+export const listenToUsedTopics = (roomId: string, callback: (topics: string[]) => void): Unsubscribe => {
+  const usedTopicsRef: DatabaseReference = ref(database, `rooms/${roomId}/usedTopics`);
+
+  const unsubscribe: Unsubscribe = onValue(usedTopicsRef, (snapshot) => {
+    const topics = snapshot.val() || [];
+    callback(topics);
+  });
+
+  return unsubscribe;
+};
+
+export const setReturnToTopicSelection = (roomId: string, shouldReturn: boolean) => {
+  const returnRef: DatabaseReference = ref(database, `rooms/${roomId}/returnToTopicSelection`);
+  set(returnRef, shouldReturn);
+};
+
+export const listenToReturnToTopicSelection = (roomId: string, callback: (shouldReturn: boolean) => void): Unsubscribe => {
+  const returnRef: DatabaseReference = ref(database, `rooms/${roomId}/returnToTopicSelection`);
+
+  const unsubscribe: Unsubscribe = onValue(returnRef, (snapshot) => {
+    const shouldReturn = snapshot.val() || false;
+    callback(shouldReturn);
+  });
+
   return unsubscribe;
 };

@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 
 export const sendGridToPlayers = async (grid: string[][], roomId: string) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/grid?room_id=${roomId}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/test/grid?room_id=${roomId}`,
             {
                 "grid": grid
             },
@@ -34,7 +34,7 @@ export const goToNextRound = async (roomId: string, round: string, grid?: string
     await deletePath(roomId, "questions");
     await deletePath(roomId, "answers");
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/rooms/round?room_id=${roomId}&round=${round}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/rooms/round?room_id=${roomId}&round=${round}`,
             {
                 "grid": grid
             },
@@ -60,7 +60,7 @@ export const goToNextRound = async (roomId: string, round: string, grid?: string
 
 export const setSelectedRow = async (roomId: string, row: string, isRow: boolean, wordLength: number) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/row/action?room_id=${roomId}&row_number=${row}&action=SELECT&is_row=${isRow}&word_length=${wordLength}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/test/row/action?room_id=${roomId}&row_number=${row}&action=SELECT&is_row=${isRow}&word_length=${wordLength}`,
             {
 
             },
@@ -86,7 +86,7 @@ export const setSelectedRow = async (roomId: string, row: string, isRow: boolean
 
 export const setIncorectRow = async (roomId: string, row: string, isRow: boolean, wordLength: number) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/row/action?room_id=${roomId}&row_number=${row}&action=INCORRECT&is_row=${isRow}&word_length=${wordLength}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/test/row/action?room_id=${roomId}&row_number=${row}&action=INCORRECT&is_row=${isRow}&word_length=${wordLength}`,
             {
 
             },
@@ -112,7 +112,7 @@ export const setIncorectRow = async (roomId: string, row: string, isRow: boolean
 
 export const setCorrectRow = async (roomId: string, row: string, correctAnswer: string, markedCharcterIndex: string, isRow: boolean, wordLength: number) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/row/action?room_id=${roomId}&row_number=${row}&action=CORRECT&correct_answer=${correctAnswer}&marked_characters_index=${markedCharcterIndex}&is_row=${isRow}&word_length=${wordLength}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/test/row/action?room_id=${roomId}&row_number=${row}&action=CORRECT&correct_answer=${correctAnswer}&marked_characters_index=${markedCharcterIndex}&is_row=${isRow}&word_length=${wordLength}`,
             {
 
             },
@@ -138,7 +138,7 @@ export const setCorrectRow = async (roomId: string, row: string, correctAnswer: 
 
 export const buzzing = async (roomId: string, playerName: string, stt: string) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/buzz?room_id=${roomId}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/buzz?room_id=${roomId}`,
             {
                 "stt": stt,
                 "player_name": playerName
@@ -165,7 +165,7 @@ export const buzzing = async (roomId: string, playerName: string, stt: string) =
 
 export const setStar = async (roomId: string, playerName: string) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/star?room_id=${roomId}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/star?room_id=${roomId}`,
             {
 
                 "player_name": playerName
@@ -192,7 +192,7 @@ export const setStar = async (roomId: string, playerName: string) => {
 
 export const resetBuzz = async (roomId: string) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/buzz/reset?room_id=${roomId}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/buzz/reset?room_id=${roomId}`,
             {
 
             },
@@ -218,7 +218,7 @@ export const resetBuzz = async (roomId: string) => {
 
 export const openObstacle = async (roomId: string, obstacleWord: string, placementArray: any) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/obstacle?room_id=${roomId}&obstacle=${obstacleWord}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/test/obstacle?room_id=${roomId}&obstacle=${obstacleWord}`,
             placementArray,
             {
                 headers: {
@@ -242,7 +242,7 @@ export const openObstacle = async (roomId: string, obstacleWord: string, placeme
 
 export const getPacketNames = async (testName: string, roomId: string) => {
     try {
-        const response = await axios.get(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/question/round/packet?test_name=${testName}&room_id=${roomId}`,
+        const response = await axios.get(`http://127.0.0.1:8000/api/test/question/round/packet?test_name=${testName}&room_id=${roomId}`,
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -265,7 +265,7 @@ export const getPacketNames = async (testName: string, roomId: string) => {
 
 export const setCurrentPacketQuestion = async (roomId: string, questionNumber: number) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/question/current?question_number=${questionNumber}&room_id=${roomId}   `, {
+        const response = await axios.post(`http://127.0.0.1:8000/api/test/question/current?question_number=${questionNumber}&room_id=${roomId}   `, {
 
         },
             {
@@ -290,7 +290,7 @@ export const setCurrentPacketQuestion = async (roomId: string, questionNumber: n
 
 export const setCurrentChunk = async (roomId: string, packetName: string, chunk: number, testName: string) => {
     try {
-        const response = await axios.get(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/question?test_name=${testName}&room_id=${roomId}&packet_name=${packetName}&chunk=${chunk}&round=3   `,
+        const response = await axios.get(`http://127.0.0.1:8000/api/test/question?test_name=${testName}&room_id=${roomId}&packet_name=${packetName}&chunk=${chunk}&round=3   `,
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -313,7 +313,7 @@ export const setCurrentChunk = async (roomId: string, packetName: string, chunk:
 
 export const sendSelectedCell = async (roomId: string, colIndex: string, rowIndex: string) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/grid/cell?room_id=${roomId}&row_index=${rowIndex}&col_index=${colIndex}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/test/grid/cell?room_id=${roomId}&row_index=${rowIndex}&col_index=${colIndex}`,
             {
 
             },
@@ -339,7 +339,7 @@ export const sendSelectedCell = async (roomId: string, colIndex: string, rowInde
 
 export const sendCellColor = async (roomId: string, colIndex: string, rowIndex: string, color: string) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/grid/color?room_id=${roomId}&row_index=${rowIndex}&col_index=${colIndex}&color=${color}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/test/grid/color?room_id=${roomId}&row_index=${rowIndex}&col_index=${colIndex}&color=${color}`,
             {
 
             },
@@ -365,7 +365,7 @@ export const sendCellColor = async (roomId: string, colIndex: string, rowIndex: 
 
 export const sendCorrectAnswer = async (roomId: string, answer: string) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/test/answer?room_id=${roomId}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/test/answer?room_id=${roomId}`,
             {
                 "answer": answer
             },
@@ -392,7 +392,7 @@ export const sendCorrectAnswer = async (roomId: string, answer: string) => {
 
 export const updateHistory = async (data: any) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/history/update`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/history/update`,
             data
             ,
             {
@@ -418,7 +418,7 @@ export const updateHistory = async (data: any) => {
 
 export const openBuzz = async (roomId: string) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/buzz/open?room_id=${roomId}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/buzz/open?room_id=${roomId}`,
             {
 
             },
@@ -444,7 +444,7 @@ export const openBuzz = async (roomId: string) => {
 
 export const closeBuzz = async (roomId: string) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/buzz/close?room_id=${roomId}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/buzz/close?room_id=${roomId}`,
             {
 
             },
@@ -470,7 +470,7 @@ export const closeBuzz = async (roomId: string) => {
 
 export const playSound = async (roomId: string, type: string) => {
     try {
-        const response = await axios.post(`https://1d68-2402-9d80-a50-f638-115b-68ac-7642-3852.ngrok-free.app/api/sound/play?room_id=${roomId}&type=${type}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/sound/play?room_id=${roomId}&type=${type}`,
             {
 
             },

@@ -41,7 +41,9 @@ const HostManagement = () => {
         setCurrentQuestionIndex,
         hostInitialGrid,
         playerColors,
-        setPlayerColors
+        setPlayerColors,
+        inGameQuestionIndex,
+        setInGameQuestionIndex
     } = useHost();
 
     const { initialGrid, selectedTopic, easyQuestionNumber, mediumQuestionNumber, hardQuestionNumber, setEasyQuestionNumber, setMediumQuestionNumber, setHardQuestionNumber, level } = usePlayer()
@@ -52,7 +54,6 @@ const HostManagement = () => {
     const currentRound = searchParams.get("round") || "1";
     const testName = searchParams.get("testName") || "1"
     const roomId = searchParams.get("roomId") || "1"
-    const [inGameQuestionIndex, setInGameQuestionIndex] = useState<number>(0);
     const [showingRules, setShowingRules] = useState(false);
     const [showGuideModal, setShowGuideModal] = useState(false);
     const [showColorSelector, setShowColorSelector] = useState(false);
@@ -102,7 +103,7 @@ const HostManagement = () => {
     };
 
     useEffect(() => {
-        setInGameQuestionIndex(0);
+        setInGameQuestionIndex(1);
         // Clear rules when entering new round to prevent auto-show
         setShowingRules(false);
         // Also clear rules from Firebase to ensure clean state
@@ -230,8 +231,8 @@ const HostManagement = () => {
                         onClick={() => {
                             if (currentRound === "3") {
                                 // Use the input box value for round 3
-                                handleNextQuestion(selectedTopic, undefined, inGameQuestionIndex.toString())
-                                setInGameQuestionIndex(prev => prev + 1);
+                                handleNextQuestion(selectedTopic, undefined, "0")
+                                setInGameQuestionIndex((prev: number) => prev + 1);
                                 return
                             }
                             if (currentRound === "4") {
@@ -251,7 +252,7 @@ const HostManagement = () => {
                             }
                             // Use the input box value for other rounds
                             handleNextQuestion(undefined, undefined, inGameQuestionIndex.toString())
-                            setInGameQuestionIndex(prev => prev + 1);
+                            setInGameQuestionIndex((prev: number) => prev + 1);
                         }}
                         className="flex items-center bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-yellow-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                     >
