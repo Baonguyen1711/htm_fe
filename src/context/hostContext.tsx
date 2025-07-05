@@ -102,7 +102,9 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
       setCurrentQuestionIndex(number)
 
       const question = await getNextQuestion(testName, number, currentRound, hostRoomId, topic, difficulty)
-      setCurrentAnswer(question.answer)
+      if(question) {
+        setCurrentAnswer(question.answer)
+      }
       setShowCurrentAnswer(true)
 
       // Clear prefetched data since we're jumping

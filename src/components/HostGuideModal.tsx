@@ -11,11 +11,12 @@ const GUIDE_CONTENT = {
   "1": {
     title: "HƯỚNG DẪN HOST - VÒNG 1: NHỔ NEO",
     steps: [
-      "1. Bấm 'Bắt đầu vòng thi' để khởi tạo vòng",
-      "2. Bấm 'Phát nhạc' để tạo không khí",
+      "1. Bấm 'Bắt đầu vòng thi' để bắt đầu vòng thi",
+      "2. Bấm 'Chạy âm thanh bắt đầu vòng thi'",
       "3. Bấm 'Câu hỏi tiếp theo' để hiển thị câu hỏi",
       "4. Bấm 'Đếm giờ' để bắt đầu thời gian trả lời (15s)",
-      "5. Sau khi hết giờ, bấm 'Hiện đáp án' để hiển thị đáp án cho thí sinh",
+      "5. Sau khi hết giờ, bấm 'Hiện đáp án' để hiển thị đáp án của thí sinh",
+      "5. Sau khi hết giờ, bấm 'Hiện đáp án đúng' để hiển thị đáp án đúng của câu hỏi",
       "6. Bấm 'Chấm điểm' (tự động theo thời gian hoặc thủ công tùy theo mode đã chọn)",
       "7. Lặp lại bước 3-6 cho 10 câu hỏi"
     ]
@@ -23,31 +24,33 @@ const GUIDE_CONTENT = {
   "2": {
     title: "HƯỚNG DẪN HOST - VÒNG 2: VƯỢT SÓNG",
     steps: [
-      "1. Bấm 'Bắt đầu vòng thi' để khởi tạo vòng",
-      "2. Bấm 'Phát nhạc' để tạo không khí",
-      "3. Bấm 'Câu hỏi tiếp theo' để hiển thị câu hỏi đầu tiên",
-      "4. Bấm 'Đếm giờ' để bắt đầu thời gian trả lời",
-      "5. Sau khi hết giờ, bấm 'Hiện đáp án' để hiển thị đáp án",
-      "6. Bấm 'Chấm điểm' cho câu hỏi thường",
-      "7. <b>Đặc biệt:</b> Nếu thí sinh trả lời đúng chướng ngại vật:",
+      "1. Bấm 'Bắt đầu vòng thi' để bắt đầu vòng thi",
+      "2. Bấm 'Chạy âm thanh bắt đầu vòng thi'",
+      "3. Bấm vào số thứ tự hàng ngang để mở menu hành động",
+      "4. Bấm 'SELECT' để hiển thị câu hỏi cho hàng ngang",
+      "5. Bấm 'Đếm giờ' để bắt đầu thời gian trả lời",
+      "6. Sau khi hết giờ, bấm 'Hiện đáp án thí sinh' để hiển thị câu trả lời của thí sinh",
+      "7. Bấm vào số thứ tự hàng ngang để mở menu hành động, chọn correct nếu có thí sinh trả lời đúng và incorrect nếu không ai trả lời đúng",
+      "8. Bấm 'Chấm điểm tự động'",
+      "9. <b>Đặc biệt:</b> Nếu thí sinh trả lời đúng chướng ngại vật:",
       "   - Bấm 'Mở chướng ngại vật' trước",
       "   - Chọn thí sinh đã trả lời đúng",
       "   - Bấm 'Cập nhật lượt thi'",
       "   - Bấm 'Chấm điểm CNV' với điểm thưởng tương ứng",
-      "8. Lặp lại cho các câu hỏi còn lại"
+      "10. Lặp lại cho các câu hỏi còn lại"
     ]
   },
   "3": {
     title: "HƯỚNG DẪN HOST - VÒNG 3: BỨT PHÁ",
     steps: [
       "1. <b>Giai đoạn phân lượt:</b>",
-      "   - Bấm 'Bắt đầu vòng thi phân lượt'",
-      "   - Đặt câu hỏi phân lượt để xác định thứ tự",
+      "   - Xác định thứ tự thi thông qua phần thi phân lượt",
       "   - Ghi nhận thứ tự thí sinh qua thanh điều khiển dưới mỗi thí sinh",
       "2. <b>Giai đoạn thi chính:</b>",
-      "   - Bấm 'Bắt đầu vòng thi chính'",
+      "   - Bấm 'Bắt đầu vòng thi'",
       "   - Chọn thí sinh theo thứ tự đã xác định",
-      "   - Thí sinh chọn chủ đề",
+      "   - Thí sinh chọn gói",
+      "   - Chọn gói tương ứng",
       "   - Bấm 'Câu hỏi tiếp theo' để chạy câu đầu tiên (60s)",
       "3. <b>Trong quá trình thi:</b>",
       "   - Với các câu tiếp theo: chỉ cần bấm 'Đúng'/'Sai'",
@@ -63,7 +66,7 @@ const GUIDE_CONTENT = {
       "   - Chọn màu cho từng thí sinh trước khi bắt đầu",
       "   - Màu sẽ hiển thị trong ô thí sinh",
       "2. <b>Giai đoạn phân lượt:</b>",
-      "   - Tương tự vòng 3, xác định thứ tự thí sinh",
+      "   - Sau khi kết thúc vòng thi phân lượt, yêu cầu thí sinh chọn thứ tự thi cho mình dựa theo thành tích ở vòng phân lượt",
       "3. <b>Giai đoạn thi chính:</b>",
       "   - Chọn thí sinh theo lượt",
       "   - Thí sinh chọn 1 ô trên bảng 5x5",
@@ -87,13 +90,12 @@ const GUIDE_CONTENT = {
     title: "HƯỚNG DẪN HOST - VÒNG PHÂN LƯỢT",
     steps: [
       "1. Bấm 'Bắt đầu vòng phân lượt'",
-      "2. Đặt câu hỏi để thí sinh tranh giành quyền ưu tiên",
-      "3. Bấm 'Câu hỏi tiếp theo' để hiển thị câu hỏi",
-      "4. Bấm 'Đếm giờ' để bắt đầu thời gian",
-      "5. Quan sát thí sinh bấm chuông",
-      "6. Xác định thứ tự thí sinh dựa trên tốc độ trả lời",
-      "7. Ghi nhận thứ tự qua thanh điều khiển",
-      "8. Chuyển sang vòng thi chính"
+      "2. Bấm 'Câu hỏi tiếp theo' để hiển thị câu hỏi",
+      "3. Bấm 'Đếm giờ' để bắt đầu thời gian",
+      "4. Sau khi hết giờ, bấm 'Hiện đáp án' để hiển thị đáp án và thời gian trả lời của thí sinh",
+      "5. Xác định thứ tự thí sinh dựa trên tốc độ trả lời",
+      "6. Ghi nhận thứ tự qua thanh điều khiển",
+      "7. Chuyển sang vòng thi chính"
     ]
   }
 };

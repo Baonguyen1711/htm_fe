@@ -1,6 +1,7 @@
 import { Question } from "../../../type";
 import { getAxiosAuthContext } from "../../../context/authContext";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 
 export const getTest = async (testName: string): Promise<any> => {
@@ -257,6 +258,10 @@ export const getNextQuestion = async (testName: string, questionNumber: string, 
 
 
   } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      toast.error("Đã hết câu hỏi!");
+      return;
+    }
     console.error('Error fetching test data:', error);
     throw error; // Quăng lỗi để xử lý ở nơi gọi hàm
   }

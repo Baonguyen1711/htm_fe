@@ -6,9 +6,10 @@ import { useTimeStart } from "../../context/timeListenerContext";
 interface PlayerAnswerInputProps {
     isHost: boolean;
     question: Question | undefined;
+    isDisabled?: boolean
 }
 
-const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, question }) => {
+const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, question, isDisabled }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const {timeElapsed, setPlayerAnswerTime} = useTimeStart()
     const [playerAnswer, setPlayerAnswer] = useState("");
@@ -48,6 +49,7 @@ const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, question 
                 className="w-full h-14 border border-gray-300 rounded-lg px-4 text-lg text-center"
                 placeholder="Type your answer..."
                 onKeyDown={handleKeyDown}
+                disabled={isDisabled}
             />
             <p className="mt-2 text-lg text-white">
                 {playerAnswer? `Your answer: ${playerAnswer}`: ""}

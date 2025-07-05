@@ -30,6 +30,7 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
     const [currentQuestion, setCurrentQuestion] = useState<Question>()
     const [correctAnswer, setCorrectAnswer] = useState<string>("")
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isInputDisabled, setIsInputDisabled] = useState(true)
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { timeLeft, playerAnswerTime, startTimer, setTimeLeft } = useTimeStart();
     const { setAnswerList, playerAnswerRef, position, animationKey, setAnimationKey, currentPlayerName, currentPlayerAvatar } = usePlayer()
@@ -60,6 +61,7 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
                 return;
             }
             startTimer(10)
+            setIsInputDisabled(false)
             return () => {
                 unsubscribe();
 
@@ -78,7 +80,7 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
             return;
         }
         if (timeLeft === 0) {
-
+            setIsInputDisabled(true)
             setAnimationKey((prev: number) => prev + 1);
             if (!isHost && !isSpectator) {
                 console.log("playerAnswerRef.current", playerAnswerRef.current);
@@ -217,6 +219,7 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
                 <PlayerAnswerInput
                     isHost={isHost}
                     question={currentQuestion}
+                    isDisabled={isInputDisabled}
                 />
             }
 

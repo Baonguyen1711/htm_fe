@@ -128,16 +128,6 @@ const HostManagement = () => {
                         Hướng dẫn
                     </button>
 
-                    {currentRound === "4" && (
-                        <button
-                            onClick={() => setShowColorSelector(true)}
-                            className="flex items-center bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105 font-medium text-sm"
-                            title="Chọn màu cho thí sinh"
-                        >
-                            <PaintBrushIcon className="w-5 h-5 mr-2" />
-                            Chọn màu
-                        </button>
-                    )}
                 </div>
 
                 <div className="text-gray-400 text-sm">
@@ -254,7 +244,7 @@ const HostManagement = () => {
                             handleNextQuestion(undefined, undefined, inGameQuestionIndex.toString())
                             setInGameQuestionIndex((prev: number) => prev + 1);
                         }}
-                        className="flex items-center bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-yellow-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
+                        className="flex items-center bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-yellow-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                     >
                         <ArrowRightCircleIcon className="w-4 h-4 mr-2" />
                         CÂU HỎI TIẾP THEO
@@ -264,7 +254,7 @@ const HostManagement = () => {
                         handleStartTime()
                         toast.success("Đã bắt đầu đếm giờ!");
                     }}
-                    className="flex items-center bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-red-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
+                    className="flex items-center bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-red-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                 >
                     <ClockIcon className="w-4 h-4 mr-2" />
 
@@ -288,7 +278,7 @@ const HostManagement = () => {
             <div className="flex flex-col gap-3 lg:gap-4 mb-4">
                  <button
                     onClick={() => handleCorrectAnswer(currentAnswer)}
-                    className="flex items-center bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-green-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
+                    className="flex items-center bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-green-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                 >
                     <CheckCircleIcon className="w-4 h-4 mr-2" />
 
@@ -316,7 +306,7 @@ const HostManagement = () => {
                         playSound(roomId, "opening")
                         toast.success("Đã chạy âm thanh mở đầu!");
                     }}
-                    className="flex items-center bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-red-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
+                    className="flex items-center bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white p-2 lg:p-3 rounded-lg shadow-md border border-red-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full"
                 >
                     <MusicalNoteIcon className="w-4 h-4 mr-2" />
 
@@ -327,7 +317,7 @@ const HostManagement = () => {
                     className={`flex items-center ${
                         showingRules
                             ? 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 border-red-400/50'
-                            : 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 border-green-400/50'
+                            : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 border-green-400/50'
                     } text-white p-2 lg:p-3 rounded-lg shadow-md border transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base w-full`}
                 >
                     {showingRules ? (

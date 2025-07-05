@@ -88,6 +88,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
   const [hintWords, setHintWords] = useState<WordObj[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<Question>()
   const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
+  const [isInputDisabled, setIsInputDisabled] = useState(true)
 
   const [cellStyles, setCellStyles] = useState<
     Record<string, { background: string; textColor: string }>
@@ -109,6 +110,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
       return;
     }
     if (timeLeft === 0) {
+      setIsInputDisabled(true)
       if (!isHost && !isSpectator) {
         submitAnswer(roomId, playerAnswerRef.current, position, playerAnswerTime, currentPlayerName, currentPlayerAvatar)
       }
@@ -130,6 +132,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
         return;
       }
       startTimer(15)
+      setIsInputDisabled(false)
       return () => {
         unsubscribe();
 
@@ -966,6 +969,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
           <PlayerAnswerInput
             isHost={isHost}
             question={currentQuestion}
+            isDisabled={isInputDisabled}
           />
         )
       }
