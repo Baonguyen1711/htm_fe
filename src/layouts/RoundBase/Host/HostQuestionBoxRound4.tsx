@@ -244,7 +244,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || "4"
     const { setEasyQuestionNumber, setMediumQuestionNumber, setHardQuestionNumber, setLevel, animationKey, setAnimationKey, setInitialGrid } = usePlayer()
-    const { currentAnswer } = useHost()
+    const { currentAnswer, handleNextQuestion } = useHost()
     const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
     const [staredPlayer, setStaredPlayer] = useState<string>("");
     const [showModal, setShowModal] = useState(false); // State for modal visibility
@@ -342,23 +342,29 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     // Function to handle menu actions
     const handleMenuAction = (action: 'select' | 'red' | 'green' | 'blue' | 'yellow', row: number, col: number) => {
         if (action === 'select') {
+            // Determine difficulty based on grid symbol
+            let selectedDifficulty = "Dễ"; // default
             if (initialGrid[row][col] == "") {
-
+                selectedDifficulty = "Dễ";
                 setLevel("Dễ")
             }
-
             if (initialGrid[row][col] == "!") {
-
+                selectedDifficulty = "Trung bình";
                 setLevel("Trung bình")
             }
-
             if (initialGrid[row][col] == "?") {
-
+                selectedDifficulty = "Khó";
                 setLevel("Khó")
             }
 
             sendSelectedCell(roomId, col.toString(), row.toString())
             const questionIndex = row * 5 + col; // Calculate question index from grid position
+
+            // Immediately trigger API call with the correct difficulty
+            const questionNumber = (questionIndex + 1).toString();
+            console.log(`Triggering API call with difficulty: ${selectedDifficulty}, question: ${questionNumber}`);
+            handleNextQuestion(undefined, selectedDifficulty, questionNumber);
+
             if (questions[questionIndex]) {
                 setSelectedQuestion(questions[questionIndex]);
                 setGridColors((prev) => {

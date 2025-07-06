@@ -19,11 +19,15 @@ function PlayerScore({ playerColors = {} }: PlayerScoreProps) {
         const unsubscribePlayers = listenToScores(roomId, (scoreList) => {
             if (Array.isArray(scoreList)) {
                 console.log("Received scoreList:", scoreList);
-                const scoreListWithFlashes = scoreList.map((score: Score) => ({
-                    ...score,
-                    flashColor: score.isModified ? score.isCorrect ? "flash-correct" : "flash-incorrect" : null,
-                    isModified: score.isModified
-                }));
+                const scoreListWithFlashes = scoreList.map((score: Score) => {
+                    const flashColor = score.isModified ? score.isCorrect ? "flash-correct" : "flash-incorrect" : null;
+                    console.log(`Player ${score.playerName}: isModified=${score.isModified}, isCorrect=${score.isCorrect}, flashColor=${flashColor}`);
+                    return {
+                        ...score,
+                        flashColor: flashColor,
+                        isModified: score.isModified
+                    };
+                });
                 setPlayerFlashes(scoreListWithFlashes);
                 const sortedList = [...scoreList].sort((a, b) => parseInt(b.score) - parseInt(a.score));
                 console.log("Sorted scoreList:", sortedList);
@@ -91,24 +95,7 @@ function PlayerScore({ playerColors = {} }: PlayerScoreProps) {
                     );
                 })}
             </div>
-            <style>{`
-                .flash-correct { 
-                    animation: flashGreen 0.5s; 
-                    background: rgba(34, 197, 94, 0.2) !important;
-                }
-                .flash-incorrect { 
-                    animation: flashRed 0.5s; 
-                    background: rgba(239, 68, 68, 0.2) !important;
-                }
-                @keyframes flashGreen {
-                  0% { background: rgba(34, 197, 94, 0.4); }
-                  100% { background: rgba(51, 65, 85, 0.6); }
-                }
-                @keyframes flashRed {
-                  0% { background: rgba(239, 68, 68, 0.4); }
-                  100% { background: rgba(51, 65, 85, 0.6); }
-                }
-            `}</style>
+
         </div>
     );
 }

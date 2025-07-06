@@ -4,6 +4,7 @@ import { RoundBase } from '../../type';
 import { sendSelectedCell, sendCellColor } from '../../components/services';
 import { useSearchParams } from 'react-router-dom';
 import { usePlayer } from '../../context/playerContext';
+import { useHost } from '../../context/hostContext';
 import { deletePath, listenToTimeStart, listenToSound, listenToQuestions, listenToSelectedCell, listenToCellColor, listenToAnswers, listenToBuzzing, listenToStar } from '../../services/firebaseServices';
 import { useTimeStart } from '../../context/timeListenerContext';
 import { resetBuzz } from '../../components/services';
@@ -73,6 +74,7 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || "4"
     const { setEasyQuestionNumber, setMediumQuestionNumber, setHardQuestionNumber, setLevel, animationKey, setAnimationKey } = usePlayer()
+    const { handleNextQuestion } = useHost()
     const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
     const [staredPlayer, setStaredPlayer] = useState<string>("");
     const [showModal, setShowModal] = useState(false); // State for modal visibility
@@ -129,23 +131,29 @@ const QuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     // Function to handle menu actions
     const handleMenuAction = (action: 'select' | 'red' | 'green' | 'blue' | 'yellow', row: number, col: number) => {
         if (action === 'select') {
+            // Determine difficulty based on grid symbol
+            let selectedDifficulty = "Dễ"; // default
             if (initialGrid[row][col] == "") {
-
+                selectedDifficulty = "Dễ";
                 setLevel("Dễ")
             }
-
             if (initialGrid[row][col] == "!") {
-
+                selectedDifficulty = "Trung bình";
                 setLevel("Trung bình")
             }
-
             if (initialGrid[row][col] == "?") {
-
+                selectedDifficulty = "Khó";
                 setLevel("Khó")
             }
 
             sendSelectedCell(roomId, col.toString(), row.toString())
             const questionIndex = row * 5 + col; // Calculate question index from grid position
+
+            // Immediately trigger API call with the correct difficulty
+            const questionNumber = (questionIndex + 1).toString();
+            console.log(`Triggering API call with difficulty: ${selectedDifficulty}, question: ${questionNumber}`);
+            handleNextQuestion(undefined, selectedDifficulty, questionNumber);
+
             if (questions[questionIndex]) {
                 setSelectedQuestion(questions[questionIndex]);
                 setGridColors((prev) => {

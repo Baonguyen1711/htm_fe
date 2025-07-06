@@ -28,11 +28,11 @@ export interface Answer {
 
 export interface Score {
     score: string,
-    isCorrect?: boolean,
+    isCorrect?: string,  // Backend sends "true"/"false" as strings
     playerName: string,
     avatar: string,
-    isModified: boolean,
+    isModified: string,  // Backend sends "true"/"false" as strings
     flashColor?: string
     stt?: string
-    [key: string]: any; 
+    [key: string]: any;
 }

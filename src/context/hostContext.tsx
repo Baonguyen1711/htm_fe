@@ -28,10 +28,10 @@ export const HostProvider = ({ children }: { children: React.ReactNode }) => {
   const [playerScores, setPlayerScores] = useState<Score[]>(
     Array(8).fill(null).map(() => ({ // Initialize for 8 players
       score: "0",
-      isCorrect: false,
+      isCorrect: "false",  // Changed to string
       playerName: "",
       avatar: "",
-      isModified: false
+      isModified: "false"  // Changed to string
     }))
   );
   const [selectedPlayer, setSelectedPlayer] = useState<User | null>(null);

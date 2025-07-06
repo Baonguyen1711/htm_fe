@@ -97,7 +97,7 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
                 );
             }, 3000);
 
-            console.log("playerFlashes before", playerFlashes);
+            console.log("playerFlashes after", playerFlashes);
             return () => clearTimeout(timeoutId);
         }
     }, [playerFlashes, setPlayerFlashes]);

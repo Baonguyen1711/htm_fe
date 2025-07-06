@@ -4,10 +4,42 @@ import ViewTest from './ViewTest';
 import SetupMatch from './SetUpMatch';
 import ViewHistory from './History';
 import useAuth from '../../../hooks/useAuth';
+import authService from '../../../services/auth.service';
+import tokenRefreshService from '../../../services/tokenRefresh.service';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { ArrowLeftOnRectangleIcon } from '@heroicons/react/24/solid';
 
 const HostManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('upload');
-  const {getToken} = useAuth()
+  const {getToken, logout: firebaseLogout} = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      // Show confirmation dialog
+      const confirmLogout = window.confirm("Bạn có chắc chắn muốn đăng xuất?");
+      if (!confirmLogout) return;
+
+      // Stop token refresh service
+      tokenRefreshService.stopAutoRefresh();
+
+      // Call auth service logout (clears localStorage and httpOnly cookies)
+      await authService.logout();
+
+      // Firebase logout
+      await firebaseLogout();
+
+      // Show success message
+      toast.success("Đăng xuất thành công!");
+
+      // Redirect to login page
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Có lỗi xảy ra khi đăng xuất");
+    }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -25,9 +57,20 @@ const HostManagement: React.FC = () => {
       <div className="relative z-10 min-h-screen p-4">
         <div className="max-w-6xl mx-auto pt-8">
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 relative">
+            {/* Logout button - positioned in top right */}
+            <div className="absolute top-0 right-0">
+              <button
+                onClick={handleLogout}
+                className="flex items-center bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-700 hover:to-gray-600 text-white px-4 py-2 rounded-lg shadow-md border border-gray-400/50 transition-all duration-200 hover:scale-105 font-medium text-sm"
+              >
+                <ArrowLeftOnRectangleIcon className="w-4 h-4 mr-2" />
+                Đăng xuất
+              </button>
+            </div>
+
             <h1 className="font-serif text-4xl font-bold mb-4 text-transparent bg-gradient-to-r from-blue-200 to-cyan-100 bg-clip-text">
-              Bảng Điều Khiển 
+              Bảng Điều Khiển
             </h1>
             <p className="text-blue-200/90 text-lg">
               Quản lý đề thi và phòng thi
