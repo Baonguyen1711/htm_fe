@@ -13,6 +13,7 @@ import FallBack from './components/ui/FallBack';
 import withRoleCheck from './routes/ProtectedRoute';
 import ProtectedRoute from './routes/ProtectedRoute';
 import { ToastContainer } from 'react-toastify';
+import ErrorBoundary from './components/ErrorBoundary';
 import 'react-toastify/dist/ReactToastify.css';
 
 
@@ -89,76 +90,82 @@ function App() {
   const roomId = searchParams.get("roomId") || ""
   return (
     <>
+      <PlayerProvider>
+        <ErrorBoundary fallback={<FallBack />}>
+          <Suspense fallback={<FallBack />}>
+            <QueryClientProvider client={queryClient}>
+              <TimeStartProvider roomId={roomId}>
+                <SoundProvider>
+                  <HostProvider>
+                    <Routes>
+                      {/* Public Routes */}
+                      <Route
+                        path="*"
+                        element={
 
-      <Suspense fallback={<FallBack />}>
-        <QueryClientProvider client={queryClient}>
-          <TimeStartProvider roomId={roomId}>
-            <SoundProvider>
-              <HostProvider>
-
-
-                <PlayerProvider>
-                  <Routes>
-                    {/* Public Routes */}
-                    <Route
-                      path="*"
-                      element={
-
-                        <Routes>
-                          <Route path="/" element={<Home />} />
-                          <Route path="/join" element={<JoinRoom />} />
-                          <Route path="/spectatorJoin" element={<SpectatorJoin />} />
-                          <Route path="/play" element={<PlayComponent />} />
-                          <Route path="/login" element={<Login />} />
-                          <Route path="/user/info" element={<InfoForm />} />
-                        </Routes>
-
-
-                      }
-                    />
-                    {/* Host Routes */}
-                    <Route
-                      path="/host/*"
-                      element={
-                        <HostProvider>
-                          <AxiosAuthProvider>
-                            <Routes>
-                              <Route path="/login" element={<Login />} />
-                              <Route path="dashboard" element={<ProtectedRoute element={<Dashboard />} requireAccessToken={false} requireHost={true}/>} />
-                              <Route path="create_room" element={<ProtectedRoute element={<CreateRoom />} requireAccessToken={false} requireHost={true}/>} />
-                              <Route path="" element={<ProtectedRoute element={<HostComponent />} requireAccessToken={true}/>} />
-                            </Routes>
-                          </AxiosAuthProvider>
-                        </HostProvider>
-
-                      }
-                    />
-
-                    <Route
-                      path="/spectator/*"
-                      element={
-                        <HostProvider>
-                          <AxiosAuthProvider>
-                            <Routes>
-                              <Route path="" element={<SpectatorComponent />} />
-                            </Routes>
-                          </AxiosAuthProvider>
-                        </HostProvider>
-
-                      }
-                    />
-                  </Routes>
-                </PlayerProvider>
-              </HostProvider>
-
-            </SoundProvider>
-
-          </TimeStartProvider>
+                          <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/join" element={<JoinRoom />} />
+                            <Route path="/spectatorJoin" element={<SpectatorJoin />} />
+                            <Route path="/play" element={
+                              <ErrorBoundary onRetry={() => window.location.reload()}>
+                                <PlayComponent />
+                              </ErrorBoundary>
+                            } />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/user/info" element={<InfoForm />} />
+                          </Routes>
 
 
-        </QueryClientProvider>
-        <ToastContainer />
-      </Suspense>
+                        }
+                      />
+                      {/* Host Routes */}
+                      <Route
+                        path="/host/*"
+                        element={
+                          <HostProvider>
+                            <AxiosAuthProvider>
+                              <Routes>
+                                <Route path="/login" element={<Login />} />
+                                <Route path="dashboard" element={<ProtectedRoute element={<Dashboard />} requireAccessToken={false} requireHost={true} />} />
+                                <Route path="create_room" element={<ProtectedRoute element={<CreateRoom />} requireAccessToken={false} requireHost={true} />} />
+                                <Route path="" element={<ProtectedRoute element={<HostComponent />} requireAccessToken={true} />} />
+                              </Routes>
+                            </AxiosAuthProvider>
+                          </HostProvider>
+
+                        }
+                      />
+
+                      <Route
+                        path="/spectator/*"
+                        element={
+                          <HostProvider>
+                            <AxiosAuthProvider>
+                              <Routes>
+                                <Route path="" element={
+                                  <ErrorBoundary onRetry={() => window.location.reload()}>
+                                    <SpectatorComponent />
+                                  </ErrorBoundary>
+                                } />
+                              </Routes>
+                            </AxiosAuthProvider>
+                          </HostProvider>
+
+                        }
+                      />
+                    </Routes>
+                  </HostProvider>
+
+                </SoundProvider>
+
+              </TimeStartProvider>
+            </QueryClientProvider>
+            <ToastContainer />
+          </Suspense>
+        </ErrorBoundary>
+      </PlayerProvider>
+
     </>
   );
 }

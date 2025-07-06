@@ -1,7 +1,124 @@
-import React from 'react';
-import { Waves, Users, Clock } from 'lucide-react'
+import React, { useEffect, useState } from 'react';
+import { Waves, Users, Clock } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { usePlayer } from '../../context/playerContext';
+import { listenToRoundStart, listenToGrid } from '../../services/firebaseServices';
+import { ref, get } from 'firebase/database';
+import { database } from '../../firebase-config';
 
 const FallBack = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const roomId = searchParams.get("roomId") || "";
+  const round = searchParams.get("round") || "";
+
+  // Safely get player context (might be null if outside PlayerProvider)
+  const playerContext = usePlayer();
+  const setInitialGrid = playerContext?.setInitialGrid;
+
+  const [showRetryOption, setShowRetryOption] = useState(false);
+
+  // Check for existing grid data immediately (for reload scenarios)
+  useEffect(() => {
+    const checkExistingGrid = async () => {
+      if (!roomId || !["2", "4"].includes(round)) return;
+
+      try {
+        console.log("FallBack: Checking for existing grid data...");
+        const gridRef = ref(database, `rooms/${roomId}/grid`);
+        const snapshot = await get(gridRef);
+        const existingGrid = snapshot.val();
+
+        if (existingGrid && Array.isArray(existingGrid) && existingGrid.length > 0) {
+          console.log("FallBack: Found existing grid data, transitioning immediately");
+          setInitialGrid(existingGrid);
+
+          const isSpectator = window.location.pathname.includes('spectator');
+          if (isSpectator) {
+            navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
+          } else {
+            navigate(`/play?round=${round}&roomId=${roomId}`, { replace: true });
+          }
+        }
+      } catch (error) {
+        console.error("FallBack: Error checking existing grid:", error);
+      }
+    };
+
+    checkExistingGrid();
+  }, [roomId, round, navigate, setInitialGrid]);
+
+  // Listen for grid data and round changes
+  useEffect(() => {
+    if (!roomId) return;
+
+    console.log("FallBack: Listening for grid data...");
+
+    // Listen for persisted grid data (for Round 2 & 4)
+    const unsubscribeGrid = listenToGrid(roomId, (gridData) => {
+      console.log("FallBack: Received grid data:", gridData);
+
+      if (gridData && Array.isArray(gridData) && gridData.length > 0) {
+        console.log("FallBack: Valid grid received, transitioning to game");
+        setInitialGrid(gridData);
+
+        // Navigate to the current round
+        const isSpectator = window.location.pathname.includes('spectator');
+
+        if (isSpectator) {
+          navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
+        } else {
+          navigate(`/play?round=${round}&roomId=${roomId}`, { replace: true });
+        }
+      }
+    });
+
+    // Also listen for round changes (for navigation to rounds that don't need grid)
+    const unsubscribeRounds = listenToRoundStart(roomId, (data) => {
+      console.log("FallBack: Received round data:", data);
+
+      // Handle round changes for rounds that don't need grid (1, 3, turn, final)
+      if (data.round && data.round !== round && !["2", "4"].includes(data.round)) {
+        console.log("FallBack: Round changed to non-grid round, navigating");
+        const isSpectator = window.location.pathname.includes('spectator');
+
+        if (isSpectator) {
+          navigate(`/spectator?round=${data.round}&roomId=${roomId}`, { replace: true });
+        } else {
+          navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
+        }
+      }
+
+      // If round changes to 2 or 4 and we have grid data, navigate
+      if (data.round && ["2", "4"].includes(data.round) && data.grid && data.grid.length > 0) {
+        console.log("FallBack: Round changed to grid round with grid data, navigating");
+        setInitialGrid(data.grid);
+        const isSpectator = window.location.pathname.includes('spectator');
+
+        if (isSpectator) {
+          navigate(`/spectator?round=${data.round}&roomId=${roomId}`, { replace: true });
+        } else {
+          navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
+        }
+      }
+    });
+
+    // Show retry option after 10 seconds if no grid is found for Round 2/4
+    let timeoutId: NodeJS.Timeout;
+    if (["2", "4"].includes(round)) {
+      timeoutId = setTimeout(() => {
+        console.log("FallBack: No grid found after 10 seconds, showing retry option");
+        setShowRetryOption(true);
+      }, 10000);
+    }
+
+    return () => {
+      console.log("FallBack: Cleaning up listeners");
+      unsubscribeGrid();
+      unsubscribeRounds();
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [roomId, round, navigate, setInitialGrid]);
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Ocean/Starry Night Background */}
@@ -47,12 +164,15 @@ const FallBack = () => {
 
           {/* Title */}
           <h2 className="text-2xl font-bold text-white mb-4">
-            Đang chờ người chơi...
+            {round === "2" || round === "4" ? "Đang chờ bảng trò chơi..." : "Đang chờ người chơi..."}
           </h2>
 
           {/* Status message */}
           <p className="text-blue-200/80 mb-6 leading-relaxed">
-            Vui lòng đợi trong khi chúng tôi chuẩn bị trò chơi cho bạn
+            {round === "2" || round === "4"
+              ? "Vui lòng đợi host thiết lập bảng trò chơi"
+              : "Vui lòng đợi trong khi chúng tôi chuẩn bị trò chơi cho bạn"
+            }
           </p>
 
           {/* Animated status indicators */}
@@ -81,6 +201,29 @@ const FallBack = () => {
           <p className="text-blue-300/60 text-sm mt-6">
             Trò chơi sẽ bắt đầu sớm thôi...
           </p>
+
+          {/* Retry option for grid-dependent rounds */}
+          {showRetryOption && ["2", "4"].includes(round) && (
+            <div className="mt-8 p-4 bg-slate-800/50 rounded-lg border border-yellow-500/30">
+              <p className="text-yellow-300 text-sm mb-3">
+                Không thể tải hàng ngang. Host có thể chưa thiết lập bảng.
+              </p>
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+                >
+                  Thử lại
+                </button>
+                <button
+                  onClick={() => navigate('/')}
+                  className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded transition-colors"
+                >
+                  Về trang chủ
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
