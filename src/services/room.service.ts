@@ -9,7 +9,7 @@ class RoomService {
     }
 
     async getRoomByUser() {
-        return await http.get("rooms", true)
+        return await http.get(`${this.baseEndpoint}`, true)
     }
 
     async createRoom(expiredTime: number, password?: string, maxPlayers?: number) {

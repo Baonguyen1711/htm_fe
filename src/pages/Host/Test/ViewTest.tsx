@@ -33,6 +33,8 @@ const ViewTest: React.FC = () => {
       try {
         const testList = await testManageMentService.getTestNameByUser();
         localStorage.setItem("testList", JSON.stringify(testList));
+        console.log("test list", testList);
+        
         setTestList(testList);
       } catch (error) {
         console.error("Error fetching test list:", error);
@@ -328,11 +330,15 @@ const ViewTest: React.FC = () => {
             <option value="" disabled className="bg-slate-700">
               -- Chọn một bộ đề --
             </option>
-            {testList.map((test) => (
+            {testList.length > 0? 
+            testList.map((test) => (
               <option key={test} value={test} className="bg-slate-700">
                 {test}
               </option>
-            ))}
+            ))
+            :
+            null
+          }
           </select>
         </div>
         <button

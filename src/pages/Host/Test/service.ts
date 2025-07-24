@@ -133,7 +133,7 @@ export const updateQuestion = async (updateQuestion: Partial<Question>, question
 export const addNewQuestion = async (updateQuestion: Partial<Question>): Promise<any> => {
   try {
 
-    const response = await axios.post(`http://127.0.0.1:8000/api/test/question/add`,updateQuestion ,{
+    const response = await axios.post(`http://127.0.0.1:8000/api/game/question/add`,updateQuestion ,{
       headers: {
         'Content-Type': 'application/json',
       },
@@ -167,7 +167,7 @@ export const getQuestionByRound = async (testName: string, round: string, roomId
     // if (!authToken) {
     //   throw new Error("No token found. Please log in.");
     // }
-    let url = `http://127.0.0.1:8000/api/test/question/round?test_name=${testName}&round=${round}&room_id=${roomId}`
+    let url = `http://127.0.0.1:8000/api/game/question/round?test_name=${testName}&round=${round}&room_id=${roomId}`
 
     if (packetName) {
       url += `&packet_name=${packetName}`;
@@ -201,7 +201,7 @@ export const getQuestionByRound = async (testName: string, round: string, roomId
 
 export const prefetchQuestion = async (testName: string, questionNumber: string, round: string, roomId: string, packetName?: string, difficulty?: string): Promise<any> => {
   try {
-    let url = `http://127.0.0.1:8000/api/test/question/prefetch?test_name=${testName}&question_number=${questionNumber}&round=${round}&room_id=${roomId}`
+    let url = `http://127.0.0.1:8000/api/game/question/prefetch?test_name=${testName}&question_number=${questionNumber}&round=${round}&room_id=${roomId}`
 
     if (packetName) {
       url += `&packet_name=${packetName}`;
@@ -231,7 +231,7 @@ export const prefetchQuestion = async (testName: string, questionNumber: string,
 export const getNextQuestion = async (testName: string, questionNumber: string, round: string, roomId: string, packetName?: string, // Optional param
   difficulty?: string ): Promise<any> => {
   try {
-    let url = `http://127.0.0.1:8000/api/test/question?test_name=${testName}&question_number=${questionNumber}&round=${round}&room_id=${roomId}`
+    let url = `http://127.0.0.1:8000/api/game/question?test_name=${testName}&question_number=${questionNumber}&round=${round}&room_id=${roomId}`
 
     if (packetName) {
       url += `&packet_name=${packetName}`;
@@ -269,7 +269,7 @@ export const getNextQuestion = async (testName: string, questionNumber: string, 
 
 export const getRoomById = async (): Promise<any> => {
   try {
-    const response = await axios.get(`http://127.0.0.1:8000/api/rooms`, {
+    const response = await axios.get(`http://127.0.0.1:8000/api/room`, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -321,7 +321,7 @@ export const setRoomRules = async (roomId: string, roomRules: any): Promise<any>
   try {
     console.log("roomRules before sending", roomRules);
     
-    const response = await axios.post(`http://127.0.0.1:8000/api/test/score/rules?room_id=${roomId}`, 
+    const response = await axios.post(`http://127.0.0.1:8000/api/game/score/rules?room_id=${roomId}`, 
         roomRules
       ,
       {

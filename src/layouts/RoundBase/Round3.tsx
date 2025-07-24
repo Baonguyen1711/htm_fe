@@ -37,7 +37,7 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
     const [usedTopics, setUsedTopics] = useState<string[]>([]);
     const [showReturnButton, setShowReturnButton] = useState(false);
     // const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const { selectedTopic, setSelectedTopic, currentQuestion, setCurrentQuestion, animationKey, setAnimationKey } = usePlayer()
+    const { selectedTopic, setSelectedTopic, currentQuestion, setCurrentQuestion, animationKey, setAnimationKey, setAnswerList } = usePlayer()
     const { currentQuestionIndex, setCurrentQuestionIndex, currentAnswer, setCurrentAnswer, selectedPlayer, handleNextQuestion, inGameQuestionIndex, setInGameQuestionIndex } = useHost()
     const [playerCurrentQuestionIndex, setPlayerCurrentQuestionIndex] = useState<number>(-1)
     const tempQuestionListRef = useRef<Question[]>([]);
@@ -286,6 +286,9 @@ const QuestionBoxRound3: React.FC<QuestionComponentProps> = ({ isHost = false })
             if (!isHost) {
                 setPlayerCurrentQuestionIndex((prev: number) => (prev + 1))
             }
+
+            // Clear previous answers when new question starts
+            setAnswerList([])
 
             const timeOut = setTimeout(() => {
                 setCurrentQuestion(questions.question)

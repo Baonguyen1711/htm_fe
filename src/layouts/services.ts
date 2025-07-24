@@ -4,7 +4,7 @@ import axios from "axios";
 export const submitAnswer = async (roomId: string, answer: string, stt: string, answerTime: number, playerName: string, avatar: string): Promise<any> => {
   try {
 
-    const response = await axios.post(`http://127.0.0.1:8000/api/test/submit?room_id=${roomId}`, {
+    const response = await axios.post(`http://127.0.0.1:8000/api/game/submit?room_id=${roomId}`, {
       "answer": answer,
       "stt": stt,
       "time": Number(answerTime),
@@ -34,7 +34,7 @@ export const submitAnswer = async (roomId: string, answer: string, stt: string, 
 export const setSelectedPacketToPlayer = async (roomId: string, packetName: string): Promise<any> => {
   try {
 
-    const url = `http://127.0.0.1:8000/api/test/packet/set?room_id=${roomId}&packet_name=${packetName}`
+    const url = `http://127.0.0.1:8000/api/game/packet/set?room_id=${roomId}&packet_name=${packetName}`
 
     const response = await axios.post(url, {
 
@@ -61,7 +61,7 @@ export const setSelectedPacketToPlayer = async (roomId: string, packetName: stri
 export const setCurrrentTurnToPlayer = async (roomId: string, turn: number): Promise<any> => {
   try {
 
-    const url = `http://127.0.0.1:8000/api/room/turn?room_id=${roomId}&turn=${turn}`
+    const url = `http://127.0.0.1:8000/api/game/turn?room_id=${roomId}&turn=${turn}`
 
     const response = await axios.post(url, {
 

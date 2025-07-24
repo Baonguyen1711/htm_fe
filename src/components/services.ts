@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 
 export const sendGridToPlayers = async (grid: string[][], roomId: string) => {
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/test/grid?room_id=${roomId}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/game/grid?room_id=${roomId}`,
             {
                 "grid": grid
             },
@@ -34,7 +34,7 @@ export const goToNextRound = async (roomId: string, round: string, grid?: string
     await deletePath(roomId, "questions");
     await deletePath(roomId, "answers");
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/rooms/round?room_id=${roomId}&round=${round}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/game/round/start?room_id=${roomId}&round=${round}`,
             {
                 "grid": grid
             },
@@ -60,7 +60,7 @@ export const goToNextRound = async (roomId: string, round: string, grid?: string
 
 export const setSelectedRow = async (roomId: string, row: string, isRow: boolean, wordLength: number) => {
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/test/row/action?room_id=${roomId}&row_number=${row}&action=SELECT&is_row=${isRow}&word_length=${wordLength}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/game/row/action?room_id=${roomId}&row_number=${row}&action=SELECT&is_row=${isRow}&word_length=${wordLength}`,
             {
 
             },
@@ -86,7 +86,7 @@ export const setSelectedRow = async (roomId: string, row: string, isRow: boolean
 
 export const setIncorectRow = async (roomId: string, row: string, isRow: boolean, wordLength: number) => {
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/test/row/action?room_id=${roomId}&row_number=${row}&action=INCORRECT&is_row=${isRow}&word_length=${wordLength}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/game/row/action?room_id=${roomId}&row_number=${row}&action=INCORRECT&is_row=${isRow}&word_length=${wordLength}`,
             {
 
             },
@@ -112,7 +112,7 @@ export const setIncorectRow = async (roomId: string, row: string, isRow: boolean
 
 export const setCorrectRow = async (roomId: string, row: string, correctAnswer: string, markedCharcterIndex: string, isRow: boolean, wordLength: number) => {
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/test/row/action?room_id=${roomId}&row_number=${row}&action=CORRECT&correct_answer=${correctAnswer}&marked_characters_index=${markedCharcterIndex}&is_row=${isRow}&word_length=${wordLength}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/game/row/action?room_id=${roomId}&row_number=${row}&action=CORRECT&correct_answer=${correctAnswer}&marked_characters_index=${markedCharcterIndex}&is_row=${isRow}&word_length=${wordLength}`,
             {
 
             },
@@ -218,7 +218,7 @@ export const resetBuzz = async (roomId: string) => {
 
 export const openObstacle = async (roomId: string, obstacleWord: string, placementArray: any) => {
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/test/obstacle?room_id=${roomId}&obstacle=${obstacleWord}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/game/obstacle?room_id=${roomId}&obstacle=${obstacleWord}`,
             placementArray,
             {
                 headers: {
@@ -242,7 +242,7 @@ export const openObstacle = async (roomId: string, obstacleWord: string, placeme
 
 export const getPacketNames = async (testName: string, roomId: string) => {
     try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/test/question/round/packet?test_name=${testName}&room_id=${roomId}`,
+        const response = await axios.get(`http://127.0.0.1:8000/api/game/question/round/packet?test_name=${testName}&room_id=${roomId}`,
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -265,7 +265,7 @@ export const getPacketNames = async (testName: string, roomId: string) => {
 
 export const setCurrentPacketQuestion = async (roomId: string, questionNumber: number) => {
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/test/question/current?question_number=${questionNumber}&room_id=${roomId}   `, {
+        const response = await axios.post(`http://127.0.0.1:8000/api/game/question/current?question_number=${questionNumber}&room_id=${roomId}   `, {
 
         },
             {
@@ -290,7 +290,7 @@ export const setCurrentPacketQuestion = async (roomId: string, questionNumber: n
 
 export const setCurrentChunk = async (roomId: string, packetName: string, chunk: number, testName: string) => {
     try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/test/question?test_name=${testName}&room_id=${roomId}&packet_name=${packetName}&chunk=${chunk}&round=3   `,
+        const response = await axios.get(`http://127.0.0.1:8000/api/game/question?test_name=${testName}&room_id=${roomId}&packet_name=${packetName}&chunk=${chunk}&round=3   `,
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -313,7 +313,7 @@ export const setCurrentChunk = async (roomId: string, packetName: string, chunk:
 
 export const sendSelectedCell = async (roomId: string, colIndex: string, rowIndex: string) => {
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/test/grid/cell?room_id=${roomId}&row_index=${rowIndex}&col_index=${colIndex}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/game/grid/cell?room_id=${roomId}&row_index=${rowIndex}&col_index=${colIndex}`,
             {
 
             },
@@ -339,7 +339,7 @@ export const sendSelectedCell = async (roomId: string, colIndex: string, rowInde
 
 export const sendCellColor = async (roomId: string, colIndex: string, rowIndex: string, color: string) => {
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/test/grid/color?room_id=${roomId}&row_index=${rowIndex}&col_index=${colIndex}&color=${color}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/game/grid/color?room_id=${roomId}&row_index=${rowIndex}&col_index=${colIndex}&color=${color}`,
             {
 
             },
@@ -365,7 +365,7 @@ export const sendCellColor = async (roomId: string, colIndex: string, rowIndex: 
 
 export const sendCorrectAnswer = async (roomId: string, answer: string) => {
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/test/answer?room_id=${roomId}`,
+        const response = await axios.post(`http://127.0.0.1:8000/api/game/answer?room_id=${roomId}`,
             {
                 "answer": answer
             },

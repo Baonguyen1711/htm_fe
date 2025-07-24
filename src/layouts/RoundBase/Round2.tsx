@@ -635,6 +635,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
   useEffect(() => {
     const unsubscribePlayers = listenToQuestions(roomId, (question) => {
       setCurrentQuestion(question)
+      setAnswerList([])
       console.log("current question", question)
 
     });
@@ -653,7 +654,7 @@ const QuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
         isInitialCall = false;
         return; // Skip the initial snapshot
       }
-      setAnswerList(null)
+      setAnswerList([])
 
       let rowIndex = -1;
       let colIndex = -1;

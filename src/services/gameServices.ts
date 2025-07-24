@@ -11,7 +11,7 @@ export const gameServices = {
   async sendGridToPlayers(grid: string[][], roomId: string) {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/test/grid?room_id=${roomId}`,
+        `${API_BASE_URL}/game/grid?room_id=${roomId}`,
         { grid },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -37,7 +37,7 @@ export const gameServices = {
       await deletePath(roomId, "answers");
 
       const response = await axios.post(
-        `${API_BASE_URL}/rooms/round?room_id=${roomId}&round=${round}`,
+        `${API_BASE_URL}/game/round/start?room_id=${roomId}&round=${round}`,
         { grid },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -83,7 +83,7 @@ export const gameServices = {
   async openBuzz(roomId: string) {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/test/buzz?room_id=${roomId}`,
+        `${API_BASE_URL}/buzz?room_id=${roomId}`,
         {},
         {
           headers: { 'Content-Type': 'application/json' },
@@ -105,7 +105,7 @@ export const gameServices = {
   async closeBuzz(roomId: string) {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/test/close_buzz?room_id=${roomId}`,
+        `${API_BASE_URL}/close_buzz?room_id=${roomId}`,
         {},
         {
           headers: { 'Content-Type': 'application/json' },
@@ -130,7 +130,7 @@ export const playerServices = {
   async buzzing(roomId: string, playerName: string, avatar: string, position: string) {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/test/buzzing?room_id=${roomId}`,
+        `${API_BASE_URL}/buzzing?room_id=${roomId}`,
         {
           player_name: playerName,
           avatar: avatar,
@@ -156,7 +156,7 @@ export const playerServices = {
   async setStar(roomId: string, playerName: string, avatar: string, position: string) {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/test/star?room_id=${roomId}`,
+        `${API_BASE_URL}/star?room_id=${roomId}`,
         {
           player_name: playerName,
           avatar: avatar,

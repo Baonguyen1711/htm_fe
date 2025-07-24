@@ -47,7 +47,7 @@ const HostManagement = () => {
         setInGameQuestionIndex
     } = useHost();
 
-    const { initialGrid, selectedTopic, easyQuestionNumber, mediumQuestionNumber, hardQuestionNumber, setEasyQuestionNumber, setMediumQuestionNumber, setHardQuestionNumber, level } = usePlayer()
+    const { initialGrid, selectedTopic, easyQuestionNumber, mediumQuestionNumber, hardQuestionNumber, setEasyQuestionNumber, setMediumQuestionNumber, setHardQuestionNumber, level, setAnswerList } = usePlayer()
 
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -68,8 +68,14 @@ const HostManagement = () => {
         if (newRound >= 1 && newRound <= 4) { // limit to 1-4 rounds
             navigate(`?round=${newRound}&testName=${testName}&roomId=${roomId}`);
         }
+
+        // Clear frontend state
+        setAnswerList([]);
+
+        // Clear Firebase data
         await deletePath(roomId, "questions");
         await deletePath(roomId, "answers");
+        await deletePath(roomId, "answerLists"); // Clear answer lists
         await deletePath(roomId, "turn"); // Clear turn assignments
         await deletePath(roomId, "isModified"); // Clear isModified state
         // Don't clear showRules here - let host control modal display manually
@@ -80,7 +86,7 @@ const HostManagement = () => {
         try {
             if (showingRules) {
                 // Hide rules
-                await http.post('room/rules/hide', true, {}, { room_id: roomId });
+                await http.post('game/rules/hide', true, {}, { room_id: roomId });
                 setShowingRules(false);
                 toast.success('Đã ẩn luật thi');
             } else {
@@ -108,7 +114,7 @@ const HostManagement = () => {
         // Clear rules when entering new round to prevent auto-show
         setShowingRules(false);
         // Also clear rules from Firebase to ensure clean state
-        http.post('room/rules/hide', true, {}, { room_id: roomId }).catch(console.error);
+        http.post('game/rules/hide', true, {}, { room_id: roomId }).catch(console.error);
     }, [currentRound]);
 
     return (

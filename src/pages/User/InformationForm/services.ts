@@ -184,7 +184,7 @@ export const getRoomById = async (): Promise<any> => {
     if (!authToken) {
       throw new Error("No token found. Please log in.");
     }
-    const response = await axiosInstance(`/api/rooms`, {
+    const response = await axiosInstance(`/api/room`, {
       method: 'GET', // Phương thức HTTP
       headers: {
         'Content-Type': 'application/json',

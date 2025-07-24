@@ -21,16 +21,16 @@ class Http {
 
             // Get valid access token (refresh if needed) for authenticated requests
             let authHeaders = {};
-            if (withCredentials) {
-                const validToken = await tokenRefreshService.getValidAccessToken();
-                if (validToken) {
-                    authHeaders = { 'Authorization': `Bearer ${validToken}` };
-                }
-            }
+            // if (withCredentials) {
+            //     const validToken = await tokenRefreshService.getValidAccessToken();
+            //     if (validToken) {
+            //         authHeaders = { 'Authorization': `Bearer ${validToken}` };
+            //     }
+            // }
 
             const response = await axios.request({
                 method,
-                url: `${this.baseUrl}/${endpoint}`,
+                url: endpoint?`${this.baseUrl}/${endpoint}`:`${this.baseUrl}`,
                 data,
                 params,
                 withCredentials,

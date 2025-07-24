@@ -63,7 +63,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     const [userId, setUserId] = useState(localStorage.getItem("userId"))
     const [params] = useSearchParams()
     const round = (params.get("round") as "1" | "2" | "3" | "4" | "turn") || "1"
-    const { players, setPlayers, setRoomId, playersArray, roomRules, setRoomRules, setPlayerArray, position, setCurrentQuestion, selectedTopic, setSelectedTopic, setScoreList } = usePlayer()
+    const { players, setPlayers, setRoomId, playersArray, roomRules, setRoomRules, setPlayerArray, position, setCurrentQuestion, selectedTopic, setSelectedTopic, setScoreList, setAnswerList } = usePlayer()
     const { playerScores, setPlayerScores, animationKey, setAnimationKey, mode, rules } = useHost()
     const isMounted = useRef(false);
     const { timeLeft, startTimer } = useTimeStart();
@@ -119,8 +119,14 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         if (newRound >= 1 && newRound <= 4) { // limit to 1-4 rounds
             navigate(`?round=${newRound}&testName=${testName}&roomId=${roomId}`);
         }
+
+        // Clear frontend state
+        setAnswerList([]);
+
+        // Clear Firebase data
         await deletePath(roomId, "questions");
         await deletePath(roomId, "answers");
+        await deletePath(roomId, "answerLists"); // Clear answer lists
         await deletePath(roomId, "turn"); // Clear turn assignments
         await deletePath(roomId, "isModified"); // Clear isModified state
     };

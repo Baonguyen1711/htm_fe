@@ -87,9 +87,9 @@ const SetupMatch: React.FC = () => {
   useEffect(() => {
     const getRooms = async () => {
       const data = await roomService.getRoomByUser();
-      console.log('rooms', data.rooms);
+      console.log('rooms', data);
       setRooms(
-        data.rooms.map((room: { roomId: string; isActive: boolean }) => ({
+        data.map((room: { roomId: string; isActive: boolean }) => ({
           ...room,
           mode: 'manual',
           roundScores: {
@@ -116,9 +116,11 @@ const SetupMatch: React.FC = () => {
 
   const handleConfirmCreateRoom = async () => {
     const data = await roomService.createRoom(2, roomPassword || undefined, maxPlayers);
+    console.log("data",data);
+    
     const newRoom: Room = {
-      roomId: data.result.roomId,
-      isActive: data.result.isActive,
+      roomId: data.roomId,
+      isActive: data.isActive,
       mode: 'manual',
       selectedTestName: '',
       roundScores: {
@@ -134,7 +136,7 @@ const SetupMatch: React.FC = () => {
       },
     };
     setRooms([...rooms, newRoom]);
-    setCreatedRoomId(data.result.roomId);
+    setCreatedRoomId(data.roomId);
     setShowCreateModal(false);
     setRoomPassword('');
     setMaxPlayers(4);
@@ -313,7 +315,7 @@ const SetupMatch: React.FC = () => {
                       <option value="" disabled className="bg-slate-700">
                         -- Chọn bộ đề --
                       </option>
-                      {testList.map((test) => (
+                      {testList && testList.map((test) => (
                         <option key={test} value={test} className="bg-slate-700">
                           {test}
                         </option>

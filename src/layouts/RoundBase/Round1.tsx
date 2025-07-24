@@ -105,7 +105,7 @@ const QuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = false 
                 setCorrectAnswer(currentAnswer)
             }
             console.log("current question", question)
-            setAnswerList(null)
+            setAnswerList([])
             if (!isHost) {
                 setCorrectAnswer("")
             }
