@@ -1,10 +1,11 @@
-import Round4 from '../../../layouts/RoundBase/Round4';
 import User from '../../../layouts/User/User';
-import { listenToRoundStart } from '../../../services/firebaseServices';
+import useFirebaseListener from "../../../shared/hooks/firebase/useFirebaseListener";
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { usePlayer } from '../../../context/playerContext';
-import PlayerQuestionBoxRound4 from '../../../layouts/RoundBase/Player/PlayerQuestionBoxRound4';
+
+import PlayerQuestionBoxRound4 from '../../../components/Round4/PlayerQuestionBoxRound4';
+import useGameApi from '../../../shared/hooks/api/useGameApi';
+import Modal from '../../../components/ui/Modal/Modal';
 const exampleGrid = [
     ['!', '', '?', '', '!'],
     ['', '?', '!', '', '?'],
@@ -28,73 +29,115 @@ interface UserRound4Props {
 
 function UserRound4({ isSpectator }: UserRound4Props) {
 
-    const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
-    const roomId = searchParams.get("roomId") || "";
-    const round = searchParams.get("round") || "";
-    const { initialGrid , setInitialGrid } = usePlayer()
+
+    const initialGrid = [
+        ['!', '', '?', '', '!'],
+        ['', '?', '!', '', '?'],
+        ['?', '', '', '!', '?'],
+        ['!', '?', '', '', '!'],
+        ['?', '!', '', '?', ''],
+    ];
     const [loading, setLoading] = useState(true);
     const isFirstCallback = useRef(true);
     const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
-
+    const { listenToRoundStart } = useFirebaseListener();
+    const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
+    const [staredPlayer, setStaredPlayer] = useState<string>("");
+    const [showModal, setShowModal] = useState(false); // State for modal visibility
+    const [searchParams] = useSearchParams()
+    const roomId = searchParams.get("roomId") || ""
+    const { listenToBuzzedPlayer, listenToStar } = useFirebaseListener();
+    const { resetBuzz } = useGameApi()
     useEffect(() => {
-        const unsubscribePlayers = listenToRoundStart(roomId, (data) => {
-
-
-            const currentRound = data.round;
-            const requestedRound = parseInt(round || "", 10);
-
-            console.log("currentRound", currentRound);
-            console.log("requestedRound", requestedRound);
-
-
-            if (requestedRound === currentRound) {
-                setIsAllowed(true);
-            } else {
-                setIsAllowed(false);
-                if (currentRound) {
-                    if (isSpectator) {
-                        navigate(`/spectator?round=${data.round}&roomId=${roomId}`, { replace: true });
-                    } else {
-                        navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
-                    }
-                }
+        const unsubscribeBuzzedPlayer = listenToBuzzedPlayer(
+            (playerName) => {
+                setShowModal(true)
+                setBuzzedPlayer(playerName)
             }
-
-
-            if (isFirstCallback.current) {
-                isFirstCallback.current = false;
-                return;
-            }
-
-
-            console.log("round", data)
-            setInitialGrid(data.grid)
-            if (isSpectator) {
-                navigate(`/spectator?round=${data.round}&roomId=${roomId}`, { replace: true });
-            } else {
-                navigate(`/play?round=${data.round}&roomId=${roomId}`, { replace: true });
-            }
-        });
+        )
 
         return () => {
-            unsubscribePlayers();
+            unsubscribeBuzzedPlayer();
         };
-    }, [roomId]);
+    }, [])
 
     useEffect(() => {
-    if (initialGrid && initialGrid.length > 0) {
-      console.log("initialGrid", initialGrid);
+        const unsubscribeStaredPlayer = listenToStar(
+            (playerName) => {
+                setShowModal(true)
+                setStaredPlayer(playerName)
+            }
+        )
 
-      setLoading(false);
-    }
-  }, [initialGrid]);
+        return () => {
+            unsubscribeStaredPlayer();
+        };
+    }, [])
+    const handleCloseModal = () => {
+        setShowModal(false);
+        // Optionally clear buzzedPlayer if you want to reset it
+        setBuzzedPlayer("");
+        setStaredPlayer("");
+    };
+
+    // useEffect(() => {
+    //     const unsubscribePlayers = listenToRoundStart(
+    //         (round) => {
+    //             console.log("round", round);
+    //             console.log("roomId", roomId);
+    //             if (isSpectator) {
+    //                 console.log(
+    //                     `Navigating to /spectator?round=${round}&roomId=${roomId}`
+    //                 )
+    //                 navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
+    //             } else {
+    //                 console.log(
+    //                     `Navigating to /play?round=${round}&roomId=${roomId}`
+    //                 )
+    //                 navigate(`/play?round=${round}&roomId=${roomId}`);
+    //             }
+    //         }
+    //     )
+
+    //     return () => {
+    //         unsubscribePlayers();
+    //     };
+    // }, [roomId]);
+
+    useEffect(() => {
+        if (initialGrid && initialGrid.length > 0) {
+            console.log("initialGrid", initialGrid);
+
+            setLoading(false);
+        }
+    }, [initialGrid]);
     return (
         // <Round4 isHost={false}/>
-        <User
-            QuestionComponent={<PlayerQuestionBoxRound4 questions={exampleQuestions} initialGrid={initialGrid} isHost={false} isSpectator={isSpectator} />}
-            isSpectator={isSpectator}
-        />
+        <>
+            <User
+                QuestionComponent={<PlayerQuestionBoxRound4 questions={exampleQuestions} initialGrid={initialGrid} isHost={false} isSpectator={isSpectator} />}
+                isSpectator={isSpectator}
+            />
+            {showModal && buzzedPlayer &&
+                <Modal
+                    text={`${buzzedPlayer} đã nhấn chuông giành quyền trả lời`}
+                    buttons={[
+                        { text: "Đóng", onClick: handleCloseModal, variant: "primary" },
+                    ]}
+                    onClose={handleCloseModal}
+                />
+            }
+
+            {showModal && staredPlayer &&
+                <Modal
+                    text={`${staredPlayer} đã chọn ngôi sao hy vọng`}
+                    buttons={[
+                        { text: "Đóng", onClick: handleCloseModal, variant: "primary" },
+                    ]}
+                    onClose={handleCloseModal}
+                />
+            }
+        </>
     );
 }
 

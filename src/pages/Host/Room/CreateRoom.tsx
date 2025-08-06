@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 import banner from "../../../assets/banner.jpg";
 import card from "../../../assets/card.jpg"
 
-import Footer from "../../../layouts/Footer";
-import Header from "../../../layouts/Header";
+import Footer from "../../../components/ui/Footer";
+import Header from "../../../components/ui/Header";
 
 function CreateRoom() {
   const [roomName, setRoomName] = useState("");

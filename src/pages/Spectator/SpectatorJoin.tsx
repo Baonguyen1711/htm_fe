@@ -1,16 +1,19 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
-import { spectatorJoin } from '../User/InformationForm/services';
+import useAuth from '../../shared/hooks/auth/useAuth';
 import authService from '../../services/auth.service';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { removeSpectator } from '../../services/firebaseServices';
+import { useFirebaseListener } from '../../shared/hooks';
+import { useRoomApi } from '../../shared/hooks/api/useRoomApi';
+import { Button } from '../../shared/components/ui';
 
 const SpectatorJoin = () => {
   const navigate = useNavigate();
   const [roomId, setRoomId] = useState<string>("");
   const { signInWithoutPassword } = useAuth();
+  const { removeSpectator } = useFirebaseListener();
+  const { joinAsSpectator } = useRoomApi();
 
   const handleJoinRoom = async () => {
     try {
@@ -54,8 +57,14 @@ const SpectatorJoin = () => {
         return;
       });
 
-      const response = await spectatorJoin(roomId)
-      removeSpectator(response.spectator_path)
+
+      const spectatorPath = await joinAsSpectator(roomId);
+      console.log("Successfully joined as spectator, path:", spectatorPath);
+      
+      // Store the path for cleanup when leaving
+      localStorage.setItem('spectatorPath', spectatorPath);
+      
+
       navigate(`/spectator?roomId=${roomId}&round=1`);
     } catch (error) {
       console.error("Error during joining room:", error);
@@ -114,13 +123,16 @@ const SpectatorJoin = () => {
                 </p>
               </div>
 
-              <button
+              <Button
                 type="button"
                 onClick={handleJoinRoom}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg hover:from-blue-700 hover:to-cyan-600 font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
+                variant="primary"
+                size="lg"
+                fullWidth
+                className="font-medium shadow-lg"
               >
                 Tham gia phòng
-              </button>
+              </Button>
             </form>
 
           </div>

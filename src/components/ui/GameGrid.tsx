@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '../../shared/components/ui';
 
 interface GameGridProps {
   initialGrid: string[][];
@@ -37,7 +38,9 @@ const GameGrid: React.FC<GameGridProps> = ({
     !gridColors ||
     gridColors.length !== 5 ||
     gridColors.some((row) => row.length !== 5)
+
   ) {
+    console.error("Invalid grid data:", initialGrid, gridColors);
     return <div className="text-red-500 text-center">Invalid grid data</div>;
   }
 
@@ -88,12 +91,13 @@ const GameGrid: React.FC<GameGridProps> = ({
                       ref={menuRef}
                       className="absolute left-20 top-1/2 transform -translate-y-1/2 flex space-x-2 bg-white border border-gray-300 rounded shadow-lg p-1 z-10"
                     >
-                      <button
-                        className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                      <Button
                         onClick={() => onMenuAction('select', rowIndex, colIndex)}
+                        variant="primary"
+                        size="xs"
                       >
                         SELECT
-                      </button>
+                      </Button>
                       <button
                         className="w-6 h-6 bg-red-500 rounded"
                         onClick={() => onMenuAction('red', rowIndex, colIndex)}
@@ -127,12 +131,13 @@ const GameGrid: React.FC<GameGridProps> = ({
               {`${buzzedPlayer} đã nhấn chuông trả lời`}
             </h2>
             <div className="flex justify-center">
-              <button
+              <Button
                 onClick={onCloseModal}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                variant="primary"
+                size="md"
               >
                 Đóng
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -146,12 +151,13 @@ const GameGrid: React.FC<GameGridProps> = ({
               {`${staredPlayer} đã nhấn chọn ngôi sao hy vọng`}
             </h2>
             <div className="flex justify-center">
-              <button
+              <Button
                 onClick={onCloseModal}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                variant="primary"
+                size="md"
               >
                 Đóng
-              </button>
+              </Button>
             </div>
           </div>
         </div>

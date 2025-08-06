@@ -10,7 +10,6 @@ const initialState: AuthState = {
   isLoading: false,
   error: null,
   accessToken: localStorage.getItem('accessToken'),
-  refreshToken: localStorage.getItem('refreshToken'),
   tokenExpiry: null,
 };
 
@@ -28,6 +27,29 @@ export const loginUser = createAsyncThunk(
       
       if (!response.ok) {
         throw new Error('Login failed');
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const authenticateUser = createAsyncThunk(
+  'auth/authenticate',
+  async (credentials: { token: string }, { rejectWithValue }) => {
+    try {
+
+      const response = await fetch('/api/auth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Authentication failed');
       }
       
       const data = await response.json();
@@ -104,14 +126,12 @@ const authSlice = createSlice({
       state.profile = action.payload;
     },
     
-    setTokens: (state, action: PayloadAction<{ accessToken: string; refreshToken: string; expiresIn: number }>) => {
+    setTokens: (state, action: PayloadAction<{ accessToken: string;  expiresIn: number }>) => {
       state.accessToken = action.payload.accessToken;
-      state.refreshToken = action.payload.refreshToken;
       state.tokenExpiry = Date.now() + (action.payload.expiresIn * 1000);
       
       // Store in localStorage
       localStorage.setItem('accessToken', action.payload.accessToken);
-      localStorage.setItem('refreshToken', action.payload.refreshToken);
     },
     
     clearAuth: (state) => {
@@ -181,6 +201,18 @@ const authSlice = createSlice({
         state.refreshToken = null;
         state.tokenExpiry = null;
         state.error = null;
+      });
+
+    builder
+      .addCase(authenticateUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+
+      })
+      .addCase(authenticateUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });

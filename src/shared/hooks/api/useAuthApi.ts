@@ -46,7 +46,6 @@ export const useAuthApi = () => {
       // Set tokens in Redux and token service
       dispatch(setTokens({
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
         expiresIn: 30 * 60, // 30 minutes default
       }));
       
@@ -102,15 +101,15 @@ export const useAuthApi = () => {
   /**
    * Check if user is host (legacy compatibility)
    */
-  const isHost = useCallback(async (data: any) => {
-    try {
-      const result = await authApi.isHost(data);
-      return result;
-    } catch (error) {
-      console.error('Failed to check host status:', error);
-      return false;
-    }
-  }, []);
+  // const isHost = useCallback(async (data: any) => {
+  //   try {
+  //     const result = await authApi.isHost(data);
+  //     return result;
+  //   } catch (error) {
+  //     console.error('Failed to check host status:', error);
+  //     return false;
+  //   }
+  // }, []);
 
   /**
    * Initialize authentication (call on app startup)
@@ -146,7 +145,7 @@ export const useAuthApi = () => {
     verifyToken,
     refreshToken,
     logout,
-    isHost,
+    // isHost,
     initializeAuth,
   };
 };

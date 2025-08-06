@@ -2,7 +2,7 @@
 import { ApiResponse } from './common.types';
 import { Question, Score, GameGrid } from './game.types';
 import { Room, CreateRoomRequest, JoinRoomRequest } from './room.types';
-import { User, AuthUser } from './user.types';
+import { User, AuthUser, PlayerData } from './user.types';
 
 // Authentication API types
 export interface LoginRequest {
@@ -33,7 +33,10 @@ export interface RefreshTokenResponse extends ApiResponse {
 // Game API types
 export interface GetQuestionsRequest {
   testName: string;
-  round: number;
+  round: string;
+  roomId?: string,
+  questionNumber?: number,
+  packetName?: string;
   difficulty?: string;
 }
 
@@ -42,10 +45,11 @@ export interface GetQuestionsResponse extends ApiResponse {
 }
 
 export interface SubmitAnswerRequest {
-  roomId: string;
-  uid: string;
-  answer: string;
-  time: number;
+  answer: string,
+  stt: string,
+  time: Number,
+  player_name: string,
+  avatar: string
 }
 
 export interface SubmitAnswerResponse extends ApiResponse {
@@ -58,7 +62,7 @@ export interface SubmitAnswerResponse extends ApiResponse {
 export interface ScoringRequest {
   roomId: string;
   mode: 'manual' | 'auto' | 'adaptive';
-  scores?: Score[];
+  scores?: Partial<PlayerData[]>;
   round: string;
   stt?: string;
   isObstacleCorrect?: boolean;
@@ -73,6 +77,18 @@ export interface ScoringRequest {
 
 export interface ScoringResponse extends ApiResponse {
   data: Score[];
+}
+
+export interface SetPlayerColorRequest {
+  roomId: string;
+  playerStt: string;
+  color: string;
+}
+
+export interface SetPlayerColorResponse extends ApiResponse {
+  data: {
+    success: boolean;
+  };
 }
 
 // Room API types

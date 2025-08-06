@@ -1,28 +1,30 @@
-import React, {useEffect} from 'react';
-import FinalScore from '../../components/FinalScore';
+import React, { useEffect } from 'react';
+import FinalScore from '../../components/FinalScore/FinalScore';
 import { useSounds } from '../../context/soundContext';
-import { listenToSound } from '../../services/firebaseServices';
 import { useSearchParams } from 'react-router-dom';
-import { deletePath } from '../../services/firebaseServices';
+import { useFirebaseListener } from '../../shared/hooks';
+
 
 const PlayerFinalScore: React.FC = () => {
     const sounds = useSounds();
     const [searchParams] = useSearchParams();
     const roomId = searchParams.get("roomId") || "";
+    const { listenToSound, deletePath } = useFirebaseListener();
+
     useEffect(() => {
-        const unsubscribePlayers = listenToSound(roomId, async (type) => {
+        const unsubscribeSound = listenToSound(
 
-            const audio = sounds[`${type}`];
-            if (audio) {
-                audio.play();
+            (type) => {
+                const audio = sounds[`${type}`];
+                if (audio) {
+                    audio.play();
+                }
+                deletePath("sound")
             }
-            console.log("sound type", type)
-            await deletePath(roomId, "sound")
-        });
+        );
 
-        // No need to set state here; it's handled by useState initializer
         return () => {
-            unsubscribePlayers();
+            unsubscribeSound();
         };
     }, []);
 

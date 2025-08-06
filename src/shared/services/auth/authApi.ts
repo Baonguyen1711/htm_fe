@@ -12,10 +12,10 @@ export const authApi = {
   /**
    * Login user with email and password
    */
-  async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response = await api.post<LoginResponse['data']>(
-      API_ENDPOINTS.AUTH.LOGIN,
-      credentials
+  async authenticateUser(token: string) {
+    const response = await api.post(
+      API_ENDPOINTS.AUTH.AUTHENTICATE,
+      {token: token},
     );
     return response.data;
   },
@@ -23,12 +23,12 @@ export const authApi = {
   /**
    * Generate access token (for room-based authentication)
    */
-  async generateAccessToken(data: { roomId: string; role: string }): Promise<{ accessToken: string; refreshToken: string }> {
-    const response = await api.post<{ accessToken: string; refreshToken: string }>(
+  async generateAccessToken(data: { roomId: string; role: string }) {
+    const response = await api.post(
       API_ENDPOINTS.AUTH.ACCESS_TOKEN,
       data
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
@@ -38,14 +38,14 @@ export const authApi = {
     const response = await api.post<{ roomId: string; role: string; userId: string; exp: number }>(
       API_ENDPOINTS.AUTH.VERIFY
     );
-    return response.data.data;
+    return response.data;
   },
 
   /**
    * Refresh access token
    */
-  async refreshToken(refreshTokenData: RefreshTokenRequest): Promise<RefreshTokenResponse> {
-    const response = await api.post<RefreshTokenResponse['data']>(
+  async refreshToken(refreshTokenData: RefreshTokenRequest) {
+    const response = await api.post(
       API_ENDPOINTS.AUTH.REFRESH,
       refreshTokenData
     );
@@ -66,12 +66,12 @@ export const authApi = {
   /**
    * Check if user is host (legacy compatibility)
    */
-  async isHost(data: any): Promise<boolean> {
+  async isHost(): Promise<any> {
     try {
-      // This would be replaced with actual API call
-      // For now, maintaining compatibility with existing code
-      const response = await api.post<{ isHost: boolean }>('/auth/is-host', data);
-      return response.data.data.isHost;
+
+      const response = await api.post(API_ENDPOINTS.AUTH.IS_HOST, {});
+      console.log("response", response);
+      return response.data;
     } catch (error) {
       return false;
     }

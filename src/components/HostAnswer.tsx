@@ -1,32 +1,58 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useHost } from '../context/hostContext';
-import { usePlayer } from '../context/playerContext';
-import { User } from '../type';
-import { updateScore } from '../pages/Host/Management/service';
-import { listenToBroadcastedAnswer, listenToScores } from '../services/firebaseServices';
-import { Answer, Score } from '../type';
 import { useSearchParams } from 'react-router-dom';
-import { openBuzz } from './services';
-import { setCurrrentTurnToPlayer } from '../layouts/services';
 import { toast } from 'react-toastify';
-import SimpleColorPicker from './SimpleColorPicker';
+import { useFirebaseListener } from '../shared/hooks';
+import SimpleColorPicker from './ui/Color/ColorPicker';
+import { useAppDispatch, useAppSelector } from '../app/store';
+import useGameApi from '../shared/hooks/api/useGameApi';
+import { PlayerData } from '../shared/types';
+import { setCurrentTurn, setMode } from '../app/store/slices/gameSlice';
+import { removePlayer } from '../app/store/slices/roomSlice';
+import KickPlayerModal from './ui/Modal/KickPlayerModal';
+import { roomApi } from '../shared/services/room/roomApi';
+import Modal from './ui/Modal/Modal';
+import { useConfirmModal } from '../shared/hooks/ui/useConfirmModal';
+import { Button } from '../shared/components/ui';
 
 
 function HostAnswer() {
     const [turn, setTurn] = useState<number>(0);
-    const [mode, setMode] = useState<string>("")
-    const { playersArray, playerFlashes, answerList, setAnswerList, level, selectedTopic } = usePlayer();
-    const { handleScoreAdjust, playerScores, setPlayerScores, handleNextQuestion, numberOfSelectedRow, playerColors, setPlayerColors, selectedPlayer, setSelectedPlayer } = useHost();
     const [searchParams] = useSearchParams();
     const round = searchParams.get("round") || "1";
     const roomId = searchParams.get("roomId") || "1";
+    const [selectedPlayer, setSelectedPlayer] = useState<PlayerData | null>(null);
+    const [kickModalOpen, setKickModalOpen] = useState(false);
+    const [playerToKick, setPlayerToKick] = useState<PlayerData | null>(null);
+    const [isKicking, setIsKicking] = useState(false);
 
-    // Generate spots array based on number of players (up to 8)
-    const maxPlayers = playersArray ? Math.max(4, playersArray.length) : 4;
-    const spots = Array.from({ length: Math.min(maxPlayers, 8) }, (_, i) => i + 1);
+    // Confirmation modal hook
+    const { modalState, showConfirmModal, closeModal } = useConfirmModal();
+
+    const { listenToBroadcastedAnswer, listenToScores, listenToPlayerColors } = useFirebaseListener()
+    const [localPlayersScore, setLocalPlayersScore] = useState<Partial<PlayerData[]>>([])
+    const { openBuzz, sendCurrentTurn, updateScoring, setPlayerColor } = useGameApi()
+    const dispatch = useAppDispatch();
+    const { mode, players, selectedDifficulty, numberOfSelectedRow, currentTurn } = useAppSelector(state => state.game)
+
+
+    // Generate spots array based on actual max players from room settings
+    const roomSettings = JSON.parse(localStorage.getItem(`scoreRules_${roomId}`) || '{}');
+    const maxPlayers = roomSettings.maxPlayers || 4;
+    const spots = Array.from({ length: maxPlayers }, (_, i) => i + 1);
     const isFirstMounted = useRef(true)
     const isAnswerListFirstMounted = useRef(true)
     // Initialize turn assignments based on max players
+    useEffect(() => {
+        console.log("room mode", mode);
+    }, [mode])
+
+    useEffect(() => {
+        const storedMode = localStorage.getItem(`mode_${roomId}`);
+        if (storedMode && (storedMode === 'manual' || storedMode === 'auto' || storedMode === 'adaptive')) {
+            dispatch(setMode(storedMode));
+        }
+    }, [])
+    
     const initializeTurnAssignments = () => {
         const assignments: { [spot: number]: number | null } = {};
         for (let i = 1; i <= Math.min(maxPlayers, 8); i++) {
@@ -35,7 +61,7 @@ function HostAnswer() {
         return assignments;
     };
     const [turnAssignments, setTurnAssignments] = useState<{ [spot: number]: number | null }>(initializeTurnAssignments());
-
+    const [playerColors, setPlayerColors] = useState<Record<string, string>>({});
     const handleAssignTurn = (spot: number, turnNumber: number) => {
         setTurnAssignments((prev) => {
             // Remove this turnNumber from any other spot
@@ -50,56 +76,139 @@ function HostAnswer() {
         });
     };
 
+    const handleScoreAdjust = (amount: number, isCorrect: boolean, stt?: string) => {
+        console.log("localPlayersScore", localPlayersScore);
+        console.log("amount", amount);
+        console.log("isCorrect", isCorrect);
+        console.log("stt", stt);
+
+        const updatedScoreList = localPlayersScore.map((p: PlayerData | undefined) => {
+            if (p && p.stt === stt && p.score) {
+                return {
+                    ...p,
+                    score: p.score + amount,
+                    isCorrect: isCorrect,
+                    isModified: true,
+                };
+            }
+            return p;
+        });
+
+        setLocalPlayersScore(updatedScoreList)
+    }
+
+    // Kick player functions
+    const handleKickPlayerClick = (player: PlayerData) => {
+        setPlayerToKick(player);
+        setKickModalOpen(true);
+    };
+
+    const handleKickPlayerConfirm = async () => {
+        if (!playerToKick || !roomId || !playerToKick.uid) return;
+
+        setIsKicking(true);
+        try {
+            console.log(`🚫 Kicking player ${playerToKick.userName} (${playerToKick.uid}) from room ${roomId}`);
+
+            const result = await roomApi.kickPlayer(roomId, playerToKick.uid);
+
+            // Update Redux state
+            dispatch(removePlayer(playerToKick.uid));
+
+            // Close modal and reset state
+            setKickModalOpen(false);
+            setPlayerToKick(null);
+
+            // If the kicked player was selected, deselect them
+            if (selectedPlayer?.uid === playerToKick.uid) {
+                setSelectedPlayer(null);
+            }
+
+            toast.success(`Đã loại bỏ ${playerToKick.userName} khỏi phòng`);
+            console.log(`✅ Successfully kicked player:`, result);
+
+        } catch (error) {
+            console.error(`❌ Failed to kick player:`, error);
+            toast.error(`Không thể loại bỏ ${playerToKick.userName}. Vui lòng thử lại.`);
+        } finally {
+            setIsKicking(false);
+        }
+    };
+
+    const handleKickModalClose = () => {
+        if (!isKicking) {
+            setKickModalOpen(false);
+            setPlayerToKick(null);
+        }
+    };
+
     useEffect(() => {
         setTurn(0);
-        setMode(localStorage.getItem(`mode_${roomId}`) || "")
     }, [round]);
 
 
-    useEffect(() => {
-        const currentScoreList = localStorage.getItem("scoreList");
-        if (currentScoreList) {
-            setPlayerScores(JSON.parse(currentScoreList));
-        }
-    }, [round]);
+    // useEffect(() => {
+    //     const currentScoreList = localStorage.getItem("scoreList");
+    //     if (currentScoreList) {
+    //         setPlayerScores(JSON.parse(currentScoreList));
+    //     }
+    // }, [round]);
 
     useEffect(() => {
-        const unsubscribeScores = listenToScores(roomId, (data) => {
-            if (isFirstMounted.current) {
-                isFirstMounted.current = false
-                return
+        const unsubscribeScores = listenToScores(
+            (scores) => {
+                setLocalPlayersScore(scores)
             }
-            setPlayerScores(data);
-        });
+        );
         return () => unsubscribeScores();
     }, [round, roomId]);
 
     useEffect(() => {
-        const unsubscribeBroadcastedAnswer = listenToBroadcastedAnswer(roomId, (answerList) => {
-            if (isAnswerListFirstMounted.current) {
-                isAnswerListFirstMounted.current = false
-                return
-            }
-
-            console.log("answerList", answerList);
-
-            setAnswerList(answerList);
-        });
+        const unsubscribeBroadcastedAnswer = listenToBroadcastedAnswer();
         return () => unsubscribeBroadcastedAnswer();
     }, [roomId]);
 
+    // Listen to player colors
+    useEffect(() => {
+        const unsubscribePlayerColors = listenToPlayerColors((colors) => {
+            setPlayerColors(colors || {});
+        });
+        return () => unsubscribePlayerColors();
+    }, [roomId, listenToPlayerColors]);
+
     const storedPlayers = localStorage.getItem("playerList");
-    const playerList = playersArray || (storedPlayers ? JSON.parse(storedPlayers) : []);
 
     // Handle color change
-    const handleColorChange = (playerStt: string, color: string) => {
-        const newColors = { ...playerColors };
-        if (color) {
-            newColors[playerStt] = color;
-        } else {
-            delete newColors[playerStt];
+    const handleColorChange = async (playerStt: string, color: string) => {
+        console.log('handleColorChange called:', { playerStt, color, roomId });
+        try {
+            // Skip API call if color is empty (removing color)
+            if (color && color.trim() !== '') {
+                // Call API to set player color
+                console.log('Calling setPlayerColor API...', color);
+                const result = await setPlayerColor(roomId, playerStt, color);
+                console.log('API call result:', result);
+            } else {
+                console.log('Removing color locally (no API call for empty color)');
+            }
+
+            // Update local state
+            const newColors = { ...playerColors };
+            if (color && color.trim() !== '') {
+                newColors[playerStt] = color;
+            } else {
+                delete newColors[playerStt];
+            }
+            setPlayerColors(newColors);
+
+            const message = color && color.trim() !== ''
+                ? `Đã cập nhật màu cho player_${playerStt}`
+                : `Đã xóa màu cho player_${playerStt}`;
+            toast.success(message);
+        } catch (error) {
+            console.error('Failed to set player color:', error);
+            toast.error('Không thể cập nhật màu cho người chơi');
         }
-        setPlayerColors(newColors);
     };
 
     // Get used colors
@@ -110,16 +219,42 @@ function HostAnswer() {
             {/* Left: Player grid */}
             <div className={`grid ${spots.length > 4 ? 'grid-cols-4 grid-rows-2' : 'grid-cols-2'} gap-4 flex-1`}>
                 {spots.map((spotNumber) => {
-                    const player = playerList.find((p: User) => parseInt(p.stt) === spotNumber);
-                    const playerScore = playerScores.find((score: Score) => score.stt === spotNumber.toString());
-                    const answer = answerList?.find((a: Answer) => parseInt(a.stt) === spotNumber);
-                    const isCurrent = turn !== null && Number(turn) === spotNumber;
+                    console.log("localPlayersScore", localPlayersScore);
+                    const player = players !== null ? players.find((p: PlayerData) => {
+                        if (p && p.stt) {
+                            return parseInt(p.stt) === spotNumber
+                        }
+                    }) : null;
+
+                    const score = localPlayersScore !== null ? localPlayersScore.find((p: PlayerData | undefined) => {
+                        if (p && p.stt) {
+                            return parseInt(p.stt) === spotNumber
+                        }
+                    }) : null;
+                    console.log("player", player)
+
+                    // const playerScore = playerScores.find((score: Score) => score.stt === spotNumber.toString());
+                    // const answer = answerList?.find((a: Answer) => parseInt(a.stt) === spotNumber);
+                    const isCurrent = currentTurn !== null && Number(currentTurn) === spotNumber;
                     return player ? (
                         <div
                             key={spotNumber}
                             onClick={() => setSelectedPlayer(player)}
-                            className={`flex items-center w-full min-h-[180px] bg-slate-800/80 rounded-xl p-4 shadow-md border border-slate-700/50 transition-all duration-200 ${isCurrent ? "ring-4 ring-yellow-400 border-yellow-400" : ""}`}
+                            className={`relative flex items-center w-full min-h-[180px] bg-slate-800/80 rounded-xl p-4 shadow-md border border-slate-700/50 transition-all duration-200 ${isCurrent ? "ring-4 ring-yellow-400 border-yellow-400" : ""}`}
                         >
+                            {/* Kick Player Button */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Prevent selecting the player
+                                    handleKickPlayerClick(player);
+                                }}
+                                className="absolute top-2 right-2 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center transition-colors duration-200 z-10"
+                                title={`Loại bỏ ${player.userName}`}
+                            >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                             <div className="relative mr-4">
                                 <img
                                     src={player.avatar}
@@ -131,23 +266,24 @@ function HostAnswer() {
                                     <div className="absolute -bottom-1 -right-1">
                                         <SimpleColorPicker
                                             playerStt={player.stt}
-                                            currentColor={playerColors[player.stt]}
+                                            currentColor={playerColors[player.stt || 0]}
                                             onColorChange={handleColorChange}
                                             usedColors={usedColors}
                                         />
                                     </div>
                                 )}
+
                             </div>
                             <div className="flex flex-col flex-1">
                                 <p className="text-white font-bold border-b border-slate-700/50 pb-1">
                                     {`player_${player.stt}: ${player.userName}`}
                                 </p>
-                                <p className="text-white text-lg font-bold">{playerScore?.score ?? 0}</p>
+                                <p className="text-white text-lg font-bold">{score?.score ?? 0}</p>
                                 <p className="text-white border-b border-slate-700/50 pb-1 mt-1">
-                                    {answer?.answer || ""}
+                                    {player?.answer ?? ""}
                                 </p>
                                 <p className="text-gray-400 text-sm mt-1">
-                                    {answer?.time ? `${answer.time}s` : ""}
+                                    {player?.time ? `${player.time}s` : ""}
                                 </p>
                                 {/* Turn assignment UI */}
                                 <div className="mt-2 flex items-center gap-2">
@@ -157,8 +293,8 @@ function HostAnswer() {
                                             key={turnNum}
                                             type="button"
                                             className={`px-2 py-1 rounded text-xs font-semibold border ${turnAssignments[spotNumber] === turnNum
-                                                    ? "bg-blue-500 text-white border-blue-600"
-                                                    : "bg-slate-700 text-blue-200 border-slate-600 hover:bg-blue-600 hover:text-white"
+                                                ? "bg-blue-500 text-white border-blue-600"
+                                                : "bg-slate-700 text-blue-200 border-slate-600 hover:bg-blue-600 hover:text-white"
                                                 }`}
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -197,10 +333,10 @@ function HostAnswer() {
                             <div className="relative mx-auto w-16 h-16">
                                 <img src={selectedPlayer.avatar} alt="Selected" className="w-16 h-16 rounded-full" />
                                 {/* Color indicator for Round 4 */}
-                                {round === "4" && playerColors[selectedPlayer.stt] && (
+                                {round === "4" && playerColors[selectedPlayer.stt || 0] && (
                                     <div
                                         className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white shadow-lg"
-                                        style={{ backgroundColor: playerColors[selectedPlayer.stt] }}
+                                        style={{ backgroundColor: playerColors[selectedPlayer.stt || 0] }}
                                         title={`Màu của ${selectedPlayer.userName}`}
                                     ></div>
                                 )}
@@ -211,110 +347,191 @@ function HostAnswer() {
 
                         <div className="flex gap-2 flex-wrap">
                             {[5, 10].map((amount) => (
-                                <button
+                                <Button
                                     key={`plus${amount}`}
-                                    onClick={() => handleScoreAdjust(parseInt(selectedPlayer.stt), amount, true, selectedPlayer.userName, selectedPlayer.avatar)}
-                                    className="bg-green-500 hover:bg-green-600 text-white p-2 rounded shadow"
+                                    onClick={() => {
+                                        if (selectedPlayer) {
+                                            handleScoreAdjust(amount, true, selectedPlayer.stt);
+                                        }
+                                    }}
+                                    variant="success"
+                                    size="sm"
+                                    className="shadow"
                                 >
                                     +{amount}
-                                </button>
+                                </Button>
                             ))}
                             {[5, 10].map((amount) => (
-                                <button
+                                <Button
                                     key={`minus${amount}`}
-                                    onClick={() => handleScoreAdjust(parseInt(selectedPlayer.stt), -amount, false, selectedPlayer.userName, selectedPlayer.avatar)}
-                                    className="bg-red-500 hover:bg-red-600 text-white p-2 rounded shadow"
+                                    onClick={() => {
+                                        if (selectedPlayer) {
+                                            handleScoreAdjust(-amount, false, selectedPlayer.stt);
+                                        }
+                                    }}
+                                    variant="danger"
+                                    size="sm"
+                                    className="shadow"
                                 >
                                     -{amount}
-                                </button>
+                                </Button>
                             ))}
                         </div>
 
                         {(round === "3" || round === "4" || round === "2" || round === "turn") && (
                             <>
-                                <button
-                                    onClick={() => {
-                                        setTurn(parseInt(selectedPlayer.stt))
-                                        setCurrrentTurnToPlayer(roomId, parseInt(selectedPlayer.stt));
+                                <Button
+                                    onClick={async () => {
+                                        dispatch(setCurrentTurn(parseInt(selectedPlayer.stt || "")))
+                                        await sendCurrentTurn(roomId, parseInt(selectedPlayer.stt || ""));
                                         toast.success(`Đã cập nhật lượt thi cho ${selectedPlayer.userName}`);
                                     }}
-                                    className={`w-full ${turn === parseInt(selectedPlayer.stt) ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-500 hover:bg-blue-600'} text-white py-2 rounded shadow`}
+                                    variant={currentTurn === parseInt(selectedPlayer.stt || "") ? 'danger' : 'primary'}
+                                    size="md"
+                                    fullWidth
+                                    className="shadow"
                                 >
-                                    {turn === parseInt(selectedPlayer.stt) ? 'Đang thi' : 'Cập nhật lượt thi'}
-                                </button>
+                                    {currentTurn === parseInt(selectedPlayer.stt || "") ? 'Đang thi' : 'Cập nhật lượt thi'}
+                                </Button>
 
                                 {
                                     round === "2" && (
                                         <div className="flex flex-wrap gap-2">
-                                            <button
+                                            <Button
                                                 onClick={() => {
                                                     console.log("numberOfSelectedRow", numberOfSelectedRow);
 
                                                     const obstaclePoint = (7 - numberOfSelectedRow) * 15
                                                     console.log("obstaclePoint", obstaclePoint);
 
-                                                    updateScore(roomId, [], "auto", "2", turn.toString(), "true", "main", "", "", "", "", "true", obstaclePoint)
+                                                    updateScoring({
+                                                        roomId: roomId,
+                                                        mode: "auto",
+                                                        round: "2",
+                                                        stt: selectedPlayer.stt,
+                                                        isCorrect: true,
+                                                        isObstacleCorrect: true,
+                                                        obstaclePoint: obstaclePoint,
+                                                    });
                                                     toast.success(`Đã cộng ${obstaclePoint} đúng CNV cho ${selectedPlayer.userName}`);
                                                 }}
-                                                className="bg-green-600 hover:bg-green-700 text-white flex-1 min-w-[120px] rounded py-2">
+                                                variant="success"
+                                                size="md"
+                                                className="flex-1 min-w-[120px]"
+                                            >
                                                 Chấm điểm đúng CNV
-                                            </button>
+                                            </Button>
                                         </div>
                                     )
                                 }
                                 {/* Round 3 buttons moved to Round3.tsx for better UX */}
                                 {round === "4" && (
                                     <div className="flex flex-wrap gap-2">
-                                        <button
-                                            onClick={() => {
-                                                updateScore(roomId, [], "auto", "4", turn.toString(), "true", "main", level)
+                                        <Button
+                                            onClick={async () => {
+                                                await updateScoring({
+                                                    roomId: roomId,
+                                                    mode: "auto",
+                                                    round: "4",
+                                                    stt: currentTurn.toString(),
+                                                    isCorrect: true,
+                                                    round4Mode: "main",
+                                                    difficulty: selectedDifficulty,
+                                                });
                                             }}
-                                            className="bg-green-600 hover:bg-green-700 text-white flex-1 min-w-[120px] rounded py-2">
+                                            variant="success"
+                                            size="md"
+                                            className="flex-1 min-w-[120px]"
+                                        >
                                             Đúng
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                             onClick={async () => {
                                                 await openBuzz(roomId)
                                                 toast.success(`Đã mở bấm chuông`);
                                             }}
-                                            className="bg-red-600 hover:bg-red-700 text-white flex-1 min-w-[120px] rounded py-2"
+                                            variant="danger"
+                                            size="md"
+                                            className="flex-1 min-w-[120px]"
                                         >
                                             Sai
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                updateScore(roomId, [], "auto", "4", turn.toString(), "true", "nshv", level)
+                                        </Button>
+                                        <Button
+                                            onClick={async () => {
+                                                await updateScoring({
+                                                    roomId: roomId,
+                                                    mode: "auto",
+                                                    round: "4",
+                                                    stt: currentTurn.toString(),
+                                                    isCorrect: true,
+                                                    round4Mode: "nshv",
+                                                    difficulty: selectedDifficulty,
+                                                });
                                             }}
-                                            className="bg-green-500 hover:bg-green-600 text-white flex-1 min-w-[120px] rounded py-2"
+                                            variant="success"
+                                            size="md"
+                                            className="flex-1 min-w-[120px]"
                                         >
                                             NSHV Đúng
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                             onClick={async () => {
-                                                updateScore(roomId, [], "auto", "4", turn.toString(), "false", "nshv", level)
+                                                await updateScoring({
+                                                    roomId: roomId,
+                                                    mode: "auto",
+                                                    round: "4",
+                                                    stt: currentTurn.toString(),
+                                                    isCorrect: false,
+                                                    round4Mode: "nshv",
+                                                    difficulty: selectedDifficulty,
+                                                });
                                                 await openBuzz(roomId)
                                                 toast.success(`Đã mở bấm chuông`);
                                             }}
-                                            className="bg-red-500 hover:bg-red-600 text-white flex-1 min-w-[120px] rounded py-2"
+                                            variant="danger"
+                                            size="md"
+                                            className="flex-1 min-w-[120px]"
                                         >
                                             NSHV Sai
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                updateScore(roomId, [], "auto", "4", "", "", "take_turn", level, "true", selectedPlayer.stt, turn.toString())
+                                        </Button>
+                                        <Button
+                                            onClick={async () => {
+                                                await updateScoring({
+                                                    roomId: roomId,
+                                                    mode: "auto",
+                                                    round: "4",
+                                                    sttTakeTurn: selectedPlayer.stt,
+                                                    sttTaken: currentTurn.toString(),
+                                                    isTakeTurnCorrect: true,
+                                                    round4Mode: "take_turn",
+                                                    difficulty: selectedDifficulty,
+                                                });
                                             }}
-                                            className="bg-green-400 hover:bg-green-500 text-white flex-1 min-w-[120px] rounded py-2"
+                                            variant="success"
+                                            size="md"
+                                            className="flex-1 min-w-[120px]"
                                         >
                                             Giành lượt Đúng
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                updateScore(roomId, [], "auto", "4", "", "", "take_turn", level, "false", selectedPlayer.stt, turn.toString())
+                                        </Button>
+                                        <Button
+                                            onClick={async () => {
+                                                await updateScoring({
+                                                    roomId: roomId,
+                                                    mode: "auto",
+                                                    round: "4",
+                                                    sttTakeTurn: selectedPlayer.stt,
+                                                    sttTaken: currentTurn.toString(),
+                                                    isTakeTurnCorrect: false,
+                                                    round4Mode: "take_turn",
+                                                    difficulty: selectedDifficulty,
+                                                });
                                             }}
-                                            className="bg-red-400 hover:bg-red-500 text-white flex-1 min-w-[120px] rounded py-2"
+                                            variant="danger"
+                                            size="md"
+                                            className="flex-1 min-w-[120px]"
                                         >
                                             Giành lượt Sai
-                                        </button>
+                                        </Button>
                                     </div>
                                 )}
                             </>
@@ -322,45 +539,77 @@ function HostAnswer() {
                     </>
                 ) : (
 
-                   round !== "1" ? (
-                    <p className="text-white text-center">Chọn 1 người chơi để điều khiển</p>
-                   ) : null
-                    
+                    round !== "1" ? (
+                        <p className="text-white text-center">Chọn 1 người chơi để điều khiển</p>
+                    ) : null
+
                 )}
 
                 {/* Confirm button */}
-                <button
-                    onClick={() => {
+                <Button
+                    onClick={async () => {
                         toast.success('Đã cập nhật điểm!');
-                        updateScore(roomId, playerScores, "manual", round);
-                        const newScoreList = [...playerScores].map((s) => ({
-                            ...s,
-                            isCorrect: false,
-                            isModified: false,
-                        }));
-                        setPlayerScores(newScoreList);
+                        await updateScoring({
+                            roomId: roomId,
+                            mode: "manual",
+                            round: round,
+                            scores: localPlayersScore,
+                        });
+
                     }}
-                    className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white py-3 rounded-xl shadow font-semibold"
+                    variant="success"
+                    size="lg"
+                    fullWidth
+                    className="shadow font-semibold"
                 >
                     Xác nhận điểm
-                </button>
+                </Button>
 
-                <button
+                <Button
                     onClick={() => {
-                        updateScore(roomId, playerScores, mode, round);
-                        toast.success(`Đã cập nhật điểm cho vòng thi ${round}`);
-                        // const newScoreList = [...playerScores].map((s) => ({
-                        //     ...s,
-                        //     isCorrect: false,
-                        //     isModified: false,
-                        // }));
-                        // setPlayerScores(newScoreList);
+                        showConfirmModal({
+                            text: `Bạn có chắc chắn muốn chấm điểm tự động cho vòng thi ${round}?`,
+                            onConfirm: () => {
+                                updateScoring({
+                                    roomId: roomId,
+                                    mode: mode,
+                                    round: round,
+                                    stt: currentTurn.toString(),
+                                });
+                                toast.success(`Đã cập nhật điểm cho vòng thi ${round}`);
+                            },
+                            confirmText: 'Chấm điểm',
+                            confirmVariant: 'primary'
+                        });
                     }}
-                    className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white py-3 rounded-xl shadow font-semibold"
+                    variant="success"
+                    size="lg"
+                    fullWidth
+                    className="shadow font-semibold"
                 >
                     Chấm điểm tự động
-                </button>
+                </Button>
+
+
             </div>
+
+            {/* Kick Player Modal */}
+            <KickPlayerModal
+                isOpen={kickModalOpen}
+                onClose={handleKickModalClose}
+                onConfirm={handleKickPlayerConfirm}
+                player={playerToKick}
+                isLoading={isKicking}
+            />
+
+            {/* Confirmation Modal */}
+            {modalState.isOpen && (
+                <Modal
+                    text={modalState.text}
+                    buttons={modalState.buttons}
+                    onClose={closeModal}
+                />
+            )}
         </div>
     );
 }

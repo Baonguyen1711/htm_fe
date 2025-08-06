@@ -1,13 +1,16 @@
 // Room Redux slice
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { RoomState, Room, RoomPlayer, CreateRoomRequest, JoinRoomRequest } from '../../../shared/types';
-
+import apiClient from '../../../shared/services/api/client';
 // Initial state
 const initialState: RoomState = {
   // Current room info
   currentRoom: null,
   players: [],
-  spectators: [],
+  spectatorsCount: 0,
+
+  // Current player info
+  currentPlayer: null,
   
   // Room management
   isHost: false,
@@ -79,19 +82,14 @@ export const joinRoom = createAsyncThunk(
   'room/joinRoom',
   async (joinData: JoinRoomRequest, { rejectWithValue }) => {
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/room/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(joinData),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to join room');
+      const url = new URL('/api/room/join', process.env.REACT_APP_BASE_URL);
+      url.searchParams.append('room_id', joinData.roomId);
+      if (joinData.password) {
+        url.searchParams.append('password', joinData.password);
       }
+      const response = await apiClient.post(url.toString(), joinData);
       
-      const data = await response.json();
-      return data;
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -161,6 +159,10 @@ const roomSlice = createSlice({
     setPlayers: (state, action: PayloadAction<RoomPlayer[]>) => {
       state.players = action.payload;
     },
+
+    setCurrentPlayer: (state, action: PayloadAction<RoomPlayer>) => {   
+      state.currentPlayer = action.payload;
+    },
     
     addPlayer: (state, action: PayloadAction<RoomPlayer>) => {
       const existingIndex = state.players.findIndex(p => p.uid === action.payload.uid);
@@ -183,20 +185,20 @@ const roomSlice = createSlice({
     },
     
     // Spectator management
-    setSpectators: (state, action: PayloadAction<RoomPlayer[]>) => {
-      state.spectators = action.payload;
+    setSpectators: (state, action: PayloadAction<number>) => {
+      state.spectatorsCount = action.payload;
     },
     
-    addSpectator: (state, action: PayloadAction<RoomPlayer>) => {
-      const existingIndex = state.spectators.findIndex(s => s.uid === action.payload.uid);
-      if (existingIndex === -1) {
-        state.spectators.push(action.payload);
-      }
-    },
+    // addSpectator: (state, action: PayloadAction<RoomPlayer>) => {
+    //   const existingIndex = state.spectators.findIndex(s => s.uid === action.payload.uid);
+    //   if (existingIndex === -1) {
+    //     state.spectators.push(action.payload);
+    //   }
+    // },
     
-    removeSpectator: (state, action: PayloadAction<string>) => {
-      state.spectators = state.spectators.filter(s => s.uid !== action.payload);
-    },
+    // removeSpectator: (state, action: PayloadAction<string>) => {
+    //   state.spectators = state.spectators.filter(s => s.uid !== action.payload);
+    // },
     
     // Room status
     setIsHost: (state, action: PayloadAction<boolean>) => {
@@ -220,7 +222,7 @@ const roomSlice = createSlice({
     clearCurrentRoom: (state) => {
       state.currentRoom = null;
       state.players = [];
-      state.spectators = [];
+      state.spectatorsCount = 0;
       state.isHost = false;
       state.isJoined = false;
     },
@@ -230,6 +232,15 @@ const roomSlice = createSlice({
       state.loading.error = null;
       state.joining.error = null;
       state.creating.error = null;
+    },
+    setPlayersFromFirebase: (state, action: PayloadAction<RoomPlayer[]>) => {
+      if (!action.payload) {
+        state.players = [];
+        return;
+      }
+      
+      // Replace the entire players array with Firebase data
+      state.players = action.payload;
     },
   },
   
@@ -275,6 +286,22 @@ const roomSlice = createSlice({
       .addCase(joinRoom.fulfilled, (state, action) => {
         state.joining.isLoading = false;
         state.currentRoom = action.payload.room;
+        state.players = action.payload.players;
+
+        state.currentPlayer = {
+          ...state.currentPlayer,
+          userName: action.meta.arg.userName,
+          avatar: action.meta.arg.avatar,
+          stt: action.meta.arg.stt,
+          uid: action.meta.arg.uid|| '',
+          answer: "",
+          time: 0,
+        }
+
+        localStorage.setItem("currentPlayer", JSON.stringify(state.currentPlayer));
+
+        console.log("state.currentPlayer after join room", state.currentPlayer);
+        
         state.isJoined = true;
         state.isHost = false;
       })
@@ -288,7 +315,7 @@ const roomSlice = createSlice({
       .addCase(leaveRoom.fulfilled, (state) => {
         state.currentRoom = null;
         state.players = [];
-        state.spectators = [];
+        state.spectatorsCount = 0;
         state.isHost = false;
         state.isJoined = false;
       });
@@ -303,14 +330,16 @@ export const {
   removePlayer,
   updatePlayer,
   setSpectators,
-  addSpectator,
-  removeSpectator,
+  // addSpectator,
+  // removeSpectator,
   setIsHost,
   setIsJoined,
   setAvailableRooms,
   setMyRooms,
+  setCurrentPlayer,
   clearCurrentRoom,
   clearError,
+  setPlayersFromFirebase,
 } = roomSlice.actions;
 
 export default roomSlice.reducer;

@@ -21,17 +21,18 @@ export interface Room extends BaseEntity {
 }
 
 export interface RoomPlayer extends PlayerData {
-  joinedAt: string;
-  isReady: boolean;
-  isConnected: boolean;
-  role: 'player' | 'spectator';
+  isConnected?: boolean;
+  role?: 'player' | 'spectator';
 }
 
 export interface RoomState {
   // Current room info
   currentRoom: Room | null;
   players: RoomPlayer[];
-  spectators: RoomPlayer[];
+  spectatorsCount: number;
+
+  // Current player info
+  currentPlayer: RoomPlayer | null;
   
   // Room management
   isHost: boolean;
@@ -48,19 +49,18 @@ export interface RoomState {
 }
 
 export interface CreateRoomRequest {
-  name: string;
-  testName: string;
-  maxPlayers: number;
-  isPrivate: boolean;
+  expired_time: number;
+  max_players: number;
   password?: string;
-  settings: GameSettings;
 }
 
 export interface JoinRoomRequest {
+  uid?: string;
   roomId: string;
   password?: string;
-  playerName: string;
+  userName: string;
   avatar: string;
+  stt: string
 }
 
 export interface RoomValidationRequest {

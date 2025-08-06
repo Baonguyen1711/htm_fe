@@ -1,25 +1,24 @@
 // User-related type definitions
 import { BaseEntity } from './common.types';
 
-export interface User extends BaseEntity {
-  uid: string;
-  userName: string;
+export interface User {
+  uid?: string;
+  userName?: string;
   email?: string;
-  avatar: string;
-  stt: string; // Player position/number
+  avatar?: string;
+  stt?: string; // Player position/number
   lastActive?: number;
   isOnline?: boolean;
 }
 
 export interface PlayerData extends User {
   answer?: string;
-  score: number;
-  roundScores: (number | null)[];
+  score?: number;
+  isModified?: boolean;
+  flashColor?: string | null;
+  roundScores?: (number | null)[];
   time?: number;
   isCorrect?: boolean;
-  wasDeductedThisRound?: boolean;
-  row?: string; // For Round 2
-  isObstacle?: boolean;
 }
 
 export interface AuthUser {
@@ -56,7 +55,7 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
   accessToken: string | null;
-  refreshToken: string | null;
+  refreshToken?: string | null;
   tokenExpiry: number | null;
 }
 
@@ -73,9 +72,6 @@ export interface PlayerContextState {
   animationKey: number;
 }
 
-export interface Answer {
-  answer: string;
-  uid: string;
-  stt: string;
+export interface Answer extends User{
   time?: number;
 }

@@ -6,32 +6,45 @@ import { ApiResponse, ApiError } from '../../types';
 // Extend InternalAxiosRequestConfig to include _retry property
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
+  _isNotAuthRequired?: boolean;
 }
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: REQUEST_TIMEOUT,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true,
+  // Don't set default Content-Type - let interceptor handle it based on data type
 });
 
 // Request interceptor
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config: ExtendedAxiosRequestConfig) => {
     // Add auth token if available
+    config.withCredentials = config._isNotAuthRequired !== true;
+    console.log("config", config);
     const accessToken = localStorage.getItem('accessToken');
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
+    // Handle Content-Type based on data type
+    if (config.data instanceof FormData) {
+      // For FormData, completely remove Content-Type to let browser set multipart/form-data with boundary
+      delete config.headers['Content-Type'];
+      console.log('📁 FormData detected, removed Content-Type header');
+      console.log('📁 FormData contents:', Array.from(config.data.entries()));
+      console.log('📁 Headers after FormData processing:', config.headers);
+    } else if (config.headers && !config.headers['Content-Type']) {
+      // Set JSON Content-Type for non-FormData requests
+      config.headers['Content-Type'] = 'application/json';
+    }
+
     // Log request in development
     if (process.env.NODE_ENV === 'development') {
       console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-        data: config.data,
+        data: config.data instanceof FormData ? 'FormData' : config.data,
         params: config.params,
+        headers: config.headers,
       });
     }
 
@@ -111,19 +124,19 @@ apiClient.interceptors.response.use(
 
 // Generic API methods
 export const api = {
-  get: <T = any>(url: string, config?: Partial<InternalAxiosRequestConfig>): Promise<AxiosResponse<ApiResponse<T>>> =>
+  get: <T = any>(url: string, config?: Partial<ExtendedAxiosRequestConfig>): Promise<AxiosResponse<T>> =>
     apiClient.get(url, config),
 
-  post: <T = any>(url: string, data?: any, config?: Partial<InternalAxiosRequestConfig>): Promise<AxiosResponse<ApiResponse<T>>> =>
+  post: <T = any>(url: string, data?: any, config?: Partial<ExtendedAxiosRequestConfig>): Promise<AxiosResponse<T>> =>
     apiClient.post(url, data, config),
 
-  put: <T = any>(url: string, data?: any, config?: Partial<InternalAxiosRequestConfig>): Promise<AxiosResponse<ApiResponse<T>>> =>
+  put: <T = any>(url: string, data?: any, config?: Partial<ExtendedAxiosRequestConfig>): Promise<AxiosResponse<T>> =>
     apiClient.put(url, data, config),
 
-  patch: <T = any>(url: string, data?: any, config?: Partial<InternalAxiosRequestConfig>): Promise<AxiosResponse<ApiResponse<T>>> =>
+  patch: <T = any>(url: string, data?: any, config?: Partial<ExtendedAxiosRequestConfig>): Promise<AxiosResponse<T>> =>
     apiClient.patch(url, data, config),
 
-  delete: <T = any>(url: string, config?: Partial<InternalAxiosRequestConfig>): Promise<AxiosResponse<ApiResponse<T>>> =>
+  delete: <T = any>(url: string, config?: Partial<ExtendedAxiosRequestConfig>): Promise<AxiosResponse<T>> =>
     apiClient.delete(url, config),
 };
 

@@ -4,6 +4,8 @@ export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.
 export const API_ENDPOINTS = {
   // Authentication
   AUTH: {
+    AUTHENTICATE: '/auth/token',
+    IS_HOST: '/auth/isHost',
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
@@ -13,25 +15,47 @@ export const API_ENDPOINTS = {
   
   // Game
   GAME: {
-    QUESTIONS: '/game/question/round',
+    QUESTION_BY_ROUND: '/game/question/round',
+    QUESTION: '/game/question',
+    CORRECT_ANSWER: '/game/answer',
     PREFETCH: '/game/question/prefetch',
     PACKETS: '/game/question/round/packet',
+    SELECTED_PACKETS: '/game/packet/set',
+    SELECTED_CELL: '/game/grid/cell',
+    OPEN_OBSTACLE: '/game/obstacle',
+    CELL_COLOR: '/game/grid/color',
+    USED_PACKETS: '/game/packet/used',
+    RETURN_TO_PACKET_SELECTION: '/game/packet/return',
     GRID: '/game/grid',
     ROUND_START: '/game/round/start',
-    SCORING: '/game/scoring',
-    ANSWER: '/game/answer',
-    BROADCAST_ANSWER: '/game/broadcast/answer',
+    TIME_START: '/game/time',
+    ROW_ACTION: '/game/row/action',
+    SCORING: '/game/score',
+    SUBMIT: '/game/submit',
+    BROADCAST_ANSWER: '/game/broadcast',
     TURN: '/game/turn',
-    RULES: '/game/rules',
+    RULES: '/game/score/rules',
+    RULES_SHOW: '/game/rules/show',
+    RULES_HIDE: '/game/rules/hide',
+    HISTORY: '/history/update',
+    PLAYER_COLOR: '/game/player/color',
   },
   
   // Room
   ROOM: {
     BASE: '/room',
+    CREATE: '/room/create',
     JOIN: '/room/join',
     VALIDATE: '/room/validate',
+    INFO: '/room/info',
     LEAVE: '/room/leave',
-    SPECTATOR: '/room/spectator',
+    SPECTATOR: '/room/spectator/join',
+  },
+
+  // Room
+  HISSTORY: {
+    BASE: '/history',
+    RETRIEVE: '/history/retrive',
   },
   
   // Test Management
@@ -39,7 +63,7 @@ export const API_ENDPOINTS = {
     BASE: '/test',
     UPLOAD: '/test/upload',
     USER: '/test/user',
-    UPDATE: '/test/update',
+    UPDATE: '/test/question/update',
   },
   
   // File Upload
@@ -65,12 +89,13 @@ export const API_ENDPOINTS = {
   // Star
   STAR: {
     BASE: '/star',
+    RESET: '/star/reset'
   },
   
   // History
   HISTORY: {
     UPDATE: '/history/update',
-    RETRIEVE: '/history/retrive', // Note: keeping original typo for compatibility
+    RETRIEVE: '/history/retrieve', 
   },
 } as const;
 

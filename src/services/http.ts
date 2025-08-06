@@ -1,5 +1,5 @@
 import axios from "axios";
-import tokenRefreshService from "./tokenRefresh.service";
+import tokenRefreshService from "../shared/services/auth/tokenRefresh";
 
 class Http {
     baseUrl: string | undefined
@@ -79,7 +79,7 @@ class Http {
     }
 
     async post(endpoint: string, isCreadential: boolean, data: any, params?:Record<string, any>) {
-        return this.request("POST", endpoint, isCreadential, params,data )
+        return this.request("POST", endpoint, isCreadential, params, data )
     }
 
     async put(endpoint: string, isCreadential: boolean, data: any,params?:Record<string, any>) {

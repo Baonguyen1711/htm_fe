@@ -1,11 +1,11 @@
-import Round3 from '../../../layouts/RoundBase/Round3';
+import HostQuestionBoxRound3 from '../../../components/Round3/HostQuestionBoxRound3';
 import Host from '../../../layouts/Host/Host';
 
 
 const HostRound3: React.FC = () => {
     return (
         <Host
-            QuestionComponent={<Round3 isHost={true}/>}
+            QuestionComponent={<HostQuestionBoxRound3 isHost={true}/>}
         />
     )
 };
