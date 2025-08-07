@@ -99,8 +99,8 @@ function App() {
       <ReduxProvider>
         {/* Legacy providers - will be migrated in later phases */}
 
-          {/* <ErrorBoundary fallback={<FallBack />}> */}
-          {/* <Suspense fallback={<FallBack />}> */}
+          <ErrorBoundary fallback={<FallBack />}>
+          <Suspense fallback={<FallBack />}>
 
 
             <Routes>
@@ -175,8 +175,8 @@ function App() {
             </Routes>
 
           <ToastContainer />
-          {/* </Suspense> */}
-          {/* </ErrorBoundary> */}
+          </Suspense>
+          </ErrorBoundary>
       </ReduxProvider>
     </>
   );

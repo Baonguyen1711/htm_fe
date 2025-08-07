@@ -48,10 +48,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         "turn": 10,
     }
 
-    const navigate = useNavigate()
-    const playerAnswerRef = useRef("");
     const sounds = useSounds();
-    const [isChatOpen, setIsChatOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     // const [spectatorCount, setSpectatorCount] = useState<number>(0)
     const [showRulesModal, setShowRulesModal] = useState(false);
@@ -59,8 +56,6 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     const [userId, setUserId] = useState(localStorage.getItem("userId"))
     const [params] = useSearchParams()
     const round = (params.get("round") as "1" | "2" | "3" | "4" | "turn") || "1"
-    // const { playerScores, setPlayerScores, animationKey, setAnimationKey, mode, rules } = useHost()
-    const isMounted = useRef(false);
     const { timeLeft, startTimer } = useTimeStart();
     const [roomRules, setRoomRules] = useState(null)
 

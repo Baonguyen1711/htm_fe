@@ -14,7 +14,7 @@ const PlayerQuestionBoxRound3: React.FC<PlayerQuestionBoxRound3Props> = ({ isHos
     const roomId = searchParams.get("roomId") || ""
 
     // local state
-    const [shouldReturnToTopicSelection, setShouldReturnToTopicSelection] = useState(false)
+    const [shouldReturnToTopicSelection, setShouldReturnToTopicSelection] = useState(true)
 
     // listener
     const { listenToPacketsName, listenToSelectedPacketName, listenToReturnToPacketsSelection } = useFirebaseListener()
@@ -65,7 +65,7 @@ const PlayerQuestionBoxRound3: React.FC<PlayerQuestionBoxRound3Props> = ({ isHos
             isSpectator={false}
             selectedPacketName={selectedPacketName}
             packetNames={packetNames}
-            showReturnButton={shouldReturnToTopicSelection}
+            shouldReturnToPacketSelection={shouldReturnToTopicSelection}
             currentQuestion={currentQuestion}
             currentCorrectAnswer={currentCorrectAnswer}
 

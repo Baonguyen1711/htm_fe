@@ -5,6 +5,7 @@ import { useFirebaseListener } from '../../../shared/hooks';
 import useGameApi from '../../../shared/hooks/api/useGameApi';
 import { useSearchParams } from 'react-router-dom';
 import Modal from '../../../components/ui/Modal/Modal';
+import { useSounds } from '../../../context/soundContext';
 const exampleGrid = [
     ['!', '', '?', '', '!'],
     ['', '?', '!', '', '?'],
@@ -21,9 +22,14 @@ const HostRound4: React.FC = () => {
     const roomId = searchParams.get("roomId") || ""
     const { listenToBuzzedPlayer, listenToStar } = useFirebaseListener();
     const { resetBuzz, resetStar } = useGameApi()
+    const sounds = useSounds();
     useEffect(() => {
         const unsubscribeBuzzedPlayer = listenToBuzzedPlayer(
             (playerName) => {
+                const audio = sounds["buzz"];
+                if (audio) {
+                    audio.play();
+                }
                 setShowModal(true)
                 setBuzzedPlayer(playerName)
             }

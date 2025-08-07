@@ -1,10 +1,11 @@
-import HostQuestionBoxRound2 from '../../../components/Round2/HostQuestionBoxRound2'; 
+import HostQuestionBoxRound2 from '../../../components/Round2/HostQuestionBoxRound2';
 import Host from '../../../layouts/Host/Host';
 import useGameApi from '../../../shared/hooks/api/useGameApi';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import useFirebaseListener from '../../../shared/hooks/firebase/useFirebaseListener';
 import Modal from '../../../components/ui/Modal/Modal';
+import { useSounds } from '../../../context/soundContext';
 
 const HostRound2: React.FC = () => {
   const [params] = useSearchParams()
@@ -16,6 +17,7 @@ const HostRound2: React.FC = () => {
   const { listenToBuzzedPlayer } = useFirebaseListener();
   const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
   const [showModal, setShowModal] = useState(false); // State for modal visibility
+  const sounds = useSounds();
 
   useEffect(() => {
     const getQuestions = async () => {
@@ -23,7 +25,7 @@ const HostRound2: React.FC = () => {
       const questions = await getQuestionByRound(testName, "2")
 
       //obstacle is the 7th question
-      const obstacleWord = questions[6].answer 
+      const obstacleWord = questions[6].answer
 
       for (let i = 0; i < questions.length - 1; i++) {
         hintArrays.push(questions[i].answer.replace(/\s/g, ''))
@@ -43,6 +45,10 @@ const HostRound2: React.FC = () => {
   useEffect(() => {
     const unsubscribeBuzzedPlayer = listenToBuzzedPlayer(
       (playerName) => {
+        const audio = sounds["buzz"];
+        if (audio) {
+          audio.play();
+        }
         setShowModal(true)
         setBuzzedPlayer(playerName)
       }
@@ -65,13 +71,13 @@ const HostRound2: React.FC = () => {
       <Host
         QuestionComponent={<HostQuestionBoxRound2 hintWordArray={hintWordArray} obstacleWord={obstacleWord} isHost={true} />}
       />
-      {showModal && buzzedPlayer && 
+      {showModal && buzzedPlayer &&
         <Modal
-              text={`${buzzedPlayer} đã nhấn chuông trả lời`}
-              buttons={[
-                { text: "Đóng", onClick: handleCloseModal, variant: "primary" },
-              ]}
-              onClose={handleCloseModal}
+          text={`${buzzedPlayer} đã nhấn chuông trả lời`}
+          buttons={[
+            { text: "Đóng", onClick: handleCloseModal, variant: "primary" },
+          ]}
+          onClose={handleCloseModal}
         />
       }
     </>

@@ -71,10 +71,10 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         useEffect(() => {
         const unsubscribeGrid = listenToRound4Grid((grid) => {
             console.log("grid in question box round 4", grid);
-            if (grid) {
-                setGrid(grid);
-            } else {
+            if (!grid  || grid.length !== 5 )  {
                 setGrid(initialGrid)
+            } else {
+                setGrid(grid);
             }
         })
         return () => {

@@ -13,7 +13,7 @@ interface BaseQuestionBoxRound3Props {
     isSpectator?: boolean,
     selectedPacketName: string | null,
     packetNames: string[],
-    showReturnButton: boolean,
+    shouldReturnToPacketSelection: boolean,
     currentQuestion: Question | null,
     currentCorrectAnswer: string,
 
@@ -28,7 +28,7 @@ const BaseQuestionBoxRound3: React.FC<BaseQuestionBoxRound3Props> = ({
     isHost,
     selectedPacketName,
     packetNames,
-    showReturnButton,
+    shouldReturnToPacketSelection,
     currentQuestion,
     currentCorrectAnswer,
 
@@ -78,7 +78,7 @@ const BaseQuestionBoxRound3: React.FC<BaseQuestionBoxRound3Props> = ({
     }, []);
     return (
         <div className="flex flex-col items-center min-h-[600px]">
-            {!selectedPacketName ? (
+            {shouldReturnToPacketSelection ? (
                 <div className="grid grid-cols-2 gap-6 w-full max-w-xl">
                     {Array.isArray(packetNames) && packetNames.length > 0 ? (
                         packetNames
@@ -126,7 +126,7 @@ const BaseQuestionBoxRound3: React.FC<BaseQuestionBoxRound3Props> = ({
                         />
 
                         {/* Return to topic selection button */}
-                        {showReturnButton && isHost && (
+                        {!shouldReturnToPacketSelection && isHost && (
                             <>
                                 <div className="mt-4">
 

@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '../../app/store';
 import { useConfirmModal } from '../../shared/hooks/ui/useConfirmModal';
 import { toast } from 'react-toastify';
 import { useSearchParams } from 'react-router-dom';
-import { getPacketsName, getQuestions, setCurrentCorrectAnswer, setCurrentQuestion, setCurrentQuestionNumber, setSelectedPacketName, setUsedPackesName } from '../../app/store/slices/gameSlice';
+import { getPacketsName, getQuestions, setCurrentCorrectAnswer, setCurrentQuestion, setCurrentQuestionNumber, setSelectedPacketName, setShouldReturnToTopicSelection, setUsedPackesName } from '../../app/store/slices/gameSlice';
 import { gameApi } from '../../shared/services';
 import BaseQuestionBoxRound3 from './BaseQuestionBoxRound3';
 
@@ -18,7 +18,7 @@ const HostQuestionBoxRound3: React.FC<HostQuestionBoxRound3Props> = ({ isHost })
     const testName = searchParams.get("testName") || ""
 
     //local state
-    const [showReturnButton, setShowReturnButton] = useState(false);
+    const [shouldReturnToPacketSelection, setShouldReturnToPacketSelection] = useState(true);
     const [usedPacketNames, setUsedPacketNames] = useState<string[]>([])
 
     // listener
@@ -69,7 +69,7 @@ const HostQuestionBoxRound3: React.FC<HostQuestionBoxRound3Props> = ({ isHost })
         dispatch(setUsedPackesName([...usedPacketNames, topic]))
         dispatch(setSelectedPacketName(topic))
 
-        setShowReturnButton(true)
+        setShouldReturnToPacketSelection(false)
 
         await sendSelectedPacketName(roomId, topic)
         await sendShouldReturnToPacketSelection(roomId, false)
@@ -78,7 +78,7 @@ const HostQuestionBoxRound3: React.FC<HostQuestionBoxRound3Props> = ({ isHost })
 
     const handleReturnToTopicSelection = async () => {
         dispatch(setSelectedPacketName(null))
-        setShowReturnButton(false);
+        setShouldReturnToPacketSelection(true);
 
         await sendShouldReturnToPacketSelection(roomId, true)
 
@@ -150,7 +150,7 @@ const HostQuestionBoxRound3: React.FC<HostQuestionBoxRound3Props> = ({ isHost })
             isSpectator={false}
             selectedPacketName={selectedPacketName}
             packetNames={packetNames}
-            showReturnButton={showReturnButton}
+            shouldReturnToPacketSelection={shouldReturnToPacketSelection}
             currentQuestion={currentQuestion}
             currentCorrectAnswer={currentCorrectAnswer}
 

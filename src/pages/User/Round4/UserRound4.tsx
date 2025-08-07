@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import PlayerQuestionBoxRound4 from '../../../components/Round4/PlayerQuestionBoxRound4';
 import useGameApi from '../../../shared/hooks/api/useGameApi';
 import Modal from '../../../components/ui/Modal/Modal';
+import { useSounds } from '../../../context/soundContext';
 const exampleGrid = [
     ['!', '', '?', '', '!'],
     ['', '?', '!', '', '?'],
@@ -38,19 +39,21 @@ function UserRound4({ isSpectator }: UserRound4Props) {
         ['?', '!', '', '?', ''],
     ];
     const [loading, setLoading] = useState(true);
-    const isFirstCallback = useRef(true);
-    const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
-    const { listenToRoundStart } = useFirebaseListener();
+
     const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
     const [staredPlayer, setStaredPlayer] = useState<string>("");
     const [showModal, setShowModal] = useState(false); // State for modal visibility
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || ""
     const { listenToBuzzedPlayer, listenToStar } = useFirebaseListener();
-    const { resetBuzz } = useGameApi()
+    const sounds = useSounds();
     useEffect(() => {
         const unsubscribeBuzzedPlayer = listenToBuzzedPlayer(
             (playerName) => {
+                const audio = sounds["buzz"];
+                if (audio) {
+                    audio.play();
+                }
                 setShowModal(true)
                 setBuzzedPlayer(playerName)
             }
@@ -79,30 +82,6 @@ function UserRound4({ isSpectator }: UserRound4Props) {
         setBuzzedPlayer("");
         setStaredPlayer("");
     };
-
-    // useEffect(() => {
-    //     const unsubscribePlayers = listenToRoundStart(
-    //         (round) => {
-    //             console.log("round", round);
-    //             console.log("roomId", roomId);
-    //             if (isSpectator) {
-    //                 console.log(
-    //                     `Navigating to /spectator?round=${round}&roomId=${roomId}`
-    //                 )
-    //                 navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
-    //             } else {
-    //                 console.log(
-    //                     `Navigating to /play?round=${round}&roomId=${roomId}`
-    //                 )
-    //                 navigate(`/play?round=${round}&roomId=${roomId}`);
-    //             }
-    //         }
-    //     )
-
-    //     return () => {
-    //         unsubscribePlayers();
-    //     };
-    // }, [roomId]);
 
     useEffect(() => {
         if (initialGrid && initialGrid.length > 0) {

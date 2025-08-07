@@ -46,7 +46,7 @@ const firebaseServices = {
   },
 
   listenToBuzzing: (roomId: string, callback: (data: string) => void) => {
-    return firebaseServices.listen(roomId, "buzzedPlayer", callback);
+    return firebaseServices.listen(roomId, "buzzedPlayer", callback, true);
   },
 
   listenToStar: (roomId: string, callback: (data: string) => void) => {

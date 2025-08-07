@@ -71,7 +71,7 @@ const PlayerQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
 
     //global state
     const dispatch = useAppDispatch()
-    const { currentQuestion } = useAppSelector(state => state.game)
+    const { currentQuestion, currentCorrectAnswer } = useAppSelector(state => state.game)
 
 
     //custom hook
@@ -214,6 +214,7 @@ const PlayerQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
         <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4 relative">
             <QuestionAndAnswer
                 currentQuestion={currentQuestion}
+                currentCorrectAnswer={currentCorrectAnswer}
             />
             {isLoading ?
                 <FallBack />

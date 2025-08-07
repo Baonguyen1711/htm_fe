@@ -5,6 +5,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import FallBack from "../../../components/ui/Error/FallBack";
 import useFirebaseListener from "../../../shared/hooks/firebase/useFirebaseListener";
 import Modal from "../../../components/ui/Modal/Modal";
+import { useSounds } from "../../../context/soundContext";
 interface UserRound2Props {
   isSpectator?: boolean;
 }
@@ -22,9 +23,15 @@ function UserRound2({ isSpectator }: UserRound2Props) {
   const isFirstCallback = useRef(true);
   const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
   const { listenToRoundStart, listenToBuzzedPlayer } = useFirebaseListener();
+  const sounds = useSounds();
+  
   useEffect(() => {
     const unsubscribeBuzzedPlayer = listenToBuzzedPlayer(
       (playerName) => {
+        const audio = sounds["buzz"];
+        if (audio) {
+          audio.play();
+        }
         setShowModal(true)
         setBuzzedPlayer(playerName)
       }

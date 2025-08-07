@@ -46,11 +46,10 @@ const JoinRoom = () => {
       // Sign in anonymously and wait for auth token to be set
       await signInWithoutPassword();
 
-      // Wait a moment for Firebase auth to complete, then manually authenticate
       await new Promise<void>((resolve) => {
         timeoutId = setTimeout(() => {
           resolve();
-        }, 1000);
+        }, 800);
       });
 
       // Manually authenticate to set cookies
