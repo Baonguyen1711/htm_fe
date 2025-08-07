@@ -7,8 +7,10 @@ import authSlice from './slices/authSlice';
 import gameSlice from './slices/gameSlice';
 import roomSlice from './slices/roomSlice';
 import uiSlice from './slices/uiSlice';
+import localStorageMiddleware from './middleware/localStorageMiddleware';
 
-export const store = configureStore({
+// Create store without middleware first to avoid circular reference
+const store = configureStore({
   reducer: {
     auth: authSlice,
     game: gameSlice,
@@ -20,12 +22,14 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
       },
-    }),
+    }).concat(localStorageMiddleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
+export { store };
 
 // Typed hooks for better TypeScript support
 export const useAppDispatch = () => useDispatch<AppDispatch>();

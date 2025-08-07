@@ -114,19 +114,26 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     }, [currentRound])
 
     useEffect(() => {
+        // Only run once on component mount, not when currentPlayer changes
         if (!currentPlayer && !isHost) {
             try {
-                const cachedPlayer = JSON.parse(localStorage.getItem("currentPlayer") || "null");
-                if (cachedPlayer) {
-                    console.log("cachedPlayer", cachedPlayer);
-                    dispatch(setCurrentPlayer(cachedPlayer))
+                const cachedPlayerString = localStorage.getItem("currentPlayer");
+                if (cachedPlayerString && cachedPlayerString !== "null" && cachedPlayerString !== "undefined") {
+                    const cachedPlayer = JSON.parse(cachedPlayerString);
+                    if (cachedPlayer && typeof cachedPlayer === 'object' && cachedPlayer.uid) {
+                        console.log("✅ Restored cached player:", cachedPlayer);
+                        dispatch(setCurrentPlayer(cachedPlayer));
+                    } else {
+                        console.warn("⚠️ Invalid cached player data, clearing localStorage");
+                        localStorage.removeItem("currentPlayer");
+                    }
                 }
             } catch (error) {
-                console.error("Error parsing cached player:", error);
+                console.error("❌ Error parsing cached player:", error);
                 localStorage.removeItem("currentPlayer");
             }
         }
-    }, [currentPlayer])
+    }, [isHost]) // Only depend on isHost, not currentPlayer
 
     useEffect(() => {
         console.log("start listening", roomId);

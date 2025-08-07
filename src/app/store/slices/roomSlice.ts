@@ -298,8 +298,7 @@ const roomSlice = createSlice({
           time: 0,
         }
 
-        localStorage.setItem("currentPlayer", JSON.stringify(state.currentPlayer));
-
+        // localStorage sync is now handled by middleware
         console.log("state.currentPlayer after join room", state.currentPlayer);
         
         state.isJoined = true;
