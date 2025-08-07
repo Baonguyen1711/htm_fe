@@ -59,7 +59,7 @@ const ProtectedRoute = ({
 
                 try {
                     const response = await axios.post<VerifyResponse>(
-                        `http://127.0.0.1:8000/api/auth/verify`,
+                        `${process.env.REACT_APP_BASE_URL}/auth/verify`,
                         {},
                         {
                             headers: {
