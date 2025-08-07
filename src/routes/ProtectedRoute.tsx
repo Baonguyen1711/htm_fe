@@ -1,6 +1,7 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import authService from '../services/auth.service';
+import { authApi } from '../shared/services/auth/authApi';
 import axios from 'axios';
 
 interface VerifyResponse {
@@ -107,8 +108,7 @@ const ProtectedRoute: React.FC<{ element: ReactNode, requireAccessToken?: boolea
                     setShowModal(true);
                 }
             } else if (requireHost) {
-                // Example: check Firebase user info (maybe from localStorage or a backend API)
-                const response = await authService.isHost({})
+                const response = await authApi.isHost()
                 console.log("response.data", response);
                 
                 if(!response) {

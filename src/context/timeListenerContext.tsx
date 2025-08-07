@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { deletePath, listenToTimeStart } from "../services/firebaseServices";
 import { useSounds } from "./soundContext";
 import { round } from "react-placeholder/lib/placeholders";
 import { useSearchParams } from "react-router-dom";
-import { useHost } from "./hostContext";
+import { useAppDispatch, useAppSelector } from "../app/store";
+import { setIsInputDisabled } from "../app/store/slices/gameSlice";
+import { gameApi } from "../shared/services";
 
 type TimeStartContextType = {
   timeLeft: number;
@@ -23,7 +24,9 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
   children,
 }) => {
   // const {setAnimationKey} = useHost();
-  const [timeLeft, setTimeLeft] = useState<number>(0);
+  const dispatch = useAppDispatch()
+  const {currentPlayer} = useAppSelector(state => state.game)
+  const [timeLeft, setTimeLeft] = useState<number>(-1);
   const [timeElapsed, settimeElapsed] = useState<number>(0)
   const [playerAnswerTime, setPlayerAnswerTime] = useState<number>(0)
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -31,10 +34,34 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
   const [searchParams] = useSearchParams();
   const round = searchParams.get("round") || "1";
   const roundRef = useRef(round);
+  const {submitAnswer} = gameApi;
 
 
+  const handleTimeEnd = async () => {
+    console.log("Time is up!");
+
+    dispatch(setIsInputDisabled(true))
+
+    const submittedAnswer = {
+      answer: currentPlayer?.answer || "",
+      stt: currentPlayer?.stt || "",
+      time: currentPlayer?.time || 0,
+      player_name: currentPlayer?.userName || "",
+      avatar: currentPlayer?.avatar || ""
+    }
+
+    await submitAnswer(submittedAnswer, roomId)
+  };
+
+  // Watch for timeLeft reaching 0
+  useEffect(() => {
+    if (timeLeft === 0) {
+      handleTimeEnd();
+    }
+  }, [timeLeft]);
 
   const startTimer = async (duration: number) => {
+
     // Clear any existing timer
     if (timerRef.current) clearInterval(timerRef.current);
     console.log("duration", duration);

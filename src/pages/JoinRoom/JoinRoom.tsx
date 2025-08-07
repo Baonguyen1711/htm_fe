@@ -1,19 +1,20 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
-import http from '../../services/http';
-import authService from '../../services/auth.service';
-import tokenRefreshService from '../../services/tokenRefresh.service';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import useAuth from '../../shared/hooks/auth/useAuth';
+import useRoomApi from '../../shared/hooks/api/useRoomApi';
+import { Button } from '../../shared/components/ui';
 
 const JoinRoom = () => {
   const navigate = useNavigate();
   const [roomId, setRoomId] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const { signInWithoutPassword } = useAuth();
+  const { signInWithoutPassword, authenticateUserManually } = useAuth();
+  const { validateRoom } = useRoomApi();
 
   const handleJoinRoom = async () => {
+    let timeoutId: NodeJS.Timeout | null = null;
+
     try {
       if (!roomId.trim()) {
         alert("Vui lòng nhập mã phòng");
@@ -22,12 +23,13 @@ const JoinRoom = () => {
 
       // Validate room and password first
       try {
+        console.log("roomId", roomId);
         const params: any = { room_id: roomId };
         if (password) {
           params.password = password;
         }
 
-        await http.post('room/validate', false, {}, params);
+        await validateRoom(roomId, password);
       } catch (error: any) {
         if (error.response?.status === 404) {
           alert("Phòng không tồn tại");
@@ -41,51 +43,21 @@ const JoinRoom = () => {
         }
       }
 
-      // Sign in anonymously first and wait for auth token to be set
+      // Sign in anonymously and wait for auth token to be set
       await signInWithoutPassword();
 
-      // Wait for Firebase auth state to change and authToken cookie to be set
-      const auth = getAuth();
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          unsubscribe();
-          reject(new Error("Authentication timeout"));
-        }, 10000); // 10 second timeout
-
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-          if (user) {
-            try {
-              // Get the Firebase ID token and send it to backend to set cookie
-              const token = await user.getIdToken();
-              await authService.authenticateUser({ token });
-              console.log("Auth token cookie set successfully");
-              clearTimeout(timeout);
-              unsubscribe();
-              resolve();
-            } catch (error) {
-              console.error("Error setting auth token:", error);
-              clearTimeout(timeout);
-              unsubscribe();
-              reject(error);
-            }
-          }
-        });
-      }).catch((authError) => {
-        console.error("Authentication failed:", authError);
-        alert("Lỗi xác thực. Vui lòng thử lại.");
-        return;
+      // Wait a moment for Firebase auth to complete, then manually authenticate
+      await new Promise<void>((resolve) => {
+        timeoutId = setTimeout(() => {
+          resolve();
+        }, 1000);
       });
+
+      // Manually authenticate to set cookies
+      await authenticateUserManually();
 
       // Get access token for the room
       try {
-        const tokenResponse = await authService.getAccessToken({ roomId });
-        console.log("Access token obtained:", tokenResponse);
-
-        // Store access token
-        localStorage.setItem('accessToken', tokenResponse.accessToken);
-
-        // Start auto-refresh timer for the new access token
-        tokenRefreshService.startAutoRefresh(tokenResponse.accessToken);
 
         const params = new URLSearchParams({ roomid: roomId });
         if (password) {
@@ -99,6 +71,12 @@ const JoinRoom = () => {
       }
     } catch (error) {
       console.error("Error during joining room:", error);
+      alert("Lỗi khi tham gia phòng");
+    } finally {
+      // Clear the timeout if it exists to prevent memory leaks
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     }
   };
 
@@ -176,13 +154,16 @@ const JoinRoom = () => {
                 </p>
               </div>
 
-              <button
+              <Button
                 type="button"
                 onClick={handleJoinRoom}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg hover:from-blue-700 hover:to-cyan-600 font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
+                variant="primary"
+                size="lg"
+                fullWidth
+                className="font-medium shadow-lg"
               >
                 Tham gia phòng
-              </button>
+              </Button>
             </form>
 
             <div className="mt-6 text-center">

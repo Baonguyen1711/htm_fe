@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
+import useAuth from '../../shared/hooks/auth/useAuth';
+import { Button } from '../../shared/components/ui';
 // Adjust the import path as necessary
 
 const Login = () => {
@@ -102,13 +103,16 @@ const Login = () => {
                 </a>
               </div>
 
-              <button
+              <Button
                 type="button"
                 onClick={handleLogin}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg hover:from-blue-700 hover:to-cyan-600 font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
+                variant="primary"
+                size="lg"
+                fullWidth
+                className="font-medium shadow-lg"
               >
                 Đăng nhập
-              </button>
+              </Button>
             </form>
 
             <div className="mt-6 text-center">

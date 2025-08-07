@@ -1,5 +1,5 @@
 import React from 'react'
-import Play from '../Play'
+import Play from '../../components/Play'
 import HostAnswer from '../../components/HostAnswer'
 import HostManagement from '../../components/HostManagement'
 

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import Footer from "../../components/ui/Footer";
+import { Button } from '../../shared/components/ui';
 
 function Home() {
   // Mock images - replace with actual paths when available
@@ -81,26 +83,30 @@ function Home() {
             {/* Custom Tabs */}
             <div className="w-full">
               <div className="flex w-full bg-slate-800/80 backdrop-blur-sm border border-blue-400/30 rounded-md">
-                <button
+                <Button
                   onClick={() => setActiveTab("gioi-thieu")}
-                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-l-md transition-colors ${
+                  variant={activeTab === "gioi-thieu" ? "primary" : "ghost"}
+                  size="sm"
+                  className={`flex-1 text-sm font-medium rounded-l-md transition-colors ${
                     activeTab === "gioi-thieu"
-                      ? "bg-blue-600 text-white"
+                      ? ""
                       : "text-blue-200 hover:bg-blue-600/20"
                   }`}
                 >
                   Giới thiệu
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setActiveTab("thong-tin")}
-                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-r-md transition-colors ${
+                  variant={activeTab === "thong-tin" ? "primary" : "ghost"}
+                  size="sm"
+                  className={`flex-1 text-sm font-medium rounded-r-md transition-colors ${
                     activeTab === "thong-tin"
-                      ? "bg-blue-600 text-white"
+                      ? ""
                       : "text-blue-200 hover:bg-blue-600/20"
                   }`}
                 >
                   Thông tin ứng dụng
-                </button>
+                </Button>
               </div>
               
               <div className="mt-6">
@@ -124,21 +130,29 @@ function Home() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mt-6 justify-center">
-              <button 
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-md hover:from-blue-700 hover:to-cyan-600 shadow-lg hover:shadow-blue-500/25 transition-all duration-300 font-medium"
+              <Button
                 onClick={() => window.location.href = "/join"}
+                variant="primary"
+                size="lg"
+                className="font-medium shadow-lg"
               >
                 Tham gia phòng thi
-              </button>
-              <button 
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-md hover:from-blue-700 hover:to-cyan-600 shadow-lg hover:shadow-blue-500/25 transition-all duration-300 font-medium"
+              </Button>
+              <Button
                 onClick={() => window.location.href = "/spectatorJoin"}
+                variant="primary"
+                size="lg"
+                className="font-medium shadow-lg"
               >
                 Tham gia phòng thi với tư cách khán giả
-              </button>
-              <button className="px-6 py-3 border border-blue-400/50 text-blue-200 rounded-md hover:bg-blue-600/20 hover:text-white hover:border-blue-400 backdrop-blur-sm transition-all duration-300 font-medium">
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="font-medium backdrop-blur-sm"
+              >
                 Luật chơi
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -174,7 +188,8 @@ function Home() {
         <div className="mt-20 border-t border-blue-400/30 bg-slate-900/50 backdrop-blur-sm">
           <div className="max-w-6xl mx-auto p-8 text-center">
             <p className="text-blue-200/80">
-              © 2024 Hành Trình Magellan. Khám phá tri thức vượt đại dương.
+              © 2025 Hành Trình Magellan. Khám phá tri thức vượt đại dương.
+
             </p>
           </div>
         </div>

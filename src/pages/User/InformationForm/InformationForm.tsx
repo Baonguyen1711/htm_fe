@@ -1,10 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { joinRoom } from "./services";
-import { usePlayer } from "../../../context/playerContext";
-import { uploadFile } from "../../../services/uploadAssestServices";
-import roomService from "../../../services/room.service";
-import useTokenRefresh from "../../../hooks/useTokenRefresh";
+
+
+import useTokenRefresh from "../../../shared/hooks/auth/useTokenRefresh";
+import { useAppDispatch, useAppSelector } from "../../../app/store";
+import { joinRoom } from "../../../app/store/slices/roomSlice";
+import { setCurrentPlayer } from "../../../app/store/slices/gameSlice";
+import authService from "../../../services/auth.service";
+import tokenRefreshService from "../../../shared/services/auth/tokenRefresh";
+import { useOptimizedUpload } from "../../../shared/hooks/useOptimizedUpload";
+import { roomApi } from "../../../shared/services/room/roomApi";
+import { toast } from 'react-toastify';
+import { Button } from '../../../shared/components/ui';
 
 const InformationForm = () => {
   const [searchParams] = useSearchParams();
@@ -13,60 +20,143 @@ const InformationForm = () => {
   const [username, setUsername] = useState("");
   const [playerNumber, setPlayerNumber] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null); // sẽ lưu key trả về
-  const [uploading, setUploading] = useState(false);
   const [password, setPassword] = useState(searchParams.get("password") || "");
-  const { setPlayers, setRoomId, setPosition, setCurrentPlayerName, setCurrentPlayerAvatar } = usePlayer();
-
+  const  dispatch  = useAppDispatch();
+  const { currentPlayer } = useAppSelector(state => state.game);
   const defaultAvatar = "https://via.placeholder.com/100";
+
+  // Room info state
+  const [roomInfo, setRoomInfo] = useState<{
+    max_players: number;
+    current_players_count: number;
+    occupied_positions: number[];
+    available_positions: number[];
+    current_players: Array<{
+      uid: string;
+      userName: string;
+      stt: string;
+      avatar: string;
+    }>;
+  } | null>(null);
+  const [loadingRoomInfo, setLoadingRoomInfo] = useState(true);
 
   // Initialize token refresh for player
   useTokenRefresh();
 
-  // Xử lý upload file lên S3 và lưu key trả về
+  // Use optimized upload hook
+  const { uploading, error: uploadError, uploadFileOptimized } = useOptimizedUpload();
+
+  useEffect(()=> {
+    localStorage.removeItem("currentPlayer")
+  },[])
+
+  // Fetch room info on component mount
+  useEffect(() => {
+    const fetchRoomInfo = async () => {
+      if (!roomId) return;
+
+      try {
+        setLoadingRoomInfo(true);
+        const info = await roomApi.getRoomInfo(roomId, password);
+        setRoomInfo(info);
+
+        // Auto-select first available position if none selected
+        if (!playerNumber && info.available_positions.length > 0) {
+          setPlayerNumber(info.available_positions[0].toString());
+        }
+      } catch (error: any) {
+        console.error('Failed to fetch room info:', error);
+        if (error.response?.status === 404) {
+          toast.error('Phòng không tồn tại');
+        } else if (error.response?.status === 403) {
+          toast.error('Mật khẩu phòng không đúng');
+        } else {
+          toast.error('Không thể tải thông tin phòng');
+        }
+      } finally {
+        setLoadingRoomInfo(false);
+      }
+    };
+
+    fetchRoomInfo();
+  }, [roomId, password]);
+
+  // Xử lý upload file lên S3 và lưu key trả về (Optimized)
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
-      setUploading(true);
-      const uploadedKey = await uploadFile(file, "User avatar");
-      console.log(`https://d1fc7d6en42vzg.cloudfront.net/${uploadedKey}`);
+      console.log(`🚀 Starting optimized avatar upload for: ${file.name}`);
+      const uploadedKey = await uploadFileOptimized(file, "User avatar");
+      console.log(`✅ Avatar uploaded successfully: https://d1fc7d6en42vzg.cloudfront.net/${uploadedKey}`);
 
       setAvatar(`https://d1fc7d6en42vzg.cloudfront.net/${uploadedKey}`); // lưu key ảnh
-      setUploading(false);
     } catch (error) {
-      setUploading(false);
       alert("Upload ảnh đại diện thất bại. Vui lòng thử lại.");
-      console.error(error);
+      console.error("❌ Avatar upload failed:", error);
     }
   };
 
   const handleSubmit = async () => {
     if (username && playerNumber && roomId && avatar) {
       try {
-        const result = await roomService.joinRoom(roomId, {
+        const uid = currentPlayer?.uid;
+        
+        const userJoinRoomInfo = {
+          uid: uid,
           userName: username,
           stt: playerNumber,
           avatar: avatar,
-        }, password || undefined);
+          password: password,
+          roomId: roomId,
+        }
+        
+        // localStorage.setItem("currentPlayer", JSON.stringify(userJoinRoomInfo));
+        const result = await dispatch(joinRoom(userJoinRoomInfo));
 
         console.log("result", result);
 
-        const currentPlayer = result.players.find((player: any) => player.stt === playerNumber);
 
-        console.log("currentPlayer", currentPlayer);
-        localStorage.setItem("currentPlayer", JSON.stringify(currentPlayer));
-        localStorage.setItem("currentAvatar", JSON.stringify(avatar));
+        const tokenResponse = await authService.getAccessToken({ roomId });
+        console.log("Access token obtained:", tokenResponse);
 
-        setCurrentPlayerName(username);
-        setCurrentPlayerAvatar(avatar)
-        setPlayers(result.players);
-        setPosition(playerNumber);
-        setRoomId(roomId);
+        // Store access token
+        localStorage.setItem('accessToken', tokenResponse.accessToken);
+
+        // Start auto-refresh timer for the new access token
+        tokenRefreshService.startAutoRefresh(tokenResponse.accessToken);
+
         navigate(`/play?round=1&roomId=${roomId}`);
-      } catch (error) {
-        alert("Tham gia phòng thất bại.");
+      } catch (error: any) {
         console.error(error);
+
+        let errorMessage = 'Tham gia phòng thất bại. Vui lòng thử lại.';
+
+        if (error.payload && typeof error.payload === 'string') {
+          // Handle Redux async thunk errors
+          if (error.payload.includes('409')) {
+            errorMessage = `Vị trí ${playerNumber} đã có người chọn. Vui lòng chọn vị trí khác.`;
+            // Refresh room info to get updated available positions
+            try {
+              const info = await roomApi.getRoomInfo(roomId, password);
+              setRoomInfo(info);
+              if (info.available_positions.length > 0) {
+                setPlayerNumber(info.available_positions[0].toString());
+              }
+            } catch (refreshError) {
+              console.error('Failed to refresh room info:', refreshError);
+            }
+          } else if (error.payload.includes('400') && error.payload.includes('Room full')) {
+            errorMessage = 'Phòng đã đầy. Không thể tham gia.';
+          } else if (error.payload.includes('404')) {
+            errorMessage = 'Phòng không tồn tại.';
+          } else if (error.payload.includes('403')) {
+            errorMessage = 'Mật khẩu phòng không đúng.';
+          }
+        }
+
+        toast.error(errorMessage);
       }
     } else {
       alert("Vui lòng nhập tên người dùng, chọn số thứ tự và tải ảnh đại diện!");
@@ -124,22 +214,56 @@ const InformationForm = () => {
               </div>
 
               <div className="mb-6">
-                <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="password">
+                <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="playerPosition">
                   Số thứ tự
                 </label>
-                <div className="relative">
-                  <input
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
-
-                    id="password"
-                    placeholder="Nhập số thứ tự"
-                    value={playerNumber}
-                    onChange={(e) => setPlayerNumber(e.target.value)}
-                  />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50">
-                    🔒
-                  </span>
-                </div>
+                {loadingRoomInfo ? (
+                  <div className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-blue-300/50 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-400 mr-2"></div>
+                    Đang tải thông tin phòng...
+                  </div>
+                ) : roomInfo ? (
+                  <div className="relative">
+                    <select
+                      id="playerPosition"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm appearance-none"
+                      value={playerNumber}
+                      onChange={(e) => setPlayerNumber(e.target.value)}
+                    >
+                      <option value="" disabled className="text-gray-400">
+                        Chọn vị trí
+                      </option>
+                      {roomInfo.available_positions.map((position) => (
+                        <option key={position} value={position.toString()} className="text-white bg-slate-700">
+                          Vị trí {position}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50 pointer-events-none">
+                      🎯
+                    </span>
+                    <div className="absolute right-8 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <svg className="w-4 h-4 text-blue-300/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full px-4 py-3 bg-red-700/50 border border-red-400/30 rounded-lg text-red-300 text-center">
+                    Không thể tải thông tin phòng
+                  </div>
+                )}
+                {roomInfo && (
+                  <p className="text-blue-300/60 text-xs mt-1">
+                    Phòng có tối đa {roomInfo.max_players} người chơi.
+                    Hiện tại có {roomInfo.current_players_count} người đã tham gia.
+                    {roomInfo.occupied_positions.length > 0 && (
+                      <span className="block mt-1">
+                        Vị trí đã có người: {roomInfo.occupied_positions.join(', ')}
+                      </span>
+                    )}
+                  </p>
+                )}
               </div>
 
               <div className="mb-6">
@@ -188,13 +312,16 @@ const InformationForm = () => {
                 </label>
               </div>
 
-              <button
+              <Button
                 onClick={handleSubmit}
-                className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                disabled={uploading}
+                variant="success"
+                size="lg"
+                fullWidth
+                isDisabled={uploading}
+                isLoading={uploading}
               >
                 Xác nhận
-              </button>
+              </Button>
 
             </form>
 

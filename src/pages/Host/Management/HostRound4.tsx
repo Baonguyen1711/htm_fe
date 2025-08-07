@@ -1,11 +1,10 @@
-import Round4 from '../../../layouts/RoundBase/Round4';
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Host from '../../../layouts/Host/Host';
-import HostQuestionBoxRound4 from '../../../layouts/RoundBase/Host/HostQuestionBoxRound4';
-
-import Play from '../../../layouts/Play';// Importing the shared Play component
-
+import HostQuestionBoxRound4 from '../../../components/Round4/HostQuestionBoxRound4';
+import { useFirebaseListener } from '../../../shared/hooks';
+import useGameApi from '../../../shared/hooks/api/useGameApi';
+import { useSearchParams } from 'react-router-dom';
+import Modal from '../../../components/ui/Modal/Modal';
 const exampleGrid = [
     ['!', '', '?', '', '!'],
     ['', '?', '!', '', '?'],
@@ -14,21 +13,72 @@ const exampleGrid = [
     ['?', '!', '', '?', ''],
 ];
 
-// Example questions for testing
-const exampleQuestions = [
-    'Question 1', 'Question 2', 'Question 3', 'Question 4', 'Question 5',
-    'Question 6', 'Question 7', 'Question 8', 'Question 9', 'Question 10',
-    'Question 11', 'Question 12', 'Question 13', 'Question 14', 'Question 15',
-    'Question 16', 'Question 17', 'Question 18', 'Question 19', 'Question 20',
-    'Question 21', 'Question 22', 'Question 23', 'Question 24', 'Question 25',
-];
-
-
 const HostRound4: React.FC = () => {
+    const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
+    const [staredPlayer, setStaredPlayer] = useState<string>("");
+    const [showModal, setShowModal] = useState(false); // State for modal visibility
+    const [searchParams] = useSearchParams()
+    const roomId = searchParams.get("roomId") || ""
+    const { listenToBuzzedPlayer, listenToStar } = useFirebaseListener();
+    const { resetBuzz, resetStar } = useGameApi()
+    useEffect(() => {
+        const unsubscribeBuzzedPlayer = listenToBuzzedPlayer(
+            (playerName) => {
+                setShowModal(true)
+                setBuzzedPlayer(playerName)
+            }
+        )
+
+        return () => {
+            unsubscribeBuzzedPlayer();
+        };
+    }, [])
+
+    useEffect(() => {
+        const unsubscribeStaredPlayer = listenToStar(
+            (playerName) => {
+                setShowModal(true)
+                setStaredPlayer(playerName)
+            }
+        )
+
+        return () => {
+            unsubscribeStaredPlayer();
+        };
+    }, [])
+    const handleCloseModal = () => {
+        setShowModal(false);
+        // Optionally clear buzzedPlayer if you want to reset it
+        setBuzzedPlayer("");
+        setStaredPlayer("");
+        resetBuzz(roomId)
+        resetStar(roomId)
+    };
     return (
-        <Host
-            QuestionComponent ={<HostQuestionBoxRound4 questions={exampleQuestions} initialGrid={exampleGrid} isHost={true}/>}
-        />
+        <>
+            <Host
+                QuestionComponent={<HostQuestionBoxRound4 initialGrid={exampleGrid} isHost={true} />}
+            />
+            {showModal && buzzedPlayer &&
+                <Modal
+                    text={`${buzzedPlayer} đã nhấn chuông giành quyền trả lời`}
+                    buttons={[
+                        { text: "Đóng", onClick: handleCloseModal, variant: "primary" },
+                    ]}
+                    onClose={handleCloseModal}
+                />
+            }
+
+            {showModal && staredPlayer &&
+                <Modal
+                    text={`${staredPlayer} đã chọn ngôi sao hy vọng`}
+                    buttons={[
+                        { text: "Đóng", onClick: handleCloseModal, variant: "primary" },
+                    ]}
+                    onClose={handleCloseModal}
+                />
+            }
+        </>
 
     )
 };

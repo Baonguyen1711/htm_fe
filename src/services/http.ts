@@ -1,5 +1,5 @@
 import axios from "axios";
-import tokenRefreshService from "./tokenRefresh.service";
+import tokenRefreshService from "../shared/services/auth/tokenRefresh";
 
 class Http {
     baseUrl: string | undefined
@@ -21,16 +21,16 @@ class Http {
 
             // Get valid access token (refresh if needed) for authenticated requests
             let authHeaders = {};
-            if (withCredentials) {
-                const validToken = await tokenRefreshService.getValidAccessToken();
-                if (validToken) {
-                    authHeaders = { 'Authorization': `Bearer ${validToken}` };
-                }
-            }
+            // if (withCredentials) {
+            //     const validToken = await tokenRefreshService.getValidAccessToken();
+            //     if (validToken) {
+            //         authHeaders = { 'Authorization': `Bearer ${validToken}` };
+            //     }
+            // }
 
             const response = await axios.request({
                 method,
-                url: `${this.baseUrl}/${endpoint}`,
+                url: endpoint?`${this.baseUrl}/${endpoint}`:`${this.baseUrl}`,
                 data,
                 params,
                 withCredentials,
@@ -79,7 +79,7 @@ class Http {
     }
 
     async post(endpoint: string, isCreadential: boolean, data: any, params?:Record<string, any>) {
-        return this.request("POST", endpoint, isCreadential, params,data )
+        return this.request("POST", endpoint, isCreadential, params, data )
     }
 
     async put(endpoint: string, isCreadential: boolean, data: any,params?:Record<string, any>) {
