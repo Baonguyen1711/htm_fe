@@ -10,7 +10,6 @@ import ReduxProvider from './app/store/providers/ReduxProvider';
 // Legacy context providers (will be migrated in later phases)
 
 // import { PlayerProvider } from './context/playerContext';
-import { QueryClient, QueryClientProvider } from 'react-query';
 import { TimeStartProvider } from './context/timeListenerContext';
 import { SoundProvider } from './context/soundContext';
 import FallBack from './components/ui/Error/FallBack';
@@ -18,9 +17,6 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import { ToastContainer } from 'react-toastify';
 import ErrorBoundary from './components/ui/Error/ErrorBoundary';
 import 'react-toastify/dist/ReactToastify.css';
-
-
-const queryClient = new QueryClient();
 
 const Home = React.lazy(() => import('./pages/Home/Home'));
 
@@ -105,7 +101,6 @@ function App() {
 
           {/* <ErrorBoundary fallback={<FallBack />}> */}
           {/* <Suspense fallback={<FallBack />}> */}
-          <QueryClientProvider client={queryClient}>
 
 
             <Routes>
@@ -179,7 +174,6 @@ function App() {
 
             </Routes>
 
-          </QueryClientProvider>
           <ToastContainer />
           {/* </Suspense> */}
           {/* </ErrorBoundary> */}
