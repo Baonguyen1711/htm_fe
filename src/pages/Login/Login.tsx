@@ -18,7 +18,7 @@ const Login = () => {
       if (result) {
         console.log("Login successful:", result);
         // Wait a bit for the authentication cookie to be set
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
         navigate("/host/dashboard");
       }
     } catch (error) {
