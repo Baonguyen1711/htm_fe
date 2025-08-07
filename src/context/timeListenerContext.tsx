@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useSounds } from "./soundContext";
-import { round } from "react-placeholder/lib/placeholders";
 import { useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../app/store";
 import { setIsInputDisabled } from "../app/store/slices/gameSlice";

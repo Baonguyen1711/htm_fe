@@ -1,8 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import User from "../../../layouts/User/User";
 import PlayerQuestionBoxRound2 from "../../../components/Round2/PlayerQuestionBoxRound2";
-import ReactPlaceholder from "react-placeholder";
-import "react-placeholder/lib/reactPlaceholder.css";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import FallBack from "../../../components/ui/Error/FallBack";
 import useFirebaseListener from "../../../shared/hooks/firebase/useFirebaseListener";
