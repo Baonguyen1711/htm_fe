@@ -11,7 +11,7 @@ interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: process.env.REACT_APP_BASE_URL,
   timeout: REQUEST_TIMEOUT,
   // Don't set default Content-Type - let interceptor handle it based on data type
 });

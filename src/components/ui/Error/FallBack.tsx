@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Waves, Users, Clock } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useFirebaseListener } from '../../../shared/hooks';
-import { ref, get } from 'firebase/database';
-import { database } from '../../../firebase-config';
+
 
 const FallBack = () => {
   const [searchParams] = useSearchParams();

@@ -9,7 +9,7 @@ import {
   browserLocalPersistence,
   setPersistence
 } from "firebase/auth";
-import {app} from "../../../firebase-config";
+import app from "../../../shared/services/firebase/config";
 import { useAppDispatch } from "../../../app/store";
 import { authApi } from "../../../shared/services/auth/authApi"
 import { setCurrentPlayer } from "../../../app/store/slices/gameSlice";
