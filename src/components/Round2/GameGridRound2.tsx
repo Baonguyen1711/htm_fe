@@ -27,7 +27,7 @@ interface GameGridRound2Props {
   hintWords: HintWord[];
   obstacleWord?: string;
   menu: MenuState;
-  menuRef: React.RefObject<HTMLDivElement | null>;
+  menuRef: React.RefObject<HTMLDivElement>;
   isHost: boolean;
   isOpenAll: boolean,
   isSpectator: boolean;
@@ -97,7 +97,7 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
                       cellStyle={cellStyle}
                       hintWords={hintWords}
                       menu={menu}
-                      menuRef={menuRef}
+                      menuRef={menuRef as React.RefObject<HTMLDivElement>}
                       isHost={isHost}
                       colIndex={colIndex}
                       rowIndex={rowIndex}

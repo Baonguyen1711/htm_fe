@@ -37,9 +37,9 @@ const AccessDeniedModal: React.FC<{ onClose: () => void; message: string }> = ({
     </div>
 );
 
-const ProtectedRoute: React.FC<{ element: ReactNode, requireAccessToken?: boolean, requireHost?: boolean }> = ({
+const ProtectedRoute = ({
     element, requireAccessToken = false, requireHost = false
-}) => {
+}: { element: ReactNode, requireAccessToken?: boolean, requireHost?: boolean }) => {
     const [showModal, setShowModal] = useState(false);
     const [modalMessage, setModalMessage] = useState("You don't have permission to access this route.");
     const [isVerified, setIsVerified] = useState(false);
@@ -142,7 +142,7 @@ const ProtectedRoute: React.FC<{ element: ReactNode, requireAccessToken?: boolea
         return null; // or <LoadingSpinner />
     }
 
-    return element;
+    return element as React.ReactElement;
 };
 
 

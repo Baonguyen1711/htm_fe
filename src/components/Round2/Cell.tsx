@@ -16,7 +16,7 @@ interface CellProps {
     cellStyle: { background: string; textColor: string };
     hintWords: HintWord[];
     menu: MenuState;
-    menuRef: React.RefObject<HTMLDivElement | null>;
+    menuRef: React.RefObject<HTMLDivElement>;
     isHost: boolean;
     colIndex: number
     rowIndex: number
@@ -81,7 +81,7 @@ const Cell = React.memo(
 
                 {showMenu && (
                     <div
-                        ref={menuRef}
+                        ref={menuRef as React.RefObject<HTMLDivElement>}
                         className="absolute left-12 top-1/2 transform -translate-y-1/2 flex space-x-2 bg-slate-900 border border-blue-400/50 rounded shadow-lg p-1 z-10"
                     >
                         <button

@@ -10,7 +10,7 @@ interface GameGridProps {
   showModal: boolean;
   buzzedPlayer: string;
   staredPlayer: string;
-  menuRef: React.RefObject<HTMLDivElement | null> ;
+  menuRef: React.RefObject<HTMLDivElement>;
   onCellClick: (row: number, col: number) => void;
   onMenuAction: (action: 'select' | 'red' | 'green' | 'blue' | 'yellow', row: number, col: number) => void;
   onCloseModal: () => void;
@@ -88,7 +88,7 @@ const GameGrid: React.FC<GameGridProps> = ({
 
                   {showMenu && isHost && !isSpectator && menuRef && (
                     <div
-                      ref={menuRef}
+                      ref={menuRef as React.RefObject<HTMLDivElement>}
                       className="absolute left-20 top-1/2 transform -translate-y-1/2 flex space-x-2 bg-white border border-gray-300 rounded shadow-lg p-1 z-10"
                     >
                       <Button

@@ -116,7 +116,7 @@ const GameGridRound4: React.FC<GameGridProps> = ({
 
                                     {showMenu && isHost && !isSpectator && menuRef && (
                                         <div
-                                            ref={menuRef}
+                                            ref={menuRef as React.RefObject<HTMLDivElement>}
                                             className="absolute left-20 top-1/2 transform -translate-y-1/2 flex space-x-2 bg-white border border-gray-300 rounded shadow-lg p-1 z-10"
                                         >
                                             <Button

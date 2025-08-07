@@ -232,7 +232,7 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
 
                 cellStyles={cellStyles}
                 menu={menu}
-                menuRef={menuRef}
+                menuRef={menuRef as React.RefObject<HTMLDivElement>}
                 isHost={true}
                 isOpenAll={false}
                 showModal={showModal}
