@@ -1,15 +1,10 @@
-// MIGRATED APP.TSX - Now using Redux-based components
-// All user and host components have been migrated to use Redux instead of Context API
-// Legacy context providers are kept for backward compatibility during testing
 import './App.css';
 import React, { Suspense } from 'react';
 import { Routes, Route, useSearchParams } from "react-router-dom";
 import CreateRoom from './pages/Host/Room/CreateRoom';
-// PHASE 1: New Redux Provider
-import ReduxProvider from './app/store/providers/ReduxProvider';
-// Legacy context providers (will be migrated in later phases)
 
-// import { PlayerProvider } from './context/playerContext';
+import ReduxProvider from './app/store/providers/ReduxProvider';
+
 import { TimeStartProvider } from './context/timeListenerContext';
 import { SoundProvider } from './context/soundContext';
 import FallBack from './components/ui/Error/FallBack';
@@ -95,9 +90,9 @@ function App() {
 
   return (
     <>
-      {/* MIGRATED: Redux Provider wraps everything - all components now use Redux */}
+
       <ReduxProvider>
-        {/* Legacy providers - will be migrated in later phases */}
+
 
           <ErrorBoundary fallback={<FallBack />}>
           <Suspense fallback={<FallBack />}>

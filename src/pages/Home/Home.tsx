@@ -3,7 +3,7 @@ import Footer from "../../components/ui/Footer";
 import { Button } from '../../shared/components/ui';
 
 function Home() {
-  // Mock images - replace with actual paths when available
+
   const images = [
     "/banner.jpg",
     "/card.jpg", 
@@ -188,8 +188,9 @@ function Home() {
         <div className="mt-20 border-t border-blue-400/30 bg-slate-900/50 backdrop-blur-sm">
           <div className="max-w-6xl mx-auto p-8 text-center">
             <p className="text-blue-200/80">
-              © 2025 Hành Trình Magellan. Khám phá tri thức vượt đại dương.
-
+              © 2025 Hành Trình Magellan. 
+              <br/>
+              Developed by Nguyen Van Duy Bao
             </p>
           </div>
         </div>
