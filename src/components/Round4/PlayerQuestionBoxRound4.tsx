@@ -5,6 +5,8 @@ import { useSounds } from '../../context/soundContext';
 import GameGrid from '../../components/ui/GameGrid';
 import { gameApi } from '../../shared/services';
 import useGameApi from '../../shared/hooks/api/useGameApi';
+import MediaModal from '../ui/Modal/MediaModal';
+
 import { useFirebaseListener } from '../../shared/hooks';
 import { useAppSelector, useAppDispatch } from '../../app/store'
 import GameGridRound4 from './GameGridRound4';
@@ -53,9 +55,9 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     const roomId = searchParams.get("roomId") || "4"
 
     //firebase listener
-    const { listenToRound4Grid, listenToTimeStart, listenToSound, deletePath, listenToCellColor, listenToSelectedCell } = useFirebaseListener()
+    const { listenToRound4Grid, listenToCellColor, listenToSelectedCell } = useFirebaseListener()
     //global state
-    const { round4Level, round4LevelNumber, currentCorrectAnswer, currentQuestion } = useAppSelector((state) => state.game);
+    const { currentCorrectAnswer, currentQuestion } = useAppSelector((state) => state.game);
 
     const colorMap: Record<string, string> = {
         red: '#FF0000',
@@ -75,12 +77,13 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     }>({ visible: false });
     const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
+    const [showMediaModal, setShowMediaModal] = useState(false);
 
     const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
     const [staredPlayer, setStaredPlayer] = useState<string>("");
     const [showModal, setShowModal] = useState(false); // State for modal visibility
 
-        useEffect(() => {
+    useEffect(() => {
         const unsubscribeGrid = listenToRound4Grid((grid) => {
             console.log("grid in question box round 4", grid);
             if (grid) {
@@ -93,21 +96,6 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
             unsubscribeGrid();
         };
     }, [])
-
-    // useEffect(() => {
-    //     const unsubscribeSound = listenToSound(
-    //         () => {
-    //             deletePath("sound")
-    //         }
-    //     );
-
-    //     return () => {
-    //         unsubscribeSound();
-    //     };
-    // }, []);
-
-
-
 
 
     const handleCloseModal = () => {
@@ -125,6 +113,13 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
 
     };
 
+    useEffect(() => {
+        if (currentQuestion?.imgUrl) {
+            setShowMediaModal(true);
+        } else {
+            setShowMediaModal(false);
+        }
+    }, [currentQuestion]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -199,6 +194,37 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         };
     }, []);
 
+    const renderMediaContent = () => {
+        const url = currentQuestion?.imgUrl;
+        if (!url) return <p className="text-white">No media</p>;
+
+        const extension = url.split('.').pop()?.toLowerCase() || '';
+
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+            return <img src={url} alt="Question Visual" className="max-w-full max-h-[80vh] object-contain rounded-lg" />;
+        }
+
+        if (['mp3', 'wav', 'ogg'].includes(extension)) {
+            return (
+                <audio controls className="w-full">
+                    <source src={url} type={`audio/${extension}`} />
+                    Your browser does not support the audio element.
+                </audio>
+            );
+        }
+
+        if (['mp4', 'webm', 'ogg'].includes(extension)) {
+            return (
+                <video controls autoPlay className="max-w-full max-h-[80vh] object-contain rounded-lg">
+                    <source src={url} type={`video/${extension}`} />
+                    Your browser does not support the video tag.
+                </video>
+            );
+        }
+
+        return <p className="text-white">Unsupported media type</p>;
+    };
+
     return (
         <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full max-w-3xl mx-auto min-h-[470px]">
             {/* Display selected question */}
@@ -221,6 +247,12 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                 onMenuAction={handleMenuAction}
                 onCloseModal={handleCloseModal}
             />
+
+            {showMediaModal && currentQuestion?.imgUrl && (
+                <MediaModal isOpen={showMediaModal} onClose={() => setShowMediaModal(false)}>
+                    {renderMediaContent()}
+                </MediaModal>
+            )}
 
         </div>
     );

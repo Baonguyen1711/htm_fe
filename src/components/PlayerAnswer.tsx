@@ -155,7 +155,6 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
             {!isSpectator && ((round === "2")) && (
                 <Button
                     onClick={() => {
-                        alert('buzzed')
                         handleBuzz()
                     }}
                     variant="success"
@@ -171,7 +170,6 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
                 <div className="flex w-full gap-4 mb-6">
                     <Button
                         onClick={() => {
-                            alert('buzzed')
                             handleSetStar()
                         }}
                         variant="success"

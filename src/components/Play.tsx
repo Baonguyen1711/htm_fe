@@ -76,6 +76,8 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         removeSpectator,
         listenToSound,
         listenToRules,
+        startWatchingPendingRemovals,
+        connectOnRejoin,
         deletePath
     } = useFirebaseListener();
     const dispatch = useAppDispatch();
@@ -92,6 +94,38 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     }
   }
 `;
+    useEffect(() => {
+        if (!isHost) return
+
+        const startWatchingRemovals = async () => {
+            console.log("start watching player removal")
+            await startWatchingPendingRemovals(roomId)
+        }
+
+        startWatchingRemovals()
+
+        return () => {
+
+        }
+    }, [])
+
+    // useEffect(() => {
+    //     if (isHost || isSpectator) return
+    //     const uid = JSON.parse(localStorage.getItem("currentPlayer") || "").uid
+    //     console.log("store uid", uid)
+
+    //     if (!uid) return
+    //     const rejoin = async () => {
+    //         console.log(" player join!")
+    //         await connectOnRejoin(roomId, uid)
+    //     }
+
+    //     rejoin()
+
+    //     return () => {
+
+    //     }
+    // }, [])
 
     useEffect(() => {
         if (!isSpectator) return;
@@ -132,8 +166,24 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
 
     useEffect(() => {
         console.log("start listening", roomId);
-        const unsubscribePlayers = listenToNewPlayer(() => {
-            console.log("start listening inside", roomId);
+        const unsubscribePlayers = listenToNewPlayer((
+
+        ) => {
+            if (isHost || isSpectator) return
+            const uid = JSON.parse(localStorage.getItem("currentPlayer") || "").uid
+            console.log("store uid", uid)
+
+            if (!uid) return
+            const rejoin = async () => {
+                console.log(" player join!")
+                await connectOnRejoin(roomId, uid)
+            }
+
+            rejoin()
+
+            return () => {
+
+            }
         })
 
         return () => {
@@ -156,21 +206,21 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     }, [])
 
     useEffect(() => {
-            const unsubscribeSound = listenToSound(
-    
-                (type) => {
-                    const audio = sounds[`${type}`];
-                    if (audio) {
-                        audio.play();
-                    }
-                    deletePath("sound")
+        const unsubscribeSound = listenToSound(
+
+            (type) => {
+                const audio = sounds[`${type}`];
+                if (audio) {
+                    audio.play();
                 }
-            );
-    
-            return () => {
-                unsubscribeSound();
-            };
-        }, []);
+                deletePath("sound")
+            }
+        );
+
+        return () => {
+            unsubscribeSound();
+        };
+    }, []);
 
     useEffect(() => {
         let timeout: NodeJS.Timeout | undefined;
@@ -199,7 +249,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
 
 
     useEffect(() => {
-        if (!roomId || isHost ) return;
+        if (!roomId || isHost) return;
         const uid = JSON.parse(localStorage.getItem("currentPlayer") || "").uid
         console.log("store uid", uid)
 

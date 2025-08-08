@@ -11,6 +11,7 @@ import { setSelectedDifficulty, setDifficultyRanges } from '../../app/store/slic
 import { useConfirmModal } from '../../shared/hooks/ui/useConfirmModal';
 import { toast } from 'react-toastify';
 import Modal from '../ui/Modal/Modal';
+import MediaModal from '../ui/Modal/MediaModal';
 import QuestionAndAnswer from '../../components/ui/QuestionAndAnswer/QuestionAndAnswer';
 import { Button } from '../../shared/components/ui';
 
@@ -68,10 +69,18 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     // Confirmation modal hook
     const { modalState, showConfirmModal, closeModal } = useConfirmModal();
 
-        useEffect(() => {
+    useEffect(() => {
+        if (currentQuestion?.imgUrl) {
+            setShowMediaModal(true);
+        } else {
+            setShowMediaModal(false);
+        }
+    }, [currentQuestion]);
+
+    useEffect(() => {
         const unsubscribeGrid = listenToRound4Grid((grid) => {
             console.log("grid in question box round 4", grid);
-            if (!grid  || grid.length !== 5 )  {
+            if (!grid || grid.length !== 5) {
                 setGrid(initialGrid)
             } else {
                 setGrid(grid);
@@ -138,7 +147,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         blue: '#0000FF',
         yellow: '#FFFF00',
     };
-
+    const [showMediaModal, setShowMediaModal] = useState(false);
     const [grid, setGrid] = useState<string[][]>([[]])
 
     const sounds = useSounds();
@@ -248,6 +257,37 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const renderMediaContent = () => {
+        const url = currentQuestion?.imgUrl;
+        if (!url) return <p className="text-white">No media</p>;
+
+        const extension = url.split('.').pop()?.toLowerCase() || '';
+
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+            return <img src={url} alt="Question Visual" className="max-w-full max-h-[80vh] object-contain rounded-lg" />;
+        }
+
+        if (['mp3', 'wav', 'ogg'].includes(extension)) {
+            return (
+                <audio controls className="w-full">
+                    <source src={url} type={`audio/${extension}`} />
+                    Your browser does not support the audio element.
+                </audio>
+            );
+        }
+
+        if (['mp4', 'webm', 'ogg'].includes(extension)) {
+            return (
+                <video controls autoPlay className="max-w-full max-h-[80vh] object-contain rounded-lg">
+                    <source src={url} type={`video/${extension}`} />
+                    Your browser does not support the video tag.
+                </video>
+            );
+        }
+
+        return <p className="text-white">Unsupported media type</p>;
+    };
+
     return (
         <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full max-w-3xl mx-auto min-h-[470px]">
             {/* Display selected question */}
@@ -296,6 +336,12 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                 </Button>
             </div>
 
+            {showMediaModal && currentQuestion?.imgUrl && (
+                <MediaModal isOpen={showMediaModal} onClose={() => setShowMediaModal(false)}>
+                    {renderMediaContent()}
+                </MediaModal>
+            )}
+
             {/* Confirmation Modal */}
             {modalState.isOpen && (
                 <Modal
@@ -304,6 +350,8 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                     onClose={closeModal}
                 />
             )}
+
+
 
         </div>
     );

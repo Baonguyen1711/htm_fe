@@ -7,8 +7,9 @@ import { useRound2 } from '../../shared/hooks/round/useRound2';
 import { useFirebaseListener } from '../../shared/hooks';
 import FallBack from '../ui/Error/FallBack';
 import { store, useAppDispatch, useAppSelector } from '../../app/store';
-import { setCurrentCorrectAnswer, setRound2Grid } from '../../app/store/slices/gameSlice';
+import { setCurrentCorrectAnswer, setCurrentQuestion, setRound2Grid } from '../../app/store/slices/gameSlice';
 import QuestionAndAnswer from '../../components/ui/QuestionAndAnswer/QuestionAndAnswer';
+import PlayerAnswerInput from '../ui/Input/PlayerAnswerInput';
 
 interface MatchPosition {
     x: number;
@@ -134,6 +135,7 @@ const PlayerQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                 grid: data.grid
             }))
             setCellStyles({})
+            dispatch(setCurrentQuestion(null))
             dispatch(setCurrentCorrectAnswer(data.obstacle))
             setIsOpenAll(true)
         })
@@ -237,7 +239,9 @@ const PlayerQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                     onConfirmGrid={handleConfirmGrid}
 
                 />}
-
+            {!isSpectator && (
+                <PlayerAnswerInput isHost={isHost} />
+            )}
         </div>
 
 

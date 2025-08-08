@@ -46,9 +46,9 @@ const InformationForm = () => {
   // Use optimized upload hook
   const { uploading, error: uploadError, uploadFileOptimized } = useOptimizedUpload();
 
-  useEffect(()=> {
-    localStorage.removeItem("currentPlayer")
-  },[])
+  // useEffect(()=> {
+  //   localStorage.removeItem("currentPlayer")
+  // },[])
 
   // Fetch room info on component mount
   useEffect(() => {

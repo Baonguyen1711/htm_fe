@@ -312,13 +312,13 @@ const gameSlice = createSlice({
 
     addPlayer: (state, action: PayloadAction<Partial<PlayerData[]>>) => {
       console.log("action.payload", action.payload);
-      if (!action.payload) return;
-      console.log("action.payload.length>state.players.length", action.payload.length > state.players.length)
-
+      // if (!action.payload) return;
+      const cleanPayload = Array.isArray(action.payload)? action.payload.filter(Boolean) as PlayerData[]: []
+      console.log("clean payload", cleanPayload)
       //new player joins room
-      if (action.payload.length > state.players.length) {
+      if (cleanPayload.length > state.players.length) {
         console.log("new player join")
-        action.payload.forEach(player => {
+        cleanPayload.forEach(player => {
           const existingIndex = state.players.findIndex(p => player && p.uid === player.uid);
           if (existingIndex === -1 && player) {
             state.players.push(player);
@@ -328,8 +328,8 @@ const gameSlice = createSlice({
 
 
       //player leaves room
-      if (action.payload.length < state.players.length) {
-        const updatedPlayers = new Set(action.payload.map(player => player?.uid))
+      if (cleanPayload.length < state.players.length || !action.payload) {
+        const updatedPlayers = new Set(Array.isArray(cleanPayload)? cleanPayload.map(player => player?.uid): [])
         console.log("updated players", updatedPlayers)
         console.log("current players", [...state.players])
         console.log("filter", state.players.filter(

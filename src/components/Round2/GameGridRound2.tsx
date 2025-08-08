@@ -62,7 +62,7 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
 
 
   return (
-    <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full max-w-3xl mx-auto">
+    <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 mb-4 w-full max-w-3xl mx-auto">
         
       {/* CNV Display for Host */}
       {isHost && obstacleWord && (
@@ -113,9 +113,7 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
       }
 
 
-      {!isSpectator && (
-        <PlayerAnswerInput isHost={isHost}  />
-      )}
+
 
       {isHost && (
         <div className="flex gap-2 mt-4 w-full">

@@ -609,6 +609,18 @@ export const useFirebaseListener = () => {
     }
   }, []);
 
+        
+  const startWatchingPendingRemovals  = async (roomId: string) => {
+    if (!roomId) return;
+
+    await firebaseServices.startWatchingPendingRemovals(roomId)
+  }
+
+  const connectOnRejoin = async (roomId: string, uid: string) => {
+    if (!roomId) return;
+
+    await firebaseServices.connectOnRejoin(roomId, uid)
+  }
   // /**
   //  * Cleanup all firebaseServicess on unmount
   //  */
@@ -656,6 +668,8 @@ export const useFirebaseListener = () => {
     listenToRules,
 
     setupDisconnect,
+    startWatchingPendingRemovals,
+    connectOnRejoin,
     // setupAllfirebaseServicess,
 
     // Writers
