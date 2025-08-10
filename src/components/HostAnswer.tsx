@@ -30,7 +30,7 @@ function HostAnswer() {
 
     const { listenToBroadcastedAnswer, listenToScores, listenToPlayerColors } = useFirebaseListener()
     const [localPlayersScore, setLocalPlayersScore] = useState<Partial<PlayerData[]>>([])
-    const { openBuzz, sendCurrentTurn, updateScoring, setPlayerColor } = useGameApi()
+    const { openBuzz, sendCurrentTurn, updateScoring, setPlayerColor, closeBuzz } = useGameApi()
     const dispatch = useAppDispatch();
     const { mode, players, selectedDifficulty, numberOfSelectedRow, currentTurn } = useAppSelector(state => state.game)
 
@@ -52,7 +52,7 @@ function HostAnswer() {
             dispatch(setMode(storedMode));
         }
     }, [])
-    
+
     const initializeTurnAssignments = () => {
         const assignments: { [spot: number]: number | null } = {};
         for (let i = 1; i <= Math.min(maxPlayers, 8); i++) {
@@ -447,8 +447,17 @@ function HostAnswer() {
                                         </Button>
                                         <Button
                                             onClick={async () => {
-                                                await openBuzz(roomId)
                                                 toast.success(`Đã mở bấm chuông`);
+                                                await openBuzz(roomId)
+                                                const timeoutId = setTimeout(() => {
+                                                    closeBuzz(roomId)
+                                                }, 5000)
+
+                                                return () => {
+
+                                                    clearTimeout(timeoutId)
+                                                }
+
                                             }}
                                             variant="danger"
                                             size="md"
@@ -487,6 +496,14 @@ function HostAnswer() {
                                                 });
                                                 await openBuzz(roomId)
                                                 toast.success(`Đã mở bấm chuông`);
+                                                const timeoutId = setTimeout(() => {
+                                                    closeBuzz(roomId)
+                                                }, 5000)
+
+                                                return () => {
+
+                                                    clearTimeout(timeoutId)
+                                                }
                                             }}
                                             variant="danger"
                                             size="md"

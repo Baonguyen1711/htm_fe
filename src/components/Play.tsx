@@ -127,6 +127,19 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     //     }
     // }, [])
 
+        useEffect(() => {
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+            event.returnValue = ""; // cần gán returnValue để trình duyệt hiện cảnh báo
+        };
+
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, []);
+
     useEffect(() => {
         if (!isSpectator) return;
         const spectatorPath = localStorage.getItem('spectatorPath') || "";

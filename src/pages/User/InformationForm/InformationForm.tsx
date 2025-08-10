@@ -207,9 +207,6 @@ const InformationForm = () => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                   />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50">
-                    📧
-                  </span>
                 </div>
               </div>
 
@@ -239,9 +236,6 @@ const InformationForm = () => {
                         </option>
                       ))}
                     </select>
-                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50 pointer-events-none">
-                      🎯
-                    </span>
                     <div className="absolute right-8 top-1/2 transform -translate-y-1/2 pointer-events-none">
                       <svg className="w-4 h-4 text-blue-300/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -279,9 +273,6 @@ const InformationForm = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50">
-                    🔐
-                  </span>
                 </div>
                 <p className="text-blue-300/60 text-xs mt-1">
                   Để trống nếu phòng không có mật khẩu

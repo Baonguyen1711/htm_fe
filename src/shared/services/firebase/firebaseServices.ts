@@ -297,6 +297,7 @@ const firebaseServices = {
           if (now - pendingTime > gracePeriod) {
             console.log(`Removing inactive player ${playerKey}`);
             remove(ref(database, `rooms/${roomId}/players/${playerKey}`));
+            remove(ref(database, `rooms/${roomId}/scores/${playerKey}`));
           }
         }
       });

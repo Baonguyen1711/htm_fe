@@ -55,7 +55,7 @@ const UploadTest: React.FC = () => {
         <form method="POST" encType="multipart/form-data" onSubmit={(event) => handleFormSubmit(event)}>
           <div className="mb-6">
             <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="fileUpload">
-              📄 Tải Lên File Excel
+              Tải Lên File Excel
             </label>
             <div className="relative">
               <input
@@ -74,7 +74,7 @@ const UploadTest: React.FC = () => {
           
           <div className="mb-6">
             <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="testName">
-              📝 Tên Bộ Đề
+              Tên Bộ Đề
             </label>
             <div className="relative">
               <input
@@ -112,7 +112,7 @@ const UploadTest: React.FC = () => {
             fullWidth
             className="font-medium shadow-lg"
           >
-            🚀 Tải Lên Đề Thi
+             Tải Lên Đề Thi
           </Button>
         </form>
       </div>
@@ -120,7 +120,7 @@ const UploadTest: React.FC = () => {
       {/* Instructions */}
       <div className="mt-8 bg-slate-700/30 backdrop-blur-sm border border-blue-400/20 rounded-xl p-6">
         <h3 className="text-blue-200 font-medium mb-3 text-center">
-          📋 Hướng dẫn tải lên
+           Hướng dẫn tải lên
         </h3>
         <ul className="text-blue-200/80 text-sm space-y-2">
           <li className="flex items-start">

@@ -118,8 +118,8 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
                     setIsTakeTurnButtonEnabled(true)
                     const timeoutId = setTimeout(() => {
                         setIsTakeTurnButtonEnabled(false)
-                        closeBuzz(roomId)
-                    }, 4000)
+                        // closeBuzz(roomId)
+                    }, 5000)
 
                     return () => {
 

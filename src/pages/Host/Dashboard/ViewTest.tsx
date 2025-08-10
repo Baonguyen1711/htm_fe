@@ -12,6 +12,7 @@ const ViewTest: React.FC = () => {
   const [editedQuestion, setEditedQuestion] = useState<Partial<Question>>({});
   const [isDataExisted, setIsDataExisted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('round_1');
+  const [selectedRound3Group, setSelectedRound3Group] = useState<string>("");
   const [testData, setTestData] = useState<{
     round_1: Question[];
     round_2: Question[];
@@ -270,9 +271,17 @@ const ViewTest: React.FC = () => {
       </div>
     );
   };
-
   const renderGroupedTable = (groups: { [key: string]: Question[] }, roundTitle: string, round: string) => {
-    if (Object.keys(groups).length === 0) return null;
+  if (Object.keys(groups).length === 0) return null;
+
+  // Nếu đây là round_3, thì dùng dropdown
+  if (round === "round_3") {
+    const groupNames = Object.keys(groups);
+
+    // Nếu chưa chọn nhóm nào, mặc định chọn nhóm đầu tiên
+    if (!selectedRound3Group && groupNames.length > 0) {
+      setSelectedRound3Group(groupNames[0]);
+    }
 
     return (
       <div className="mb-8">
@@ -280,18 +289,49 @@ const ViewTest: React.FC = () => {
           <span className="text-cyan-300 mr-2">🎯</span>
           {roundTitle}
         </h3>
-        {Object.entries(groups).map(([groupName, questions]) => (
-          <div key={groupName} className="mb-6">
-            <h4 className="text-xl font-medium text-blue-200 mb-3 flex items-center">
-              <span className="text-yellow-400 mr-2">📦</span>
-              {groupName}
-            </h4>
-            {renderTable(questions, "", round, groupName)}
-          </div>
-        ))}
+
+        {/* Dropdown chọn chủ đề */}
+        <div className="mb-4">
+          <label className="text-blue-200 mr-3">📦 Chọn Chủ Đề:</label>
+          <select
+            className="bg-slate-600/50 border border-blue-400/30 rounded-lg p-2 text-white"
+            value={selectedRound3Group}
+            onChange={(e) => setSelectedRound3Group(e.target.value)}
+          >
+            {groupNames.map((group) => (
+              <option key={group} value={group} className="bg-slate-700">
+                {group}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Hiển thị câu hỏi của chủ đề đang chọn */}
+        {selectedRound3Group && renderTable(groups[selectedRound3Group], "", round, selectedRound3Group)}
       </div>
     );
-  };
+  }
+
+  // Mặc định cho round_4 vẫn hiển thị hết
+  return (
+    <div className="mb-8">
+      <h3 className="text-2xl font-semibold text-white mb-4 flex items-center">
+        <span className="text-cyan-300 mr-2">🎯</span>
+        {roundTitle}
+      </h3>
+      {Object.entries(groups).map(([groupName, questions]) => (
+        <div key={groupName} className="mb-6">
+          <h4 className="text-xl font-medium text-blue-200 mb-3 flex items-center">
+            <span className="text-yellow-400 mr-2">📦</span>
+            {groupName}
+          </h4>
+          {renderTable(questions, "", round, groupName)}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -322,7 +362,7 @@ const ViewTest: React.FC = () => {
       <div className="bg-slate-700/50 backdrop-blur-sm border border-blue-400/30 rounded-xl p-6 mb-8">
         <div className="mb-6">
           <label htmlFor="testSelect" className="block text-blue-200 text-sm font-medium mb-2">
-            📋 Chọn Bộ Đề
+             Chọn Bộ Đề
           </label>
           <select
             id="testSelect"
@@ -352,7 +392,7 @@ const ViewTest: React.FC = () => {
           size="lg"
           className="font-medium shadow-lg"
         >
-          👁️ Xem Đề Thi
+           Xem Đề Thi
         </Button>
       </div>
 

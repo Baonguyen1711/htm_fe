@@ -293,7 +293,7 @@ const SetupMatch: React.FC = () => {
             <thead className="bg-slate-600/50">
               <tr>
                 <th className="px-6 py-4 text-left text-blue-200 font-medium">Mã Phòng</th>
-                <th className="px-6 py-4 text-left text-blue-200 font-medium">Trạng Thái</th>
+                {/* <th className="px-6 py-4 text-left text-blue-200 font-medium">Trạng Thái</th> */}
                 <th className="px-6 py-4 text-left text-blue-200 font-medium">Bộ Đề</th>
                 <th className="px-6 py-4 text-left text-blue-200 font-medium">Chế Độ</th>
                 <th className="px-6 py-4 text-left text-blue-200 font-medium">Hành Động</th>
@@ -303,7 +303,7 @@ const SetupMatch: React.FC = () => {
               {rooms.map((room) => (
                 <tr key={room.roomId} className="border-t border-blue-400/20 hover:bg-slate-600/30 transition-colors">
                   <td className="px-6 py-4 text-white font-mono">{room.roomId}</td>
-                  <td className="px-6 py-4">
+                  {/* <td className="px-6 py-4">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${room.isActive
                         ? 'bg-green-500/20 text-green-300 border border-green-500/30'
@@ -312,7 +312,7 @@ const SetupMatch: React.FC = () => {
                     >
                       {room.isActive ? 'Hoạt động' : 'Không hoạt động'}
                     </span>
-                  </td>
+                  </td> */}
                   <td className="px-6 py-4">
                     <select
                       id={`testSelect-${room.roomId}`}
@@ -335,7 +335,7 @@ const SetupMatch: React.FC = () => {
                     <div className="mb-4">
                       <h4 className="text-white font-medium mb-2">Chế độ chấm điểm (Vòng 1 & 2)</h4>
                       <div className="flex gap-4">
-                        <label className="flex items-center gap-2">
+                        {/* <label className="flex items-center gap-2">
                           <input
                             type="radio"
                             name={`mode-${room.roomId}`}
@@ -348,7 +348,7 @@ const SetupMatch: React.FC = () => {
                             className="text-blue-400 focus:ring-blue-400"
                           />
                           <span className="text-white">Thủ công</span>
-                        </label>
+                        </label> */}
                         <label className="flex items-center gap-2">
                           <input
                             type="radio"

@@ -73,8 +73,8 @@ const ViewHistory: React.FC = () => {
         <div className="p-8">
             {/* Header */}
             <div className="mb-8">
-                <h2 className="text-3xl font-bold text-white mb-2">Xem Đề Thi</h2>
-                <p className="text-blue-200/80">Quản lý và chỉnh sửa các câu hỏi trong đề thi</p>
+                <h2 className="text-3xl font-bold text-white mb-2">Xem Lịch Sử</h2>
+                <p className="text-blue-200/80">Xem chi tiết của những trận đấu đã tổ chức</p>
             </div>
 
             <div className="p-8 space-y-12">

@@ -91,9 +91,6 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50">
-                    🔒
-                  </span>
                 </div>
               </div>
 

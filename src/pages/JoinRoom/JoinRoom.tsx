@@ -144,9 +144,6 @@ const JoinRoom = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50">
-                    🔐
-                  </span>
                 </div>
                 <p className="text-blue-300/60 text-xs mt-1 text-center">
                   Để trống nếu phòng không có mật khẩu
