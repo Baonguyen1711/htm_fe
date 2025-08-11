@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 interface SimpleColorPickerProps {
   playerStt?: string;
+  isHost: boolean;
   currentColor?: string;
   onColorChange: (playerStt: string, color: string) => void;
   usedColors: Set<string>;
@@ -21,6 +22,7 @@ const COLORS = [
 const SimpleColorPicker: React.FC<SimpleColorPickerProps> = ({
   playerStt,
   currentColor,
+  isHost,
   onColorChange,
   usedColors
 }) => {
@@ -53,7 +55,7 @@ const SimpleColorPicker: React.FC<SimpleColorPickerProps> = ({
       />
 
       {/* Color picker dropdown */}
-      {isOpen && (
+      {isOpen && isHost && (
         <>
           {/* Backdrop */}
           <div 

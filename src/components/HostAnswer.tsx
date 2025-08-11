@@ -83,7 +83,10 @@ function HostAnswer() {
         console.log("stt", stt);
 
         const updatedScoreList = localPlayersScore.map((p: PlayerData | undefined) => {
-            if (p && p.stt === stt && p.score) {
+            if (p && p.stt === stt && p.score !== undefined) {
+                console.log("p.score", p.score);
+                console.log("p", p)
+                console.log("p.stt", p.stt)
                 return {
                     ...p,
                     score: p.score + amount,
@@ -91,8 +94,11 @@ function HostAnswer() {
                     isModified: true,
                 };
             }
+            console.log("p", p)
             return p;
         });
+
+        console.log("updatedScoreList", updatedScoreList);
 
         setLocalPlayersScore(updatedScoreList)
     }
@@ -222,16 +228,21 @@ function HostAnswer() {
                     console.log("localPlayersScore", localPlayersScore);
                     const player = players !== null ? players.find((p: PlayerData) => {
                         if (p && p.stt) {
+                            console.log("p.stt", p.stt);
+                            console.log("spotNumber", spotNumber);
                             return parseInt(p.stt) === spotNumber
                         }
+                        console.log("players", players)
                     }) : null;
 
                     const score = localPlayersScore !== null ? localPlayersScore.find((p: PlayerData | undefined) => {
                         if (p && p.stt) {
+
                             return parseInt(p.stt) === spotNumber
                         }
                     }) : null;
                     console.log("player", player)
+                    console.log("score", score)
 
                     // const playerScore = playerScores.find((score: Score) => score.stt === spotNumber.toString());
                     // const answer = answerList?.find((a: Answer) => parseInt(a.stt) === spotNumber);
@@ -266,6 +277,7 @@ function HostAnswer() {
                                     <div className="absolute -bottom-1 -right-1">
                                         <SimpleColorPicker
                                             playerStt={player.stt}
+                                            isHost={true}
                                             currentColor={playerColors[player.stt || 0]}
                                             onColorChange={handleColorChange}
                                             usedColors={usedColors}

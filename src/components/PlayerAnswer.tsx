@@ -226,6 +226,7 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
                                         <div className="absolute -bottom-1 -right-1">
                                             <SimpleColorPicker
                                                 playerStt={player.stt}
+                                                isHost={false}
                                                 currentColor={playerColors[player.stt || 0]}
                                                 onColorChange={handleColorChange}
                                                 usedColors={usedColors}
