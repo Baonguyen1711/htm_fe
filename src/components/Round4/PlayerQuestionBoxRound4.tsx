@@ -29,22 +29,6 @@ interface GameGridProps {
     onMenuAction: (action: 'select' | 'red' | 'green' | 'blue' | 'yellow', row: number, col: number) => void;
     onCloseModal: () => void;
 }
-const exampleGrid = [
-    ['!', '', '?', '', '!'],
-    ['', '?', '!', '', '?'],
-    ['?', '', '', '!', '?'],
-    ['!', '?', '', '', '!'],
-    ['?', '!', '', '?', ''],
-];
-
-// Example questions for testing
-const exampleQuestions = [
-    'Question 1', 'Question 2', 'Question 3', 'Question 4', 'Question 5',
-    'Question 6', 'Question 7', 'Question 8', 'Question 9', 'Question 10',
-    'Question 11', 'Question 12', 'Question 13', 'Question 14', 'Question 15',
-    'Question 16', 'Question 17', 'Question 18', 'Question 19', 'Question 20',
-    'Question 21', 'Question 22', 'Question 23', 'Question 24', 'Question 25',
-];
 
 const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     initialGrid,
@@ -172,18 +156,53 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     }, []);
 
     useEffect(() => {
-
         const unsubscribeCellColor = listenToCellColor((data) => {
-            if (!data) return
-            console.log("questions", data);
-            const row = parseInt(data.rowIndex)
-            const col = parseInt(data.colIndex)
-            const color = data.color
+            if (!data) return;
+            console.log("cell color data", data);
+            const row = parseInt(data.rowIndex);
+            const col = parseInt(data.colIndex);
+            const color = data.color;
 
             if (!isNaN(row) && !isNaN(col) && row >= 0 && row < 5 && col >= 0 && col < 5 && color) {
+                // Update grid colors
                 setGridColors((prev) => {
                     const newGrid = prev.map((rowArray) => [...rowArray]);
                     newGrid[row][col] = colorMap[color];
+                    return newGrid;
+                });
+
+                // Clear the cell content in the grid (remove "?", "!", or "i")
+                setGrid((prev) => {
+                    const newGrid = prev.map((rowArray) => [...rowArray]);
+                    newGrid[row][col] = ''; // Set cell content to empty string
+                    return newGrid;
+                });
+            }
+        });
+
+        return () => {
+            unsubscribeCellColor();
+        };
+    }, []); useEffect(() => {
+        const unsubscribeCellColor = listenToCellColor((data) => {
+            if (!data) return;
+            console.log("cell color data", data);
+            const row = parseInt(data.rowIndex);
+            const col = parseInt(data.colIndex);
+            const color = data.color;
+
+            if (!isNaN(row) && !isNaN(col) && row >= 0 && row < 5 && col >= 0 && col < 5 && color) {
+                // Update grid colors
+                setGridColors((prev) => {
+                    const newGrid = prev.map((rowArray) => [...rowArray]);
+                    newGrid[row][col] = colorMap[color];
+                    return newGrid;
+                });
+
+                // Clear the cell content in the grid (remove "?", "!", or "i")
+                setGrid((prev) => {
+                    const newGrid = prev.map((rowArray) => [...rowArray]);
+                    newGrid[row][col] = ''; // Set cell content to empty string
                     return newGrid;
                 });
             }

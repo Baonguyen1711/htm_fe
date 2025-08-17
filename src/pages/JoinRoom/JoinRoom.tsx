@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../shared/hooks/auth/useAuth';
 import useRoomApi from '../../shared/hooks/api/useRoomApi';
 import { Button } from '../../shared/components/ui';
+import { toast } from 'react-toastify';
 
 const JoinRoom = () => {
   const navigate = useNavigate();
@@ -11,9 +12,20 @@ const JoinRoom = () => {
   const [password, setPassword] = useState<string>("");
   const { signInWithoutPassword, authenticateUserManually } = useAuth();
   const { validateRoom } = useRoomApi();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleJoinRoom = async () => {
     let timeoutId: NodeJS.Timeout | null = null;
+    if (isLoading) return; // Prevent multiple login attempts
+
+    setIsLoading(true); // Set loading state to true
+    const toastId = toast.info('Đang lấy thông tin phòng, vui lòng chờ...', {
+      position: 'top-right',
+      autoClose: false, // Keep toast until manually dismissed or updated
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+    });
 
     try {
       if (!roomId.trim()) {
@@ -52,6 +64,12 @@ const JoinRoom = () => {
         }, 800);
       });
 
+      toast.dismiss(toastId); // Dismiss the loading toast
+      toast.success('Đã lấy thông tin phòng thành công!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+
       // Manually authenticate to set cookies
       await authenticateUserManually();
 
@@ -65,7 +83,11 @@ const JoinRoom = () => {
         navigate(`/user/info?${params.toString()}`);
       } catch (tokenError) {
         console.error("Error getting access token:", tokenError);
-        alert("Lỗi khi lấy quyền truy cập phòng");
+        toast.dismiss(toastId); // Dismiss the loading toast
+        toast.error('Lỗi khi lấy thông tin phòng', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
         return;
       }
     } catch (error) {

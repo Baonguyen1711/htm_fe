@@ -173,7 +173,7 @@ const firebaseServices = {
   },
 
   listenToReturnToTopicSelection: (roomId: string, callback: (shouldReturn: boolean) => void) => {
-    return firebaseServices.listen(roomId, "returnToTopicSelection", callback);
+    return firebaseServices.listen(roomId, "returnToTopicSelection", callback, true);
   },
 
   findPlayerKey: async (playersRef: DatabaseReference, userId: string, roomId: string) => {

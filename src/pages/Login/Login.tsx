@@ -3,29 +3,60 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../shared/hooks/auth/useAuth';
 import { Button } from '../../shared/components/ui';
-// Adjust the import path as necessary
+import { toast } from 'react-toastify';
+
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { login } = useAuth();
 
   const handleLogin = async () => {
+    if (isLoading) return; // Prevent multiple login attempts
+
+    setIsLoading(true); // Set loading state to true
+    const toastId = toast.info('Đang xác thực, vui lòng chờ...', {
+      position: 'top-right',
+      autoClose: false, // Keep toast until manually dismissed or updated
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+    });
+
     try {
       const result = await login(email, password); // Call the login function
       if (result) {
-        console.log("Login successful:", result);
-        // Wait a bit for the authentication cookie to be set
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        navigate("/host/dashboard");
+        console.log('Login successful:', result);
+        toast.dismiss(toastId); // Dismiss the loading toast
+        // Show success toast before navigation
+        toast.success('Đăng nhập thành công!', {
+          position: 'top-right',
+          autoClose: 2000,
+        });
+        // Wait for the success toast to be visible and for the auth cookie
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Match autoClose duration
+        navigate('/host/dashboard');
+      } else {
+        toast.dismiss(toastId); // Dismiss the loading toast
+        toast.error('Email hoặc mật khẩu không đúng!', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
       }
     } catch (error) {
-      console.error("Error during login:", error);
-
+      console.error('Error during login:', error);
+      toast.dismiss(toastId); // Dismiss the loading toast
+      toast.error('Email hoặc mật khẩu không đúng!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+    } finally {
+      setIsLoading(false); // Reset loading state
     }
-  }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">

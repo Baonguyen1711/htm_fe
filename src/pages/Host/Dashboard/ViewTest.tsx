@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { uploadFile } from '../../../shared/hooks/common/uploadAssestServices';
 import { Question } from '../../../shared/types';
 import { useTestApi } from '../../../shared/hooks/api/useTestApi';
@@ -6,13 +8,15 @@ import { Button } from '../../../shared/components/ui';
 
 const ViewTest: React.FC = () => {
   const [testList, setTestList] = useState<string[]>([]);
-  const [selectedTestName, setSelectedTestName] = useState<string>("");
+  const [selectedTestName, setSelectedTestName] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [editedQuestion, setEditedQuestion] = useState<Partial<Question>>({});
   const [isDataExisted, setIsDataExisted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('round_1');
-  const [selectedRound3Group, setSelectedRound3Group] = useState<string>("");
+  const [selectedRound3Group, setSelectedRound3Group] = useState<string>('');
+  const [uploadingQuestions, setUploadingQuestions] = useState<Record<string, boolean>>({}); // Track upload state per question
+  const [modifyingQuestions, setModifyingQuestions] = useState<Record<string, boolean>>({}); // Track modification state per question
   const [testData, setTestData] = useState<{
     round_1: Question[];
     round_2: Question[];
@@ -24,7 +28,7 @@ const ViewTest: React.FC = () => {
     round_2: [],
     round_3: {},
     round_4: {},
-    turn: []
+    turn: [],
   });
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const { getTestContent, getTestsNameByUserId, updateQuestion } = useTestApi();
@@ -33,12 +37,15 @@ const ViewTest: React.FC = () => {
     const getTestList = async () => {
       try {
         const testList = await getTestsNameByUserId();
-        localStorage.setItem("testList", JSON.stringify(testList));
-        console.log("test list", testList);
-        
+        localStorage.setItem('testList', JSON.stringify(testList));
+        console.log('test list', testList);
         setTestList(testList);
       } catch (error) {
-        console.error("Error fetching test list:", error);
+        console.error('Error fetching test list:', error);
+        toast.error('Không thể tải danh sách bộ đề!', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
       }
     };
     getTestList();
@@ -51,15 +58,18 @@ const ViewTest: React.FC = () => {
 
   const handleViewTest = async () => {
     if (!selectedTestName) {
-      alert("Please select a test first!");
+      toast.warn('Vui lòng chọn một bộ đề!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
       return;
     }
     if (isDataExisted) return;
     try {
       const data = await getTestContent(selectedTestName);
-      console.log("data", data);
-      localStorage.setItem("testId", data["round_1"][0]["testId"]);
-      console.log(localStorage.getItem("testId"));
+      console.log('data', data);
+      localStorage.setItem('testId', data['round_1'][0]['testId']);
+      console.log(localStorage.getItem('testId'));
 
       setTestData({
         round_1: data.round_1 || [],
@@ -70,13 +80,17 @@ const ViewTest: React.FC = () => {
       });
       setIsDataExisted(true);
     } catch (error) {
-      console.error("Error fetching test questions:", error);
+      console.error('Error fetching test questions:', error);
+      toast.error('Không thể tải câu hỏi của bộ đề!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
       setTestData({
         round_1: [],
         round_2: [],
         round_3: {},
         round_4: {},
-        turn: []
+        turn: [],
       });
     }
   };
@@ -85,26 +99,45 @@ const ViewTest: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    const questionId = question.questionId || '';
+    if (uploadingQuestions[questionId]) return; // Prevent multiple uploads for this question
+
+    setUploadingQuestions((prev) => ({ ...prev, [questionId]: true }));
+    const toastId = toast.info(`Đang tải lên hình ảnh cho câu hỏi ${questionId}...`, {
+      position: 'top-right',
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+    });
+
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
-    console.log("file.name.", file.name);
-    console.log("fileExtension", fileExtension);
-    console.log("question type inside function", type);
+    console.log('file.name.', file.name);
+    console.log('fileExtension', fileExtension);
+    console.log('question type inside function', type);
 
     try {
-      const key = await uploadFile(file, `Question ${question.questionId}`);
-      console.log("question", question);
+      const validExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+      if (!validExtensions.includes(fileExtension || '')) {
+        toast.error('Chỉ hỗ trợ các định dạng hình ảnh: jpg, jpeg, png, gif!', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
+        return;
+      }
+
+      const key = await uploadFile(file, `Question ${questionId}`);
+      console.log('question', question);
 
       const updatedQuestion = { ...question, imgUrl: `https://d1fc7d6en42vzg.cloudfront.net/${key}` };
-      console.log("updatedQuestion", updatedQuestion);
+      console.log('updatedQuestion', updatedQuestion);
 
-      await updateQuestion( question.questionId || "",updatedQuestion);
+      await updateQuestion(questionId, updatedQuestion);
 
       const updatedTestData = { ...testData };
       const updateQuestionInList = (questions: Question[]) =>
         questions.map((q) =>
-          q.testId === question.testId && q.questionId === question.questionId
-            ? updatedQuestion
-            : q
+          q.testId === question.testId && q.questionId === questionId ? updatedQuestion : q
         );
 
       updatedTestData.round_1 = updateQuestionInList(updatedTestData.round_1);
@@ -116,9 +149,25 @@ const ViewTest: React.FC = () => {
         updatedTestData.round_4[difficulty] = updateQuestionInList(updatedTestData.round_4[difficulty]);
       }
       setTestData(updatedTestData);
+
+      toast.dismiss(toastId);
+      toast.success('Tải lên hình ảnh thành công!', {
+        position: 'top-right',
+        autoClose: 2000,
+      });
     } catch (error) {
-      console.error("Error uploading file:", error);
-      alert("Failed to upload file.");
+      console.error('Error uploading file:', error);
+      toast.dismiss(toastId);
+      toast.error('Tải lên hình ảnh thất bại!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+    } finally {
+      setUploadingQuestions((prev) => {
+        const newState = { ...prev };
+        delete newState[questionId];
+        return newState;
+      });
     }
   };
 
@@ -171,26 +220,69 @@ const ViewTest: React.FC = () => {
 
   const handleConfirm = async () => {
     if (!selectedQuestion && !editedQuestion.round) return;
+    if (!editedQuestion.question || !editedQuestion.answer) {
+      toast.warn('Vui lòng nhập câu hỏi và đáp án!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+      return;
+    }
 
-    if (selectedQuestion) {
-      await updateQuestion( selectedQuestion.questionId || "",editedQuestion);
-      const updatedTestData = { ...testData };
-      const updateQuestionInList = (questions: Question[]) =>
-        questions.map((q) =>
-          q.testId === selectedQuestion.testId && q.questionId === selectedQuestion.questionId
-            ? { ...q, ...editedQuestion }
-            : q
-        );
+    const questionId = selectedQuestion?.questionId || '';
+    if (modifyingQuestions[questionId]) return; // Prevent multiple submissions
 
-      updatedTestData.round_1 = updateQuestionInList(updatedTestData.round_1);
-      updatedTestData.round_2 = updateQuestionInList(updatedTestData.round_2);
-      for (const packetName in updatedTestData.round_3) {
-        updatedTestData.round_3[packetName] = updateQuestionInList(updatedTestData.round_3[packetName]);
+    setModifyingQuestions((prev) => ({ ...prev, [questionId]: true }));
+    const toastId = toast.info(`Đang cập nhật câu hỏi ${questionId}...`, {
+      position: 'top-right',
+      autoClose: false,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+    });
+
+    try {
+      if (selectedQuestion) {
+        await updateQuestion(questionId, editedQuestion);
+        const updatedTestData = { ...testData };
+        const updateQuestionInList = (questions: Question[]) =>
+          questions.map((q) =>
+            q.testId === selectedQuestion.testId && q.questionId === questionId
+              ? { ...q, ...editedQuestion }
+              : q
+          );
+
+        updatedTestData.round_1 = updateQuestionInList(updatedTestData.round_1);
+        updatedTestData.round_2 = updateQuestionInList(updatedTestData.round_2);
+        for (const packetName in updatedTestData.round_3) {
+          updatedTestData.round_3[packetName] = updateQuestionInList(updatedTestData.round_3[packetName]);
+        }
+        for (const difficulty in updatedTestData.round_4) {
+          updatedTestData.round_4[difficulty] = updateQuestionInList(updatedTestData.round_4[difficulty]);
+        }
+        setTestData(updatedTestData);
+
+        toast.dismiss(toastId);
+        toast.success('Cập nhật câu hỏi thành công!', {
+          position: 'top-right',
+          autoClose: 2000,
+        });
       }
-      for (const difficulty in updatedTestData.round_4) {
-        updatedTestData.round_4[difficulty] = updateQuestionInList(updatedTestData.round_4[difficulty]);
-      }
-      setTestData(updatedTestData);
+      setIsModalOpen(false);
+      setSelectedQuestion(null);
+      setEditedQuestion({});
+    } catch (error) {
+      console.error('Error updating question:', error);
+      toast.dismiss(toastId);
+      toast.error('Cập nhật câu hỏi thất bại!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+    } finally {
+      setModifyingQuestions((prev) => {
+        const newState = { ...prev };
+        delete newState[questionId];
+        return newState;
+      });
     }
   };
 
@@ -201,8 +293,8 @@ const ViewTest: React.FC = () => {
   };
 
   const renderTable = (questions: Question[], title: string, round: string, groupName?: string) => {
-    console.log("questions", questions);
-    
+    console.log('questions', questions);
+
     if (questions.length === 0 && !groupName) return null;
 
     return (
@@ -236,8 +328,9 @@ const ViewTest: React.FC = () => {
                     variant="primary"
                     size="sm"
                     className="text-sm font-medium"
+                    disabled={uploadingQuestions[question.questionId || '']} // Disable only for this question
                   >
-                    📤 Tải Lên
+                    {uploadingQuestions[question.questionId || ''] ? 'Đang tải...' : 'Tải Lên'}
                   </Button>
 
                   <span className="text-blue-200/60 break-words max-w-full text-xs">
@@ -251,6 +344,7 @@ const ViewTest: React.FC = () => {
                     }}
                     className="hidden"
                     onChange={(e) => handleFileUpload(question, question.type, e)}
+                    disabled={uploadingQuestions[question.questionId || '']}
                   />
                 </div>
 
@@ -260,6 +354,7 @@ const ViewTest: React.FC = () => {
                     variant="warning"
                     size="sm"
                     className="text-sm font-medium"
+                    disabled={modifyingQuestions[question.questionId || '']} // Disable only for this question
                   >
                     ✏️ Sửa
                   </Button>
@@ -271,16 +366,42 @@ const ViewTest: React.FC = () => {
       </div>
     );
   };
+
   const renderGroupedTable = (groups: { [key: string]: Question[] }, roundTitle: string, round: string) => {
-  if (Object.keys(groups).length === 0) return null;
+    if (Object.keys(groups).length === 0) return null;
 
-  // Nếu đây là round_3, thì dùng dropdown
-  if (round === "round_3") {
-    const groupNames = Object.keys(groups);
+    if (round === 'round_3') {
+      const groupNames = Object.keys(groups);
 
-    // Nếu chưa chọn nhóm nào, mặc định chọn nhóm đầu tiên
-    if (!selectedRound3Group && groupNames.length > 0) {
-      setSelectedRound3Group(groupNames[0]);
+      if (!selectedRound3Group && groupNames.length > 0) {
+        setSelectedRound3Group(groupNames[0]);
+      }
+
+      return (
+        <div className="mb-8">
+          <h3 className="text-2xl font-semibold text-white mb-4 flex items-center">
+            <span className="text-cyan-300 mr-2">🎯</span>
+            {roundTitle}
+          </h3>
+
+          <div className="mb-4">
+            <label className="text-blue-200 mr-3">📦 Chọn Chủ Đề:</label>
+            <select
+              className="bg-slate-600/50 border border-blue-400/30 rounded-lg p-2 text-white"
+              value={selectedRound3Group}
+              onChange={(e) => setSelectedRound3Group(e.target.value)}
+            >
+              {groupNames.map((group) => (
+                <option key={group} value={group} className="bg-slate-700">
+                  {group}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {selectedRound3Group && renderTable(groups[selectedRound3Group], '', round, selectedRound3Group)}
+        </div>
+      );
     }
 
     return (
@@ -289,62 +410,31 @@ const ViewTest: React.FC = () => {
           <span className="text-cyan-300 mr-2">🎯</span>
           {roundTitle}
         </h3>
-
-        {/* Dropdown chọn chủ đề */}
-        <div className="mb-4">
-          <label className="text-blue-200 mr-3">📦 Chọn Chủ Đề:</label>
-          <select
-            className="bg-slate-600/50 border border-blue-400/30 rounded-lg p-2 text-white"
-            value={selectedRound3Group}
-            onChange={(e) => setSelectedRound3Group(e.target.value)}
-          >
-            {groupNames.map((group) => (
-              <option key={group} value={group} className="bg-slate-700">
-                {group}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Hiển thị câu hỏi của chủ đề đang chọn */}
-        {selectedRound3Group && renderTable(groups[selectedRound3Group], "", round, selectedRound3Group)}
+        {Object.entries(groups).map(([groupName, questions]) => (
+          <div key={groupName} className="mb-6">
+            <h4 className="text-xl font-medium text-blue-200 mb-3 flex items-center">
+              <span className="text-yellow-400 mr-2">📦</span>
+              {groupName}
+            </h4>
+            {renderTable(questions, '', round, groupName)}
+          </div>
+        ))}
       </div>
     );
-  }
-
-  // Mặc định cho round_4 vẫn hiển thị hết
-  return (
-    <div className="mb-8">
-      <h3 className="text-2xl font-semibold text-white mb-4 flex items-center">
-        <span className="text-cyan-300 mr-2">🎯</span>
-        {roundTitle}
-      </h3>
-      {Object.entries(groups).map(([groupName, questions]) => (
-        <div key={groupName} className="mb-6">
-          <h4 className="text-xl font-medium text-blue-200 mb-3 flex items-center">
-            <span className="text-yellow-400 mr-2">📦</span>
-            {groupName}
-          </h4>
-          {renderTable(questions, "", round, groupName)}
-        </div>
-      ))}
-    </div>
-  );
-};
-
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'round_1':
-        return renderTable(testData.round_1, "NHỔ NEO", "round_1");
+        return renderTable(testData.round_1, 'NHỔ NEO', 'round_1');
       case 'round_2':
-        return renderTable(testData.round_2, "VƯỢT SÓNG", "round_2");
+        return renderTable(testData.round_2, 'VƯỢT SÓNG', 'round_2');
       case 'round_3':
-        return renderGroupedTable(testData.round_3, "BỨC PHÁ", "round_3");
+        return renderGroupedTable(testData.round_3, 'BỨC PHÁ', 'round_3');
       case 'round_4':
-        return renderGroupedTable(testData.round_4, "CHINH PHỤC", "round_4");
+        return renderGroupedTable(testData.round_4, 'CHINH PHỤC', 'round_4');
       case 'turn':
-        return renderTable(testData.turn, "PHÂN LƯỢT", "round_5");
+        return renderTable(testData.turn, 'PHÂN LƯỢT', 'round_5');
       default:
         return null;
     }
@@ -352,17 +442,28 @@ const ViewTest: React.FC = () => {
 
   return (
     <div className="p-8">
-      {/* Header */}
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
+
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-white mb-2">Xem Đề Thi</h2>
         <p className="text-blue-200/80">Quản lý và chỉnh sửa các câu hỏi trong đề thi</p>
       </div>
 
-      {/* Test Selection */}
       <div className="bg-slate-700/50 backdrop-blur-sm border border-blue-400/30 rounded-xl p-6 mb-8">
         <div className="mb-6">
           <label htmlFor="testSelect" className="block text-blue-200 text-sm font-medium mb-2">
-             Chọn Bộ Đề
+            Chọn Bộ Đề
           </label>
           <select
             id="testSelect"
@@ -374,15 +475,13 @@ const ViewTest: React.FC = () => {
             <option value="" disabled className="bg-slate-700">
               -- Chọn một bộ đề --
             </option>
-            {testList.length > 0? 
-            testList.map((test) => (
-              <option key={test} value={test} className="bg-slate-700">
-                {test}
-              </option>
-            ))
-            :
-            null
-          }
+            {testList.length > 0 ? (
+              testList.map((test) => (
+                <option key={test} value={test} className="bg-slate-700">
+                  {test}
+                </option>
+              ))
+            ) : null}
           </select>
         </div>
         <Button
@@ -392,20 +491,19 @@ const ViewTest: React.FC = () => {
           size="lg"
           className="font-medium shadow-lg"
         >
-           Xem Đề Thi
+          Xem Đề Thi
         </Button>
       </div>
 
-      {/* Tabs */}
       <div className="mb-8">
         <div className="flex border-b border-blue-400/30">
           {[
-    { label: 'NHỔ NEO', key: 'round_1' },
-    { label: 'VƯỢT SÓNG', key: 'round_2' },
-    { label: 'BỨC PHÁ', key: 'round_3' },
-    { label: 'CHINH PHỤC', key: 'round_4' },
-    { label: 'PHÂN LƯỢT', key: 'turn' },
-  ].map((tab) => (
+            { label: 'NHỔ NEO', key: 'round_1' },
+            { label: 'VƯỢT SÓNG', key: 'round_2' },
+            { label: 'BỨC PHÁ', key: 'round_3' },
+            { label: 'CHINH PHỤC', key: 'round_4' },
+            { label: 'PHÂN LƯỢT', key: 'turn' },
+          ].map((tab) => (
             <Button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
@@ -423,7 +521,6 @@ const ViewTest: React.FC = () => {
         </div>
       </div>
 
-      {/* Tab Content */}
       <div className="space-y-8">
         {renderTabContent()}
         {testData.round_1.length === 0 &&
@@ -437,7 +534,6 @@ const ViewTest: React.FC = () => {
           )}
       </div>
 
-      {/* Modal for editing/adding */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-slate-800/90 backdrop-blur-sm border border-blue-400/30 rounded-xl p-8 shadow-2xl w-full max-w-lg mx-4">
@@ -457,6 +553,7 @@ const ViewTest: React.FC = () => {
                   onChange={handleInputChange}
                   className="w-full bg-slate-700/50 border border-blue-400/30 rounded-lg p-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
                   placeholder="Nhập câu hỏi"
+                  disabled={modifyingQuestions[selectedQuestion?.questionId || '']}
                 />
               </div>
               <div>
@@ -468,6 +565,7 @@ const ViewTest: React.FC = () => {
                   onChange={handleInputChange}
                   className="w-full bg-slate-700/50 border border-blue-400/30 rounded-lg p-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
                   placeholder="Nhập đáp án"
+                  disabled={modifyingQuestions[selectedQuestion?.questionId || '']}
                 />
               </div>
               <div>
@@ -479,6 +577,7 @@ const ViewTest: React.FC = () => {
                   onChange={handleInputChange}
                   className="w-full bg-slate-700/50 border border-blue-400/30 rounded-lg p-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
                   placeholder="Nhập loại câu hỏi"
+                  disabled={modifyingQuestions[selectedQuestion?.questionId || '']}
                 />
               </div>
               <div>
@@ -490,6 +589,7 @@ const ViewTest: React.FC = () => {
                   onChange={handleInputChange}
                   className="w-full bg-slate-700/50 border border-blue-400/30 rounded-lg p-3 text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
                   placeholder="Nhập URL hình ảnh"
+                  disabled={modifyingQuestions[selectedQuestion?.questionId || '']}
                 />
               </div>
             </div>
@@ -498,6 +598,7 @@ const ViewTest: React.FC = () => {
                 onClick={handleCancel}
                 variant="secondary"
                 size="md"
+                disabled={modifyingQuestions[selectedQuestion?.questionId || '']}
               >
                 Hủy
               </Button>
@@ -505,8 +606,9 @@ const ViewTest: React.FC = () => {
                 onClick={handleConfirm}
                 variant="success"
                 size="md"
+                disabled={modifyingQuestions[selectedQuestion?.questionId || '']}
               >
-                {selectedQuestion ? 'Xác Nhận' : 'Thêm'}
+                {modifyingQuestions[selectedQuestion?.questionId || ''] ? 'Đang xử lý...' : selectedQuestion ? 'Xác Nhận' : 'Thêm'}
               </Button>
             </div>
           </div>

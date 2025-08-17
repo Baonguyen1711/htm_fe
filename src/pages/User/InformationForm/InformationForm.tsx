@@ -21,9 +21,10 @@ const InformationForm = () => {
   const [playerNumber, setPlayerNumber] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null); // sẽ lưu key trả về
   const [password, setPassword] = useState(searchParams.get("password") || "");
-  const  dispatch  = useAppDispatch();
+  const dispatch = useAppDispatch();
   const { currentPlayer } = useAppSelector(state => state.game);
-  const defaultAvatar = "https://via.placeholder.com/100";
+  const defaultAvatar = "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg";
+  const [isLoading, setIsLoading] = useState(false);
 
   // Room info state
   const [roomInfo, setRoomInfo] = useState<{
@@ -99,10 +100,20 @@ const InformationForm = () => {
   };
 
   const handleSubmit = async () => {
+    if (isLoading) return; // Prevent multiple login attempts
+
+    setIsLoading(true); // Set loading state to true
+    const toastId = toast.info('Đang tham gia phòng, vui lòng chờ...', {
+      position: 'top-right',
+      autoClose: false, // Keep toast until manually dismissed or updated
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+    });
     if (username && playerNumber && roomId && avatar) {
       try {
         const uid = currentPlayer?.uid;
-        
+
         const userJoinRoomInfo = {
           uid: uid,
           userName: username,
@@ -111,7 +122,7 @@ const InformationForm = () => {
           password: password,
           roomId: roomId,
         }
-        
+
         // localStorage.setItem("currentPlayer", JSON.stringify(userJoinRoomInfo));
         const result = await dispatch(joinRoom(userJoinRoomInfo));
 
@@ -128,6 +139,11 @@ const InformationForm = () => {
         tokenRefreshService.startAutoRefresh(tokenResponse.accessToken);
 
         navigate(`/play?round=1&roomId=${roomId}`);
+        toast.dismiss(toastId); // Dismiss the loading toast
+        toast.success('Tham gia phòng thành công!', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
       } catch (error: any) {
         console.error(error);
 
