@@ -7,6 +7,7 @@ import {
   onAuthStateChanged,
   signInAnonymously,
   browserLocalPersistence,
+  browserSessionPersistence,
   setPersistence
 } from "firebase/auth";
 import app from "../../../shared/services/firebase/config";
@@ -35,8 +36,6 @@ const useAuth = () => {
         const token = await user.getIdToken();
         console.log("token", token)
 
-        // Only call authenticateUser if not on join room page
-        // This prevents automatic authentication when players are just browsing the join room form
         const isOnJoinRoomPage = window.location.pathname === '/join' ||
                                  window.location.pathname === '/spectatorJoin';
         if (!isOnJoinRoomPage) {

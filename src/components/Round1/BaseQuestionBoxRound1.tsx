@@ -64,7 +64,7 @@ const BaseQuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = fa
                         return <img src={url} alt="Question Visual" className="w-full h-full object-contain rounded-lg" />;
                     }
 
-                    if (["mp3", "wav", "ogg"].includes(extension)) {
+                    if (["m4a","mp3", "wav", "ogg"].includes(extension)) {
                         return <audio controls className="w-full h-full object-contain">
                             <source src={url} type={`audio/${extension}`} />
                             Your browser does not support the audio element.

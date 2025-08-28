@@ -28,7 +28,8 @@ const HostRound2: React.FC = () => {
       const obstacleWord = questions[6].answer
 
       for (let i = 0; i < questions.length - 1; i++) {
-        hintArrays.push(questions[i].answer.replace(/\s/g, ''))
+        console.log("questions[i].answer", questions[i].answer)
+        hintArrays.push(questions[i].answer.toString().replace(/\s/g, ''))
       }
 
       setHintWordArray(hintArrays)

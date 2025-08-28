@@ -14,16 +14,17 @@ import { toast } from 'react-toastify';
 import { Button } from '../../../shared/components/ui';
 
 const InformationForm = () => {
+  const defaultAvatar = "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg";
+
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const roomId = searchParams.get("roomid");
   const [username, setUsername] = useState("");
   const [playerNumber, setPlayerNumber] = useState("");
-  const [avatar, setAvatar] = useState<string | null>(null); // sẽ lưu key trả về
+  const [avatar, setAvatar] = useState<string | null>(defaultAvatar); // sẽ lưu key trả về
   const [password, setPassword] = useState(searchParams.get("password") || "");
   const dispatch = useAppDispatch();
   const { currentPlayer } = useAppSelector(state => state.game);
-  const defaultAvatar = "https://static.vecteezy.com/system/resources/previews/009/292/244/non_2x/default-avatar-icon-of-social-media-user-vector.jpg";
   const [isLoading, setIsLoading] = useState(false);
 
   // Room info state
@@ -94,7 +95,10 @@ const InformationForm = () => {
 
       setAvatar(`https://d1fc7d6en42vzg.cloudfront.net/${uploadedKey}`); // lưu key ảnh
     } catch (error) {
-      alert("Upload ảnh đại diện thất bại. Vui lòng thử lại.");
+      toast.error('Tải lên ảnh đại diện thất bại. Vui lòng thử lại với ảnh khác', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
       console.error("❌ Avatar upload failed:", error);
     }
   };
@@ -105,11 +109,12 @@ const InformationForm = () => {
     setIsLoading(true); // Set loading state to true
     const toastId = toast.info('Đang tham gia phòng, vui lòng chờ...', {
       position: 'top-right',
-      autoClose: false, // Keep toast until manually dismissed or updated
+      autoClose: false,
       hideProgressBar: false,
       closeOnClick: false,
       pauseOnHover: true,
     });
+
     if (username && playerNumber && roomId && avatar) {
       try {
         const uid = currentPlayer?.uid;
@@ -121,13 +126,10 @@ const InformationForm = () => {
           avatar: avatar,
           password: password,
           roomId: roomId,
-        }
+        };
 
-        // localStorage.setItem("currentPlayer", JSON.stringify(userJoinRoomInfo));
         const result = await dispatch(joinRoom(userJoinRoomInfo));
-
         console.log("result", result);
-
 
         const tokenResponse = await authService.getAccessToken({ roomId });
         console.log("Access token obtained:", tokenResponse);
@@ -146,36 +148,22 @@ const InformationForm = () => {
         });
       } catch (error: any) {
         console.error(error);
-
-        let errorMessage = 'Tham gia phòng thất bại. Vui lòng thử lại.';
-
-        if (error.payload && typeof error.payload === 'string') {
-          // Handle Redux async thunk errors
-          if (error.payload.includes('409')) {
-            errorMessage = `Vị trí ${playerNumber} đã có người chọn. Vui lòng chọn vị trí khác.`;
-            // Refresh room info to get updated available positions
-            try {
-              const info = await roomApi.getRoomInfo(roomId, password);
-              setRoomInfo(info);
-              if (info.available_positions.length > 0) {
-                setPlayerNumber(info.available_positions[0].toString());
-              }
-            } catch (refreshError) {
-              console.error('Failed to refresh room info:', refreshError);
-            }
-          } else if (error.payload.includes('400') && error.payload.includes('Room full')) {
-            errorMessage = 'Phòng đã đầy. Không thể tham gia.';
-          } else if (error.payload.includes('404')) {
-            errorMessage = 'Phòng không tồn tại.';
-          } else if (error.payload.includes('403')) {
-            errorMessage = 'Mật khẩu phòng không đúng.';
-          }
-        }
-
-        toast.error(errorMessage);
+        toast.dismiss(toastId); // Dismiss the loading toast
+        setIsLoading(false); // Reset loading state to allow retry
+        toast.error(error.message || 'Tham gia phòng thất bại. Vui lòng thử lại.', {
+          position: 'top-right',
+          autoClose: 3000,
+        });
+      } finally {
+        setIsLoading(false); // Ensure loading state is reset in all cases
       }
     } else {
-      alert("Vui lòng nhập tên người dùng, chọn số thứ tự và tải ảnh đại diện!");
+      toast.dismiss(toastId); // Dismiss the loading toast
+      setIsLoading(false); // Reset loading state
+      toast.error('Vui lòng nhập tên người dùng, chọn số thứ tự và tải ảnh đại diện!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
     }
   };
 

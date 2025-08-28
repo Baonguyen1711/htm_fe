@@ -117,9 +117,9 @@ const ViewTest: React.FC = () => {
     console.log('question type inside function', type);
 
     try {
-      const validExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+      const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'mp3', 'mp4', "m4a"];
       if (!validExtensions.includes(fileExtension || '')) {
-        toast.error('Chỉ hỗ trợ các định dạng hình ảnh: jpg, jpeg, png, gif!', {
+        toast.error('Chỉ hỗ trợ các định dạng hình ảnh: jpg, jpeg, png, gif, mp3, mp4, m4a!', {
           position: 'top-right',
           autoClose: 3000,
         });

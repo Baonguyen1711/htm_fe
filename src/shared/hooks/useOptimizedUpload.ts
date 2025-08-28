@@ -38,7 +38,7 @@ export const useOptimizedUpload = (): UseOptimizedUploadReturn => {
       }
 
       // Check file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp','audio/mpeg','video/mp4' ];
       if (!allowedTypes.includes(file.type)) {
         throw new Error('Only JPEG, PNG, GIF, and WebP images are allowed');
       }
