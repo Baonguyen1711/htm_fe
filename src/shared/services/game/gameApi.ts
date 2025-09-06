@@ -387,6 +387,26 @@ export const gameApi = {
     return response.data;
   },
 
+  /**
+   * Start media
+   */
+  async startMedia(roomId: string) {
+    const response = await api.post(
+      `${API_ENDPOINTS.GAME.MEDIA_PLAY}?room_id=${roomId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Stop media
+   */
+  async stopMedia(roomId: string) {
+    const response = await api.post(
+      `${API_ENDPOINTS.GAME.MEDIA_STOP}?room_id=${roomId}`
+    );
+    return response.data;
+  },
+
 };
 
 export default gameApi;

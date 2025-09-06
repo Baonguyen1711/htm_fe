@@ -78,6 +78,7 @@ export interface ScoreRule {
 export interface GameState {
   // Current game status
   currentRound: string;
+
   currentTestName: string,
   isActive: boolean;
   isHost: boolean;
@@ -113,6 +114,8 @@ export interface GameState {
   timeLimit: number;
   
   // UI state
+  isRound2GridConfirmed: boolean;
+  isRound4GridConfirmed: boolean;
   showRules: boolean;
   currentTurn: number;
   currentQuestionNumber: number;

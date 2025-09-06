@@ -9,7 +9,7 @@ import { useFirebaseListener } from '../../shared/hooks';
 import useGameApi from '../../shared/hooks/api/useGameApi';
 import { useAppDispatch, useAppSelector } from '../../app/store';
 
-import { setBuzzedPlayer } from '../../app/store/slices/gameSlice';
+import { setBuzzedPlayer, setIsRound2GridConfirmed } from '../../app/store/slices/gameSlice';
 import { useConfirmModal } from '../../shared/hooks/ui/useConfirmModal';
 import { toast } from 'react-toastify';
 import Modal from '../ui/Modal/Modal';
@@ -93,7 +93,7 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
 
     //global state
     const dispatch = useAppDispatch();
-    const { round2Grid, currentQuestion } = useAppSelector(state => state.game);
+    const { round2Grid, currentQuestion, isRound2GridConfirmed } = useAppSelector(state => state.game);
 
     //firebase listener
     const { listenToTimeStart} = useFirebaseListener()
@@ -148,15 +148,16 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
         if (!round2Grid?.blankGrid) return;
 
         showConfirmModal({
-            text: 'Bạn có chắc chắn muốn xác nhận chướng ngại vật? Hành động này sẽ gửi bảng cho tất cả người chơi.',
+            text: 'Bạn có chắc chắn muốn xác nhận hàng ngang? Hành động này sẽ gửi hàng ngang cho tất cả người chơi.',
             onConfirm: async () => {
                 if (round2Grid?.blankGrid) {
                     console.log("round2Grid?.blankGrid", round2Grid.blankGrid);
+                    dispatch(setIsRound2GridConfirmed(true));
                     await sendGrid(round2Grid.blankGrid, roomId);
-                    toast.success('Đã xác nhận chướng ngại vật !');
+                    toast.success('Đã xác nhận hàng ngang !');
                 }
             },
-            confirmText: 'Xác nhận chướng ngại vật',
+            confirmText: 'Xác nhận hàng ngang',
             confirmVariant: 'primary'
         });
     }

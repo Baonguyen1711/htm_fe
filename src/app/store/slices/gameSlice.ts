@@ -48,6 +48,8 @@ const initialState: GameState = {
   timeLimit: 30,
 
   // UI state
+  isRound2GridConfirmed: false,
+  isRound4GridConfirmed: false,
   showRules: false,
   currentTurn: 0,
   currentQuestionNumber: 0,
@@ -436,6 +438,14 @@ const gameSlice = createSlice({
     },
 
     // UI state
+    setIsRound2GridConfirmed: (state, action: PayloadAction<boolean>) => {
+      state.isRound2GridConfirmed = action.payload;
+    },
+
+    setIsRound4GridConfirmed: (state, action: PayloadAction<boolean>) => {
+      state.isRound4GridConfirmed = action.payload;
+    },
+
     setShowRules: (state, action: PayloadAction<boolean>) => {
       state.showRules = action.payload;
     },
@@ -583,6 +593,8 @@ export const {
   setSelectedDifficulty,
   setMode,
   setTimeLimit,
+  setIsRound2GridConfirmed,
+  setIsRound4GridConfirmed,
   setShowRules,
   setCurrentTurn,
   resetGame,

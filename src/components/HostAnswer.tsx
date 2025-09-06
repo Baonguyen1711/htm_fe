@@ -287,14 +287,14 @@ function HostAnswer() {
 
                             </div>
                             <div className="flex flex-col flex-1">
-                                <p className="text-white font-bold border-b border-slate-700/50 pb-1">
+                                <p className="text-white font-bold border-b border-slate-700/50 pb-1 text-lg">
                                     {`player_${player.stt}: ${player.userName}`}
                                 </p>
                                 <p className="text-white text-lg font-bold">{score?.score ?? 0}</p>
-                                <p className="text-white border-b border-slate-700/50 pb-1 mt-1">
+                                <p className="text-white border-b border-slate-700/50 pb-1 mt-1 text-lg">
                                     {player?.answer ?? ""}
                                 </p>
-                                <p className="text-gray-400 text-sm mt-1">
+                                <p className="text-gray-400 text-lg mt-1">
                                     {player?.time ? `${player.time}s` : ""}
                                 </p>
                                 {/* Turn assignment UI */}

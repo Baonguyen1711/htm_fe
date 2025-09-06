@@ -33,9 +33,13 @@ const HostManagement = () => {
 
     const testName = searchParams.get("testName") || "1"
     const roomId = searchParams.get("roomId") || "1"
+    const currentRound = searchParams.get("round") || "1"
     const [showingRules, setShowingRules] = useState(false);
     const [showGuideModal, setShowGuideModal] = useState(false);
     const [inGameQuestionIndex, setInGameQuestionIndex] = useState(0)
+    const [isRoundStarted, setIsRoundStarted] = useState(false)
+
+    const { isRound2GridConfirmed, isRound4GridConfirmed } = useAppSelector(state => state.game);
 
     const dispatch = useAppDispatch();
 
@@ -49,12 +53,37 @@ const HostManagement = () => {
     } = useGameApi()
 
     const { playSound } = useRoomApi()
-    const { listenToRules } = useFirebaseListener()
-    const { currentRound } = useAppSelector(state => state.game)
+    const { listenToRules, listenToRoundStart } = useFirebaseListener()
+    //const { currentRound } = useAppSelector(state => state.game)
     // Initialize token refresh for host
     useTokenRefresh();
 
+    useEffect(() => {
+        const unsubscribeRoundStart = listenToRoundStart(
+            (round) => {
+                if (round === currentRound) {
+                    setIsRoundStarted(true);
+                } else {
+                    setIsRoundStarted(false);
+                }
+            }
+        )
+
+        return () => {
+            unsubscribeRoundStart();
+        };
+    }, [currentRound]);
+
     const handleStartRoundClick = async () => {
+        if (currentRound === "2" && !isRound2GridConfirmed) {
+            toast.error('Vui lòng xác nhận hàng ngang trước khi bắt đầu vòng thi!');
+            return;
+        }
+
+        if (currentRound === "4" && !isRound4GridConfirmed) {
+            toast.error('Vui lòng xác nhận bảng trước khi bắt đầu vòng thi!');
+            return;
+        }
         try {
             await startRound(roomId);
             toast.success(`Đã bắt đầu vòng thi ${currentRound}`);
@@ -172,7 +201,7 @@ const HostManagement = () => {
 
             {/* Guide and Color Selection */}
             <div className="flex items-center justify-between mb-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600/50">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center">
                     <button
                         onClick={() => setShowGuideModal(true)}
                         className="flex items-center bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-200 hover:scale-105 font-medium text-sm"
@@ -183,10 +212,16 @@ const HostManagement = () => {
                     </button>
 
                 </div>
+                <div className="items-center space-x-3">
+                    <div className="text-gray-400 text-sm">
+                        Vòng {currentRound} - {currentRound === "1" ? "NHỔ NEO" : currentRound === "2" ? "VƯỢT SÓNG" : currentRound === "3" ? "BỨT PHÁ" : currentRound === "4" ? "CHINH PHỤC" : "PHÂN LƯỢT"}
+                    </div>
 
-                <div className="text-gray-400 text-sm">
-                    Vòng {currentRound} - {currentRound === "1" ? "NHỔ NEO" : currentRound === "2" ? "VƯỢT SÓNG" : currentRound === "3" ? "BỨT PHÁ" : currentRound === "4" ? "CHINH PHỤC" : "PHÂN LƯỢT"}
+                    <div className="text-red-400 text-sm">
+                        {isRoundStarted ? "VÒNG THI ĐÃ BẮT ĐẦU!" : "VÒNG THI CHƯA BẮT ĐẦU"}
+                    </div>
                 </div>
+
             </div>
 
             {/* Host actions - First row */}

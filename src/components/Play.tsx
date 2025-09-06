@@ -41,7 +41,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     ];
 
     const roundTime = {
-        "1": 10,
+        "1": 15,
         "2": 15,
         "3": 60,
         "4": 15,

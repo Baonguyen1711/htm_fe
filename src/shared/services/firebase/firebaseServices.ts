@@ -350,7 +350,10 @@ const firebaseServices = {
       status: "active",
       pendingRemovalAt: null,
     })
-  }
+  },
+  listenToMedia: (roomId: string, callback: (data: any) => void) => {
+    return firebaseServices.listen(roomId, "media", callback, true);
+  },
 }
 
 export default firebaseServices;

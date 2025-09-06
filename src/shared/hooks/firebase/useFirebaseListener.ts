@@ -507,6 +507,14 @@ export const useFirebaseListener = () => {
     });
   }, [roomId]);
 
+  const listenToMedia = useCallback((callback?: (data: any) => void) => {
+    if (!roomId) return () => { };
+
+    return firebaseServices.listenToMedia(roomId, (data) => {
+      callback?.(data);
+    });
+  }, [roomId]);
+
   /**
    * Setup all firebaseServicess at once
    */
@@ -666,6 +674,7 @@ export const useFirebaseListener = () => {
     listenToPlayerColors,
     listenToCurrentTurn,
     listenToRules,
+    listenToMedia,
 
     setupDisconnect,
     startWatchingPendingRemovals,

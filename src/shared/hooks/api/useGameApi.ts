@@ -468,6 +468,22 @@ export const useGameApi = () => {
         }
     }, []);
 
+    const startMedia = useCallback(async (roomId: string) => {
+        try {
+            await gameApi.startMedia(roomId);
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
+    const stopMedia = useCallback(async (roomId: string) => {
+        try {
+            await gameApi.stopMedia(roomId);
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
     return {
         getQuestionByRound,
         //     // State
@@ -511,6 +527,8 @@ export const useGameApi = () => {
         showRules,
         hideRules,
         //     setSelectedPacketName,
+        startMedia,
+        stopMedia,
 
         //     // Local State Actions
         //     setCurrentQuestionLocal,

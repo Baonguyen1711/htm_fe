@@ -7,7 +7,7 @@ import useGameApi from '../../shared/hooks/api/useGameApi';
 import { useFirebaseListener } from '../../shared/hooks';
 import { generateRandomGrid, getDifficultyRanges } from '../../shared/utils/round4.utils';
 import { useAppSelector, useAppDispatch } from '../../app/store';
-import { setSelectedDifficulty, setDifficultyRanges } from '../../app/store/slices/gameSlice';
+import { setSelectedDifficulty, setDifficultyRanges, setIsRound4GridConfirmed } from '../../app/store/slices/gameSlice';
 import { useConfirmModal } from '../../shared/hooks/ui/useConfirmModal';
 import { toast } from 'react-toastify';
 import Modal from '../ui/Modal/Modal';
@@ -64,7 +64,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
 
     const dispatch = useAppDispatch()
     //global state
-    const { round4LevelNumber, currentQuestion, currentCorrectAnswer } = useAppSelector((state) => state.game);
+    const { round4LevelNumber, currentQuestion, currentCorrectAnswer, isRound4GridConfirmed } = useAppSelector((state) => state.game);
 
     // Confirmation modal hook
     const { modalState, showConfirmModal, closeModal } = useConfirmModal();
@@ -133,6 +133,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         showConfirmModal({
             text: 'Bạn có chắc chắn muốn xác nhận bảng cho vòng 4? Bảng sẽ được gửi đến tất cả người chơi và không thể thay đổi.',
             onConfirm: async () => {
+                dispatch(setIsRound4GridConfirmed(true));
                 await sendGrid(grid, roomId);
                 toast.success('Đã xác nhận bảng cho vòng 4!');
             },

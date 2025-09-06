@@ -39,6 +39,8 @@ export const API_ENDPOINTS = {
     RULES_HIDE: '/game/rules/hide',
     HISTORY: '/history/update',
     PLAYER_COLOR: '/game/player/color',
+    MEDIA_PLAY: '/game/media/start',
+    MEDIA_STOP: '/game/media/stop',
   },
   
   // Room

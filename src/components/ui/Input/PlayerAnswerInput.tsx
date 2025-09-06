@@ -14,7 +14,7 @@ const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, playerAns
     const inputRef = useRef<HTMLInputElement>(null);
     const { timeElapsed, setPlayerAnswerTime } = useTimeStart()
     const dispatch = useAppDispatch()
-    const currentPlayer = useAppSelector((state) => state.game.currentPlayer) 
+    const currentPlayer = useAppSelector((state) => state.game.currentPlayer)
     const playerAnswer = useAppSelector((state) => state.game.currentPlayer?.answer)
     const { isInputDisabled } = useAppSelector((state) => state.game)
     const { currentQuestion } = useAppSelector((state) => state.game)
@@ -50,6 +50,12 @@ const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, playerAns
         }))
 
     }, [currentQuestion]);
+
+    useEffect(() => {
+        if (!isInputDisabled && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [isInputDisabled]);
 
     if (isHost) return null;
 

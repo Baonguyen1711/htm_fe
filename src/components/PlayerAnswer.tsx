@@ -235,9 +235,9 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
                                     )}
                                 </div>
                                 <div className="flex flex-col flex-1">
-                                    <div className="flex items-center gap-2 border-b border-slate-700/50 pb-1">
+                                    <div className="flex items-center gap-2 border-b border-slate-700/50 text-lg pb-1">
                                         <p className="text-white font-bold">
-                                            {`player_${player.stt}: ${player.userName}`}
+                                            {`Thí sinh ${player.stt}: ${player.userName}`}
                                         </p>
                                         {/* Color indicator for Round 4 */}
                                         {round === "4" && playerColors[player.stt || 0] && (
@@ -248,10 +248,10 @@ const PlayerAnswer: React.FC<PlayerAnswerProps> = ({ isSpectator }) => {
                                             ></div>
                                         )}
                                     </div>
-                                    <p className="text-white border-b border-slate-700/50 pb-1 mt-1">
+                                    <p className="text-white border-b border-slate-700/50 text-lg pb-1 mt-1">
                                         {player?.answer || ""}
                                     </p>
-                                    <p className="text-gray-400 text-sm mt-1">
+                                    <p className="text-gray-400 text-lg mt-1">
                                         {player?.time ? `${player.time}s` : ""}
                                     </p>
                                 </div>
