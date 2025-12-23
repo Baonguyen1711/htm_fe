@@ -52,7 +52,7 @@ export const roomApi = {
    * Create a new room
    */
   async createRoom(roomData: CreateRoomRequest): Promise<Room> {
-    const response = await api.post<Room>(`${API_ENDPOINTS.ROOM.CREATE}?expired_time=${roomData.expired_time}&max_players=${roomData.max_players}`,
+    const response = await api.post<Room>(`${API_ENDPOINTS.ROOM.CREATE}?expired_time=${roomData.expired_time}&max_players=${roomData.max_players}&room_mode=${roomData.roomMode}`,
       
     );
     return response.data;
@@ -77,9 +77,12 @@ export const roomApi = {
   async getRoomInfo(roomId: string, password?: string): Promise<{
     room_id: string;
     max_players: number;
+    room_mode: string;
     current_players_count: number;
     occupied_positions: number[];
     available_positions: number[];
+    status: string,
+    test_name: string,
     current_players: Array<{
       uid: string;
       userName: string;
@@ -129,8 +132,10 @@ export const roomApi = {
   /**
    * Update room settings (host only)
    */
-  async updateRoom(roomId: string, updates: Partial<Room>): Promise<Room> {
-    const response = await api.patch<Room>(`${API_ENDPOINTS.ROOM.BASE}/${roomId}`, updates);
+  async updateRoom(roomId: string, testName: string): Promise<Room> {
+    const response = await api.post(
+      `${API_ENDPOINTS.ROOM.UPDATE}?room_id=${roomId}&test_name=${testName}`,
+    );
     return response.data;
   },
 

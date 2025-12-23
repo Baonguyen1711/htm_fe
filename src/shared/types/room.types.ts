@@ -50,7 +50,8 @@ export interface RoomState {
 
 export interface CreateRoomRequest {
   expired_time: number;
-  max_players: number;
+  max_players?: number;
+  roomMode: "room" | "multiplayer" | "practice";
   password?: string;
 }
 

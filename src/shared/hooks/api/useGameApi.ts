@@ -19,7 +19,8 @@ import {
     SendGridRequest,
     Question,
     Score,
-    ScoreRule
+    ScoreRule,
+    MultiplayerGameState
 } from '../../types';
 
 import {useSearchParams} from 'react-router-dom';
@@ -126,6 +127,33 @@ export const useGameApi = () => {
     //       throw error;
     //     }
     //   }, [dispatch, currentRound]);
+
+    const getSpecificQuestion = async (params: GetQuestionsRequest) => {
+        try {
+            const questions = await gameApi.getQuestions(params);
+            return questions;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    const getNextQuestion = async (params: GetQuestionsRequest) => {
+        try {
+            const questions = await gameApi.getNextQuestions(params);
+            return questions;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    const updateGameState = async (roomId: string, state: Partial<MultiplayerGameState>) => {
+        try {
+            const questions = await gameApi.updateGameState(roomId, state);
+            return questions;
+        } catch (error) {
+            throw error;
+        }
+    }
 
     /**
      * Get questions by round
@@ -484,8 +512,86 @@ export const useGameApi = () => {
         }
     }, []);
 
+    const multiplayerStart = useCallback(async (roomId: string, testName: string, playMode: string, currentQuestionNumber?: number) => {
+        try {
+            await gameApi.multiplayerStart(roomId, testName, playMode, currentQuestionNumber);
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
+    const multiplayerPause = useCallback(async (roomId: string) => {
+        try {
+            await gameApi.multiplayerPause(roomId);
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
+    const multiplayerResume = useCallback(async (roomId: string, testName: string) => {
+        try {
+            await gameApi.multiplayerResume(roomId, testName);
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
+
+    const multiplayerEnd = useCallback(async (roomId: string) => {
+        try {
+            await gameApi.multiplayerEnd(roomId);
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
+    const multiplayerSubmit = useCallback(async (roomId: string, answer: string, stt: string, time: number, playerName: string, avatar: string, testName: string, groupId?: string) => {
+        try {
+            await gameApi.multiplayerSubmit({ roomId: roomId, answer: answer, stt: stt, time: time, player_name: playerName, avatar: avatar, testName: testName, groupId: groupId });
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
+    const multiplayerGroupInvite = useCallback(async (roomId: string, targetPlayerUid: string, playerName: string, groupId?: string) => {
+        try {
+            await gameApi.multiplayerInvite({ roomId, targetPlayerUid, playerName, groupId });
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
+    const multiplayerAcceptInvite = useCallback(async (roomId: string, groupId: string, inviterUid?: string) => {
+        try {
+            await gameApi.multiplayerAcceptInvite({ roomId, groupId, inviterUid });
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
+    const getAllStatistic = async () => {
+        try {
+            const questions = await gameApi.getAllStatistic();
+            return questions;
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    const getStatisticByTest = async (testId: string) => {
+        try {
+            const questions = await gameApi.getStatisticByTest(testId);
+            return questions;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+
     return {
         getQuestionByRound,
+        getSpecificQuestion,
+        getNextQuestion,
         //     // State
         //     loading,
         //     currentQuestion,
@@ -530,11 +636,22 @@ export const useGameApi = () => {
         startMedia,
         stopMedia,
 
+        updateGameState,
         //     // Local State Actions
         //     setCurrentQuestionLocal,
         //     setQuestionsLocal,
         //     setScoresLocal,
         //     clearGameError,
+        multiplayerStart,
+        multiplayerPause,
+        multiplayerResume,
+        multiplayerEnd,
+        multiplayerSubmit,
+        multiplayerGroupInvite,
+        multiplayerAcceptInvite,
+
+        getAllStatistic,
+        getStatisticByTest
     };
 };
 

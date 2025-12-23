@@ -1,6 +1,6 @@
 import { ref, onValue, Unsubscribe, onDisconnect, get, remove, serverTimestamp, DatabaseReference, update, off } from "firebase/database";
 import { database } from "./config";
-import { User } from "../../types";
+import { MultiplayerGameState, User } from "../../types";
 import { PlayerData, Score } from "../../types";
 
 
@@ -89,6 +89,19 @@ const firebaseServices = {
     return firebaseServices.listen(roomId, "openBuzzed", callback);
   },
 
+  listenToCountDownStarted: (roomId: string, callback: (data: string) => void) => {
+    return firebaseServices.listen(roomId, "multiplayer/countdown", callback, true);
+  },
+
+  listenToMultiplayerGameState: (roomId: string, callback: (data: MultiplayerGameState) => void) => {
+    return firebaseServices.listen(roomId, "state", callback);
+  },
+
+  listenToGroupInvite: (roomId: string, callback: (data: string) => void) => {
+    const currentPlayerUid = JSON.parse(localStorage.getItem("currentPlayer") || "{}").uid;
+    return firebaseServices.listen(roomId, `group_invites/${currentPlayerUid}`, callback, true);
+  },
+
   listenToTimeStart: (roomId: string, callback?: () => void): Unsubscribe => {
     const refPath = ref(database, `rooms/${roomId}/times`);
     let isFirstCall = true;
@@ -175,6 +188,22 @@ const firebaseServices = {
   listenToReturnToTopicSelection: (roomId: string, callback: (shouldReturn: boolean) => void) => {
     return firebaseServices.listen(roomId, "returnToTopicSelection", callback, true);
   },
+
+  listenToMultiplayerGameStart: (roomId: string, callback: (data: any) => void) => {
+    return firebaseServices.listen(roomId, "multiplayer/schedule", callback);
+  },
+
+  listenToMultiplayerGamePause: (roomId: string, callback: (data: any) => void) => {
+    return firebaseServices.listen(roomId, "multiplayer/pause", callback);
+  },
+  
+  listenToMultiplayerGameEnd: (roomId: string, callback: (data: any) => void) => {
+    return firebaseServices.listen(roomId, "multiplayer/end", callback);
+  },
+  
+  listenToPlayerAnswerList: (roomId: string, callback: (data: any) => void) => {
+    return firebaseServices.listen(roomId, "player_answer", callback);
+  },  
 
   findPlayerKey: async (playersRef: DatabaseReference, userId: string, roomId: string) => {
     try {

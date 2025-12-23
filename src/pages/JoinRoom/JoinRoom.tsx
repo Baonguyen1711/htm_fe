@@ -10,7 +10,7 @@ const JoinRoom = () => {
   const navigate = useNavigate();
   const [roomId, setRoomId] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const { signInWithoutPassword, authenticateUserManually } = useAuth();
+  const { signInWithoutPassword, authenticateUserManually, isAuthenticated } = useAuth();
   const { validateRoom } = useRoomApi();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -56,7 +56,9 @@ const JoinRoom = () => {
       }
 
       // Sign in anonymously and wait for auth token to be set
-      await signInWithoutPassword();
+      if(!isAuthenticated) {
+        await signInWithoutPassword();
+      }
 
       await new Promise<void>((resolve) => {
         timeoutId = setTimeout(() => {
@@ -184,7 +186,7 @@ const JoinRoom = () => {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
+            {/* <div className="mt-6 text-center">
               <p className="text-blue-200/70 text-sm">
                 Bạn muốn tổ chức trận đấu?{' '}
                 <Link
@@ -195,6 +197,33 @@ const JoinRoom = () => {
                 </Link>
               </p>
             </div>
+
+            <div className="mt-6 text-center">
+              <p className="text-blue-200/70 text-sm">
+                Bạn muốn lưu lại kết quả thi đấu?{' '}
+                <Link
+                  to="/register"
+                  className="text-cyan-300 hover:text-cyan-200 font-medium transition-colors"
+                >
+                  Đăng ký tài khoản tại đây
+                </Link>
+              </p>
+            </div> */}
+
+            <div className="mt-6 text-center text-sm text-blue-200/70">
+              <p>
+                Muốn lưu lại kết quả thi đấu hoặc tổ chức trận đấu?{""}
+                <br />
+                <Link to="/register" className="text-cyan-300 hover:text-cyan-200 font-medium">
+                  Đăng ký tài khoản
+                </Link>
+                {" "}hoặc{" "}
+                <Link to="/login" className="text-cyan-300 hover:text-cyan-200 font-medium">
+                  đăng nhập
+                </Link>
+              </p>
+            </div>
+
           </div>
 
           {/* Back to Home */}

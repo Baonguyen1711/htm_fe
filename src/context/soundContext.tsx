@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useRef } from 'react';
 
 const soundFiles = [
+    { key: 'lobby_game', src: '/sounds/lobby-classic-game.mp3' },
+
     { key: 'correct', src: '/sounds/VeDichCauDung.mp3' },
     { key: '1', src: '/sounds/NhoNeo_MoDau.mp3' },
     { key: '2', src: '/sounds/VuotSong_MoDau.mp3' },

@@ -16,6 +16,7 @@ const Header: React.FC<RoundTab> = ({ isHost, spectatorCount }) => {
     const roomId = searchParams.get("roomId") || "";
     const testName = searchParams.get("testName") || "";
     const currentRound = searchParams.get("round") || "1";
+    const roomMode = searchParams.get("roomMode") || "room"
 
     const { deletePath } = useFirebaseListener();
     const dispatch = useAppDispatch();
@@ -51,7 +52,7 @@ const Header: React.FC<RoundTab> = ({ isHost, spectatorCount }) => {
                 </a>
 
                 {/* Round Tabs - center, but tabs fit content and don't wrap */}
-                {isHost && (
+                {isHost && roomMode !== "multiplayer" && (
                     <div className="flex flex-1 justify-center">
                         <div className="inline-flex bg-slate-800/80 rounded-xl shadow-lg px-2 py-1 gap-1 whitespace-nowrap">
                             {roundTabs.map(tab => (

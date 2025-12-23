@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
   GAME: {
     QUESTION_BY_ROUND: '/game/question/round',
     QUESTION: '/game/question',
+    NEXT_QUESTION: '/game/question/next',
     CORRECT_ANSWER: '/game/answer',
     PREFETCH: '/game/question/prefetch',
     PACKETS: '/game/question/round/packet',
@@ -41,6 +42,14 @@ export const API_ENDPOINTS = {
     PLAYER_COLOR: '/game/player/color',
     MEDIA_PLAY: '/game/media/start',
     MEDIA_STOP: '/game/media/stop',
+
+    MULTIPLAYER_START: '/game/multiplayer/start',
+    MULTIPLAYER_PAUSE: '/game/multiplayer/pause',
+    MULTIPLAYER_RESUME: '/game/multiplayer/resume',
+    MULTIPLAYER_END: '/game/multiplayer/end',
+    MULTIPLAYER_SUBMIT: '/game/multiplayer/submit',
+    MULTIPLAYER_INVITE: '/game/multiplayer/invite',
+    MULTIPLAYER_ACCEPT_INVITE: '/game/multiplayer/invite/accept',
   },
   
   // Room
@@ -52,6 +61,7 @@ export const API_ENDPOINTS = {
     INFO: '/room/info',
     LEAVE: '/room/leave',
     SPECTATOR: '/room/spectator/join',
+    UPDATE: '/room/update'
   },
 
   // Room
@@ -59,13 +69,25 @@ export const API_ENDPOINTS = {
     BASE: '/history',
     RETRIEVE: '/history/retrive',
   },
+
+  STATE: {
+    UPDATE: '/game/state/update'
+  },
+
+  STATISTICS: {
+    ADD: '/statistics/add',
+    GET_ALL: '/statistics/',
+    GET_BY_TEST: '/statistics/test'
+  },
   
   // Test Management
   TEST: {
     BASE: '/test',
     UPLOAD: '/test/upload',
+    MULTIPLAYER_UPLOAD: '/test/multiplayer/upload',
     USER: '/test/user',
     UPDATE: '/test/question/update',
+    RANDOM: '/test/question/random',
   },
   
   // File Upload

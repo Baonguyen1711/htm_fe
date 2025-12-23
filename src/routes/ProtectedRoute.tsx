@@ -8,6 +8,8 @@ interface VerifyResponse {
 
     roomId: string;
     role: 'host' | 'player' | 'spectator';
+    testName: string;
+    roomMode: string;
     userId: string;
     exp: number;
 
@@ -47,6 +49,8 @@ const ProtectedRoute = ({
     const location = useLocation();
     const navigate = useNavigate();
     const roomId = params.get("roomId") || ""
+    const testName = params.get("testName") || ""
+    const roomMode = params.get("roomMode") || ""
     useEffect(() => {
         const verify = async () => {
             if (requireAccessToken) {
@@ -83,16 +87,31 @@ const ProtectedRoute = ({
                     
 
                     if (!requiredRole || payload.role !== requiredRole ) {
-                        setModalMessage("You don't have the right role to access this route.");
+                        setModalMessage("Đây là trang dành cho người điều khiển. Bạn không có quyền truy cập vào trang này");
                         setShowModal(true);
                         return;
                     }
 
                     if (payload.roomId !== roomId) {
-                        setModalMessage("You don't have the host right to this room Id.");
+                        setModalMessage("Bạn không có quyền host với mã phòng này");
                         setShowModal(true);
                         return;
                     }
+
+                    if (payload.testName !== testName) {
+                        setModalMessage("Bạn không có quyền truy cập bộ đề này");
+                        setShowModal(true);
+                        return;
+                    }
+
+                    if (roomMode && payload.roomMode !== roomMode) {
+                        console.log("payload room mode", payload.roomMode);
+                        console.log("room mode", roomMode);
+                        setModalMessage("Bạn không có quyền truy cập vào phòng này");
+                        setShowModal(true);
+                        return;
+                    }
+
 
                     const currentTime = Date.now() / 1000;
                     if (payload.exp < currentTime) {

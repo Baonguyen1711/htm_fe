@@ -147,6 +147,14 @@ function Home() {
                 Tham gia phòng thi với tư cách khán giả
               </Button>
               <Button
+                onClick={() => window.location.href = "/practice/create"}
+                variant="primary"
+                size="lg"
+                className="font-medium shadow-lg"
+              >
+                Luyện tập
+              </Button>
+              <Button
                 variant="outline"
                 size="lg"
                 className="font-medium backdrop-blur-sm"

@@ -15,10 +15,15 @@ export interface PlayerData extends User {
   answer?: string;
   score?: number;
   isModified?: boolean;
+  groupId?: string;
   flashColor?: string | null;
   roundScores?: (number | null)[];
   time?: number;
   isCorrect?: boolean;
+  answers?: {
+    answer: string;
+    isCorrect: boolean;
+  }[]
 }
 
 export interface AuthUser {

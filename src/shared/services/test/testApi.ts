@@ -115,6 +115,21 @@ export const testApi = {
     }
   },
 
+  async uploadMultiplayerTestToServer(test_name: string, file: File, isPublic: boolean) {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const response = await api.post(
+        `${API_ENDPOINTS.TEST.MULTIPLAYER_UPLOAD}?test_name=${test_name}&is_public=${isPublic}`,
+        formData
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+
   /**
    * Update question
    */
@@ -125,6 +140,17 @@ export const testApi = {
     );
     return response.data;
   },
+
+  /**
+   * Get random questions
+  */
+
+  async getRandomQuestions(limit: number, category?: string) {
+    const response = await api.get(
+      `${API_ENDPOINTS.TEST.RANDOM}?limit=${limit}${category ? `&catergory=${category}` : ''}`
+    );
+    return response.data;
+  }
  
 };
 

@@ -2,14 +2,131 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================
+   Google Fonts
+========================= */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* =========================
+   CSS Variables / Theme
+========================= */
+:root {
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+
+  --card: 217 33% 17%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 217 33% 17%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 199 89% 48%;
+  --primary-foreground: 222 47% 11%;
+
+  --secondary: 217 33% 25%;
+  --secondary-foreground: 199 95% 85%;
+
+  --muted: 217 33% 20%;
+  --muted-foreground: 199 30% 70%;
+
+  --accent: 187 85% 43%;
+  --accent-foreground: 222 47% 11%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 199 50% 30%;
+  --input: 217 33% 25%;
+  --ring: 199 89% 48%;
+
+  --radius: 0.75rem;
+
+  /* Sidebar */
+  --sidebar-background: 222 47% 8%;
+  --sidebar-foreground: 199 95% 85%;
+  --sidebar-primary: 199 89% 48%;
+  --sidebar-primary-foreground: 222 47% 11%;
+  --sidebar-accent: 217 33% 17%;
+  --sidebar-accent-foreground: 199 95% 85%;
+  --sidebar-border: 199 50% 20%;
+  --sidebar-ring: 199 89% 48%;
+
+  /* Ocean theme */
+  --ocean-deep: 222 47% 11%;
+  --ocean-mid: 213 50% 25%;
+  --ocean-light: 199 89% 48%;
+  --ocean-glow: 187 85% 60%;
+  --star-bright: 45 100% 85%;
+
+  /* Gradients */
+  --gradient-ocean: linear-gradient(
+    180deg,
+    hsl(222 47% 11%) 0%,
+    hsl(213 50% 25%) 50%,
+    hsl(199 70% 35%) 100%
+  );
+
+  --gradient-header: linear-gradient(
+    90deg,
+    hsl(199 95% 85%) 0%,
+    hsl(187 85% 70%) 100%
+  );
+
+  /* Shadows */
+  --shadow-glow: 0 0 30px hsl(199 89% 48% / 0.3);
+  --shadow-card: 0 10px 40px hsl(222 47% 5% / 0.5);
+}
+
+.dark {
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --card: 217 33% 17%;
+  --card-foreground: 210 40% 98%;
+  --popover: 217 33% 17%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 199 89% 48%;
+  --primary-foreground: 222 47% 11%;
+  --secondary: 217 33% 25%;
+  --secondary-foreground: 199 95% 85%;
+  --muted: 217 33% 20%;
+  --muted-foreground: 199 30% 70%;
+  --accent: 187 85% 43%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 199 50% 30%;
+  --input: 217 33% 25%;
+  --ring: 199 89% 48%;
+  --sidebar-background: 222 47% 8%;
+  --sidebar-foreground: 199 95% 85%;
+  --sidebar-primary: 199 89% 48%;
+  --sidebar-primary-foreground: 222 47% 11%;
+  --sidebar-accent: 217 33% 17%;
+  --sidebar-accent-foreground: 199 95% 85%;
+  --sidebar-border: 199 50% 20%;
+  --sidebar-ring: 199 89% 48%;
+}
+
+/* =========================
+   Global Base Styles
+========================= */
+* {
+  border-color: hsl(var(--border));
+}
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
 }
 
 code {
@@ -17,52 +134,108 @@ code {
     monospace;
 }
 
-/* Animation cho chữ chào mừng (ẩn khi ảnh bắt đầu) */
+/* =========================
+   Ocean UI Components
+========================= */
+.ocean-background {
+  position: relative;
+  overflow: hidden;
+  background: var(--gradient-ocean);
+}
+
+.stars-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 25% 25%, hsl(var(--star-bright) / 0.4) 1px, transparent 1px),
+    radial-gradient(circle at 75% 75%, hsl(var(--star-bright) / 0.3) 1px, transparent 1px),
+    radial-gradient(circle at 50% 10%, hsl(var(--star-bright) / 0.5) 2px, transparent 2px);
+  background-size: 100px 100px, 150px 150px, 200px 200px;
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+.wave-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8rem;
+  background: linear-gradient(
+    to top,
+    hsl(var(--ocean-light) / 0.3),
+    transparent
+  );
+}
+
+.glass-card {
+  background-color: hsl(var(--card) / 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border) / 0.5);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-card);
+}
+
+.text-gradient {
+  background-image: var(--gradient-header);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* =========================
+   Animations
+========================= */
+@keyframes twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
 @keyframes welcomeFade {
-  0% {
-    opacity: 1;
-  }
-  10% {
-    opacity: 1;
-  }
-  20% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 0;
-  }
+  0%, 10% { opacity: 1; }
+  20%, 100% { opacity: 0; }
 }
 
-/* Animation cho ảnh */
 @keyframes imageSlide {
-  0% {
-    transform: translateX(-100%);
-    visibility: visible;
-    z-index: 1;
-  }
-  33.33% {
-    transform: translateX(0);
-    visibility: visible;
-    z-index: 1;
-  }
-  66.66% {
-    transform: translateX(0);
-    visibility: visible;
-    z-index: 1;
-  }
-  99.99% {
-    transform: translateX(100%);
-    visibility: visible;
-    z-index: 1;
-  }
-  100% {
-    transform: translateX(100%);
-    visibility: hidden;
-    z-index: 0;
-  }
+  0% { transform: translateX(-100%); visibility: visible; z-index: 1; }
+  33.33%, 66.66% { transform: translateX(0); visibility: visible; z-index: 1; }
+  99.99% { transform: translateX(100%); visibility: visible; z-index: 1; }
+  100% { transform: translateX(100%); visibility: hidden; z-index: 0; }
 }
 
-/* Áp dụng animation */
+@keyframes flashGreen {
+  0% { background-color: rgba(34, 197, 94, 0.6); }
+  50% { background-color: rgba(34, 197, 94, 0.4); }
+  100% { background-color: rgba(51, 65, 85, 0.6); }
+}
+
+@keyframes flashRed {
+  0% { background-color: rgba(239, 68, 68, 0.6); }
+  50% { background-color: rgba(239, 68, 68, 0.4); }
+  100% { background-color: rgba(51, 65, 85, 0.6); }
+}
+
+@keyframes shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* =========================
+   Animation Utilities
+========================= */
+.animate-twinkle {
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
 .animate-welcomeFade {
   animation: welcomeFade 6s infinite ease-in-out;
 }
@@ -81,27 +254,6 @@ code {
   background-color: rgba(239, 68, 68, 0.2) !important;
 }
 
-@keyframes flashGreen {
-  0% { background-color: rgba(34, 197, 94, 0.6) !important; }
-  50% { background-color: rgba(34, 197, 94, 0.4) !important; }
-  100% { background-color: rgba(51, 65, 85, 0.6) !important; }
-}
-
-@keyframes flashRed {
-  0% { background-color: rgba(239, 68, 68, 0.6) !important; }
-  50% { background-color: rgba(239, 68, 68, 0.4) !important; }
-  100% { background-color: rgba(51, 65, 85, 0.6) !important; }
-}
-
-
-@keyframes shrink {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
-}
 .player-item {
   position: relative;
 }

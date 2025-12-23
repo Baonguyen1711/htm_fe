@@ -1,6 +1,6 @@
 import './App.css';
 import React, { Suspense } from 'react';
-import { Routes, Route, useSearchParams } from "react-router-dom";
+import { Routes, Route, useSearchParams, useLocation } from "react-router-dom";
 import CreateRoom from './pages/Host/Room/CreateRoom';
 
 import ReduxProvider from './app/store/providers/ReduxProvider';
@@ -12,6 +12,9 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import { ToastContainer } from 'react-toastify';
 import ErrorBoundary from './components/ui/Error/ErrorBoundary';
 import 'react-toastify/dist/ReactToastify.css';
+import { AnimatePresence, circIn, motion } from "framer-motion";
+import "./index.css";
+
 
 const Home = React.lazy(() => import('./pages/Home/Home'));
 
@@ -20,6 +23,7 @@ const UserRound2 = React.lazy(() => import('./pages/User/Round2/UserRound2'));
 const UserRound3 = React.lazy(() => import('./pages/User/Round3/UserRound3'));
 const UserRound4 = React.lazy(() => import('./pages/User/Round4/UserRound4'));
 const UserRoundTurn = React.lazy(() => import('./pages/User/Round1/UserRound1'));
+const UserMultipleChoice = React.lazy(() => import('./pages/User/MultipleChoice/MultipleChoice'));
 
 
 const HostRound1 = React.lazy(() => import('./pages/Host/Management/HostRound1'));
@@ -27,8 +31,14 @@ const HostRound2 = React.lazy(() => import('./pages/Host/Management/HostRound2')
 const HostRound3 = React.lazy(() => import('./pages/Host/Management/HostRound3'));
 const HostRound4 = React.lazy(() => import('./pages/Host/Management/HostRound4'));
 const HostRoundTurn = React.lazy(() => import('./pages/Host/Management/HostRound1'));
+const HostMultipleChoice = React.lazy(() => import('./pages/Host/Management/NewHostMultipleChoice'));
+const FinalRanking = React.lazy(() => import('./components/NewFinalRanking'))
+const HostRanking = React.lazy(() => import('./components/HostRanking'));
+const HostLobby = React.lazy(() => import('./pages/Host/Management/HostLobby'));
+const Lobby = React.lazy(() => import('./pages/Lobby/NewLobby'))
 
 const Login = React.lazy(() => import('./pages/Login/Login'))
+const Register = React.lazy(() => import('./pages/Register/Register'))
 const JoinRoom = React.lazy(() => import('./pages/JoinRoom/JoinRoom'))
 const SpectatorJoin = React.lazy(() => import('./pages/Spectator/SpectatorJoin'))
 
@@ -37,11 +47,16 @@ const InfoForm = React.lazy(() => import('./pages/User/InformationForm/Informati
 const HostFinalScore = React.lazy(() => import('./pages/FinalScore/HostFinalScore'));
 const PlayerFinalScore = React.lazy(() => import('./pages/FinalScore/PlayerFinalScore'));
 const Dashboard = React.lazy(() => import('./pages/Host/Dashboard/Dashboard'))
+const UserDashboard = React.lazy(() => import('./pages/User/Dashboard/UserDashboard'))
 
+const CreatePracticeRoom = React.lazy(() => import('./pages/Practice/CreatePracticeRoom'))
+const PrivatePractice = React.lazy(() => import('./pages/Practice/PrivatePractice'))
 function PlayComponent() {
   const [searchParams] = useSearchParams();
 
-  const round = searchParams.get("round") || "1";
+  const round = searchParams.get("round");
+  const roomMode = searchParams.get("roomMode") || "room";
+  const location = useLocation();
 
   // MIGRATED: Using Redux-based components with new hooks
   if (round === "1") return <UserRound1 />;
@@ -49,22 +64,25 @@ function PlayComponent() {
   if (round === "3") return <UserRound3 />;
   if (round === "4") return <UserRound4 />;
   if (round === "turn") return <UserRoundTurn />;
-  if (round === "final") return <PlayerFinalScore />;
+  if (round === "final") return <FinalRanking isHost={false} />;
+  if (roomMode === "multiplayer" || roomMode === "practice") return <HostMultipleChoice isHost={false} />;
+
 
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
 }
 
 function HostComponent() {
   const [searchParams] = useSearchParams();
-  const round = searchParams.get("round") || "1";
-
-  // MIGRATED: Using Redux-based host components with new architecture
+  const round = searchParams.get("round");
+  const roomMode = searchParams.get("roomMode") || "room";
+  console.log("room mode", roomMode);
   if (round === "1") return <HostRound1 />;
   if (round === "2") return <HostRound2 />;
   if (round === "3") return <HostRound3 />;
   if (round === "4") return <HostRound4 />;
   if (round === "turn") return <HostRoundTurn />;
-  if (round === "final") return <HostFinalScore />;
+  if (round === "final") return <FinalRanking isHost={true} />;
+  if (roomMode === "multiplayer") return <HostMultipleChoice isHost={true}/>;
 
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
 }
@@ -79,14 +97,31 @@ function SpectatorComponent() {
   if (round === "3") return <UserRound3 isSpectator={true} />;
   if (round === "4") return <UserRound4 isSpectator={true} />;
   if (round === "turn") return <UserRoundTurn isSpectator={true} />;
-  if (round === "final") return <PlayerFinalScore />;
+  if (round === "final") return <FinalRanking isHost={false} />;
 
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
 }
 
 function App() {
+  const pageVariants = {
+    initial: { opacity: 0, x: 100 },
+    in: { opacity: 1, x: 0 },
+    out: { opacity: 0, x: -100 },
+  };
+
+  const pageTransition = {
+    type: "tween" as const,
+    ease: "easeInOut" as const,
+    duration: 0.5,
+  };
+
+  const lobbyVariants = {
+    initial: { x: 0, opacity: 1 },   // stays on screen
+    exit: { x: "-100%", opacity: 0 }, // slide out on unmount
+  };
   const [searchParams] = useSearchParams();
   const roomId = searchParams.get("roomId") || ""
+  const location = useLocation();
 
   return (
     <>
@@ -94,84 +129,154 @@ function App() {
       <ReduxProvider>
 
 
-          <ErrorBoundary fallback={<FallBack />}>
+        <ErrorBoundary fallback={<FallBack />}>
           <Suspense fallback={<FallBack />}>
 
+            <AnimatePresence mode="wait">
+              <Routes
+                location={location}
+                key={location.pathname}
+              >
+                {/* Public Routes */}
+                <Route
+                  path="*"
+                  element={
 
-            <Routes>
-              {/* Public Routes */}
-              <Route
-                path="*"
-                element={
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/join" element={<JoinRoom />} />
+                      <Route path="/spectatorJoin" element={<SpectatorJoin />} />
+                      <Route path="/lobby" element={<Lobby isHost={false} />} />
 
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/join" element={<JoinRoom />} />
-                    <Route path="/spectatorJoin" element={<SpectatorJoin />} />
+                      <Route path="/play" element={
+                        <TimeStartProvider roomId={roomId}>
+                          <SoundProvider>
+                            <ErrorBoundary onRetry={() => window.location.reload()}>
+                              <PlayComponent />
+                            </ErrorBoundary>
+                          </SoundProvider>
+                        </TimeStartProvider>
+                      } />
 
-                    <Route path="/play" element={
-                      <TimeStartProvider roomId={roomId}>
-                        <SoundProvider>
-                          <ErrorBoundary onRetry={() => window.location.reload()}>
-                            <PlayComponent />
-                          </ErrorBoundary>
-                        </SoundProvider>
-                      </TimeStartProvider>
-                    } />
-
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/user/info" element={<InfoForm />} />
-                  </Routes>
-
-
-                }
-              />
-              {/* Host Routes */}
-
-
-              <Route
-                path="/host/*"
-                element={
-                  <TimeStartProvider roomId={roomId}>
-                    <SoundProvider>
-
-                      <Routes>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="dashboard" element={<ProtectedRoute element={<Dashboard />} requireAccessToken={false} requireHost={true} />} />
-                        <Route path="create_room" element={<ProtectedRoute element={<CreateRoom />} requireAccessToken={false} requireHost={true} />} />
-                        <Route path="" element={<ProtectedRoute element={<HostComponent />} requireAccessToken={true} />} />
-                      </Routes>
-
-                    </SoundProvider>
-                  </TimeStartProvider>
-                }
-              />
-
-              <Route
-                path="/spectator/*"
-                element={
-                  <TimeStartProvider roomId={roomId}>
-                    <SoundProvider>
-
-                      <Routes>
-                        <Route path="" element={
-                          <ErrorBoundary onRetry={() => window.location.reload()}>
-                            <SpectatorComponent />
-                          </ErrorBoundary>
-                        } />
-                      </Routes>
-
-                    </SoundProvider>
-                  </TimeStartProvider>
-                }
-              />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/user/info" element={<InfoForm />} />
+                      <Route path="/user/dashboard" element={<UserDashboard />} />
+                    </Routes>
 
 
-            </Routes>
+                  }
+                />
+                {/* Host Routes */}
 
-          <ToastContainer />
+
+                <Route
+                  path="/host/*"
+                  element={
+                    <TimeStartProvider roomId={roomId}>
+                      <SoundProvider>
+
+                        <Routes
+
+                        >
+                          <Route
+                            path="lobby"
+                            element={
+                              // <motion.div
+                              //   variants={lobbyVariants}
+                              //   initial="initial"
+                              //   animate="initial"
+                              //   exit="exit"
+                              //   transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                              //   className="h-full w-full"
+                              // >
+                              // <HostLobby />
+                              <Lobby isHost={true}/>
+                              // </motion.div>
+                            }
+                          />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="dashboard" element={<ProtectedRoute element={<Dashboard />} requireAccessToken={false} requireHost={true} />} />
+                          <Route path="create_room" element={<ProtectedRoute element={<CreateRoom />} requireAccessToken={false} requireHost={true} />} />
+                          <Route
+                            path=""
+                            element={
+                              <ProtectedRoute
+                                element={<HostComponent />}
+                                requireAccessToken={true}
+                              />
+                              // <motion.div
+                              //   variants={pageVariants}
+                              //   initial="initial"
+                              //   animate="in"
+                              //   exit="out"
+                              //   transition={pageTransition}
+                              //   className="h-full w-full"
+                              // >
+
+                              // </motion.div>
+                            }
+                          />
+                        </Routes>
+
+                      </SoundProvider>
+                    </TimeStartProvider>
+                  }
+                />
+
+                <Route
+                  path="/spectator/*"
+                  element={
+                    <TimeStartProvider roomId={roomId}>
+                      <SoundProvider>
+
+                        <Routes>
+                          <Route path="" element={
+                            <ErrorBoundary onRetry={() => window.location.reload()}>
+                              <SpectatorComponent />
+                            </ErrorBoundary>
+                          } />
+                        </Routes>
+
+                      </SoundProvider>
+                    </TimeStartProvider>
+                  }
+                />
+
+                <Route
+                  path="/practice/*"
+                  element={
+                    <TimeStartProvider roomId={roomId}>
+                      <SoundProvider>
+
+                        <Routes>
+                          <Route path="create" element={
+                            <ErrorBoundary onRetry={() => window.location.reload()}>
+                              <CreatePracticeRoom />
+                            </ErrorBoundary>
+                          } />
+
+                          <Route path="private" element={
+                            <ErrorBoundary onRetry={() => window.location.reload()}>
+                              <PrivatePractice />
+                            </ErrorBoundary>
+                          } />
+                        </Routes>
+
+                      </SoundProvider>
+                    </TimeStartProvider>
+                  }
+                />
+
+
+              </Routes>
+
+            </AnimatePresence>
+
+
+            <ToastContainer />
           </Suspense>
-          </ErrorBoundary>
+        </ErrorBoundary>
       </ReduxProvider>
     </>
   );

@@ -23,12 +23,14 @@ const ViewTest: React.FC = () => {
     round_3: { [key: string]: Question[] };
     round_4: { [key: string]: Question[] };
     turn: Question[];
+    multiplayer: Question[];
   }>({
     round_1: [],
     round_2: [],
     round_3: {},
     round_4: {},
     turn: [],
+    multiplayer: [],
   });
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const { getTestContent, getTestsNameByUserId, updateQuestion } = useTestApi();
@@ -68,7 +70,14 @@ const ViewTest: React.FC = () => {
     try {
       const data = await getTestContent(selectedTestName);
       console.log('data', data);
-      localStorage.setItem('testId', data['round_1'][0]['testId']);
+      if (data['round_1']) {
+        setActiveTab('round_1');
+        localStorage.setItem('testId', data['round_1'][0]['testId']);
+      } else {
+        setActiveTab('multiplayer');
+        localStorage.setItem('testId', data[0]['testId']);
+      }
+
       console.log(localStorage.getItem('testId'));
 
       setTestData({
@@ -77,6 +86,9 @@ const ViewTest: React.FC = () => {
         round_3: data.round_3 || {},
         round_4: data.round_4 || {},
         turn: data.turn || [],
+        multiplayer: Array.isArray(data)
+  ? data.filter((q: Question) => q.round === "MULTIPLAYER")
+  : []
       });
       setIsDataExisted(true);
     } catch (error) {
@@ -91,6 +103,7 @@ const ViewTest: React.FC = () => {
         round_3: {},
         round_4: {},
         turn: [],
+        multiplayer: [],
       });
     }
   };
@@ -423,6 +436,64 @@ const ViewTest: React.FC = () => {
     );
   };
 
+  const renderMultiplayerTable = (questions: Question[]) => {
+    console.log('questions', questions);
+    if (questions.length === 0) return null;
+
+    return (
+      <div className="mb-8">
+        <div className="bg-slate-700/50 backdrop-blur-sm border border-blue-400/30 rounded-xl overflow-hidden">
+          <div className="grid grid-cols-9 gap-4 p-4 bg-slate-600/50 font-semibold text-blue-200">
+            <div>#</div>
+            <div>Câu Hỏi</div>
+            <div>A</div>
+            <div>B</div>
+            <div>C</div>
+            <div>D</div>
+            <div>Đáp Án</div>
+            <div>Danh mục </div>
+            <div>Hình Ảnh</div>
+          </div>
+          {questions.map((question, index) => (
+            <div key={question.questionId} className="grid grid-cols-9 gap-4 p-4 border-t border-blue-400/20 hover:bg-slate-600/30 transition-colors">
+              <div className="text-blue-200/80">{index + 1}</div>
+              <div className="text-white">{question.question}</div>
+              <div className="text-white">{question["answerA"] || "-"}</div>
+              <div className="text-white">{question["answerB"] || "-"}</div>
+              <div className="text-white">{question["answerC"] || "-"}</div>
+              <div className="text-white">{question["answerD"] || "-"}</div>
+              <div className="text-cyan-300 font-bold">{question.answer}</div>
+              <div className="text-white">{question.catergory.replace("Câu hỏi về", "") || "-"}</div>
+
+              <div className="flex flex-col space-y-2 items-start">
+                <Button
+                  onClick={() => fileInputRefs.current[question.questionId || ""]?.click()}
+                  variant="primary"
+                  size="sm"
+                  disabled={uploadingQuestions[question.questionId || ""]}
+                >
+                  {uploadingQuestions[question.questionId || ""] ? "Đang tải..." : "Tải Lên"}
+                </Button>
+                <span className="text-blue-200/60 text-xs">
+                  {question.imgUrl ? "✅ Có file" : "❌ Chưa có file"}
+                </span>
+                <input
+                  type="file"
+                  ref={(el) => { fileInputRefs.current[question.questionId || ""] = el; }}
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(question, question.type, e)}
+                  disabled={uploadingQuestions[question.questionId || ""]}
+                />
+              </div>
+              
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'round_1':
@@ -435,6 +506,8 @@ const ViewTest: React.FC = () => {
         return renderGroupedTable(testData.round_4, 'CHINH PHỤC', 'round_4');
       case 'turn':
         return renderTable(testData.turn, 'PHÂN LƯỢT', 'round_5');
+      case 'multiplayer':
+        return renderMultiplayerTable(testData.multiplayer);
       default:
         return null;
     }
@@ -494,32 +567,35 @@ const ViewTest: React.FC = () => {
           Xem Đề Thi
         </Button>
       </div>
-
-      <div className="mb-8">
-        <div className="flex border-b border-blue-400/30">
-          {[
-            { label: 'NHỔ NEO', key: 'round_1' },
-            { label: 'VƯỢT SÓNG', key: 'round_2' },
-            { label: 'BỨC PHÁ', key: 'round_3' },
-            { label: 'CHINH PHỤC', key: 'round_4' },
-            { label: 'PHÂN LƯỢT', key: 'turn' },
-          ].map((tab) => (
-            <Button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              variant={activeTab === tab.key ? 'primary' : 'secondary'}
-              size="md"
-              className={`font-medium text-sm transition-all duration-300 ${
-                activeTab === tab.key
-                  ? 'border-b-2 border-cyan-400'
-                  : 'bg-slate-700/50 hover:bg-slate-600/50'
-              }`}
-            >
-              {tab.label}
-            </Button>
-          ))}
+      {
+        testData.multiplayer.length == 0 &&
+        <div className="mb-8">
+          <div className="flex border-b border-blue-400/30">
+            {[
+              { label: 'NHỔ NEO', key: 'round_1' },
+              { label: 'VƯỢT SÓNG', key: 'round_2' },
+              { label: 'BỨC PHÁ', key: 'round_3' },
+              { label: 'CHINH PHỤC', key: 'round_4' },
+              { label: 'PHÂN LƯỢT', key: 'turn' },
+              { label: 'MULTIPLAYER', key: 'multiplayer' },
+            ].map((tab) => (
+              <Button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                variant={activeTab === tab.key ? 'primary' : 'secondary'}
+                size="md"
+                className={`font-medium text-sm transition-all duration-300 ${activeTab === tab.key
+                    ? 'border-b-2 border-cyan-400'
+                    : 'bg-slate-700/50 hover:bg-slate-600/50'
+                  }`}
+              >
+                {tab.label}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
+      }
+      
 
       <div className="space-y-8">
         {renderTabContent()}

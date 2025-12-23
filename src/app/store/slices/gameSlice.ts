@@ -1,6 +1,6 @@
 // Game Redux slice
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { GameState, Question, Score, PlayerData, Round2Grid, Round4Grid, ScoreRule, RoomPlayer, JoinRoomRequest, Answer, GetQuestionsRequest, ScoringRequest } from '../../../shared/types';
+import { GameState, Question, Score, PlayerData, Round2Grid, Round4Grid, ScoreRule, RoomPlayer, JoinRoomRequest, Answer, GetQuestionsRequest, ScoringRequest, Phase } from '../../../shared/types';
 import apiClient from '../../../shared/services/api/client';
 import { set } from 'firebase/database';
 import gameApi from '../../../shared/services/game/gameApi';
@@ -12,7 +12,7 @@ const initialState: GameState = {
   currentTestName: "",
   isActive: false,
   isHost: false,
-
+  numberOfPlayer: 0,
   // Questions and answers
   currentQuestion: null,
   selectedPacketName: null,
@@ -46,8 +46,13 @@ const initialState: GameState = {
     round4: [10, 20, 30]
   },
   timeLimit: 30,
+  showCountdown: false,
+  showGameStartCountdown: false,
 
   // UI state
+  answersCount: [],
+  isPausedButtonDisabled: true,
+  phase: "idle",
   isRound2GridConfirmed: false,
   isRound4GridConfirmed: false,
   showRules: false,
@@ -69,6 +74,7 @@ const initialState: GameState = {
 
   //input disabled
   isInputDisabled: true,
+  selectedChoice: ""
 };
 
 
@@ -98,6 +104,7 @@ export const getQuestions = createAsyncThunk(
 
       const { currentQuestionNumber, currentRound, selectedPacketName, selectedDifficulty, difficultyRanges, round4LevelNumber } = state.game;
       console.log("getQuestions", { currentQuestionNumber, isJump, round, roomId, testName });
+      console.log("question number", questionNumber)
       let targetQuestionNumber = 0
 
       if (currentRound == "4") {
@@ -136,7 +143,7 @@ export const getQuestions = createAsyncThunk(
         roomId: roomId,
         testName: testName,
         questionNumber: currentRound == "2" ? currentQuestionNumber : targetQuestionNumber,
-        round: currentRound,
+        round: round == "multiplayer" ? "multiplayer" : currentRound,
         packetName: currentRound === "3" ? (selectedPacketName || undefined) : undefined
       }
       console.log("nextQuestion", nextQuestion);
@@ -208,6 +215,9 @@ const gameSlice = createSlice({
   initialState,
   reducers: {
     // Game state management
+    setNumberOfPlayer: (state, action: PayloadAction<number>) => {
+      state.numberOfPlayer = action.payload;
+    },
     setCurrentRound: (state, action: PayloadAction<string>) => {
       state.currentRound = action.payload;
       state.currentQuestionNumber = 0; // Reset question number when round changes
@@ -227,7 +237,7 @@ const gameSlice = createSlice({
 
     setPacketsName: (state, action: PayloadAction<string[]>) => {
       console.log("setPacketsName", action.payload);
-      console.trace("stack trace setPacketsName")
+      console.trace("stack trace setPacketsName");
       state.packetNames = action.payload;
     },
 
@@ -366,7 +376,7 @@ const gameSlice = createSlice({
     },
 
     // Scoring
-    setScoresRanking: (state, action: PayloadAction<Score[]>) => {
+    setScoresRanking: (state, action: PayloadAction<PlayerData[]>) => {
       console.log("setScoresRanking", action.payload);
       state.scoresRanking = action.payload
       console.log("state.scoresRanking after setting", state.scoresRanking);
@@ -437,7 +447,32 @@ const gameSlice = createSlice({
       state.timeLimit = action.payload;
     },
 
+    setShowCountdown: (state, action: PayloadAction<boolean>) => {
+      state.showCountdown = action.payload;
+    },
+
+    setShowGameStartCountdown: (state, action: PayloadAction<boolean>) => {
+      state.showGameStartCountdown = action.payload;
+    },
+
+    setSelectedChoice: (state, action: PayloadAction<string | null>) => {
+      state.selectedChoice = action.payload;
+    },
+
+    setAnswersCount: (state, action: PayloadAction<string[]>) => {
+      state.answersCount = action.payload;
+    },
+    
+
     // UI state
+    setPhase: (state, action: PayloadAction<Phase>) => {
+      state.phase = action.payload;
+    },
+
+    setIsPausedButtonDisabled: (state, action: PayloadAction<boolean>) => {
+      state.isPausedButtonDisabled = action.payload;
+    },
+
     setIsRound2GridConfirmed: (state, action: PayloadAction<boolean>) => {
       state.isRound2GridConfirmed = action.payload;
     },
@@ -561,6 +596,7 @@ const gameSlice = createSlice({
 });
 
 export const {
+  setNumberOfPlayer,
   setCurrentRound,
   setIsActive,
   setIsHost,
@@ -593,6 +629,12 @@ export const {
   setSelectedDifficulty,
   setMode,
   setTimeLimit,
+  setShowCountdown,
+  setShowGameStartCountdown,
+  setPhase,
+  setIsPausedButtonDisabled,
+  setSelectedChoice,
+  setAnswersCount,
   setIsRound2GridConfirmed,
   setIsRound4GridConfirmed,
   setShowRules,

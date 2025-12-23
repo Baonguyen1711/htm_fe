@@ -8,7 +8,8 @@ import {
   signInAnonymously,
   browserLocalPersistence,
   browserSessionPersistence,
-  setPersistence
+  setPersistence,
+  createUserWithEmailAndPassword
 } from "firebase/auth";
 import app from "../../../shared/services/firebase/config";
 import { useAppDispatch } from "../../../app/store";
@@ -37,7 +38,7 @@ const useAuth = () => {
         console.log("token", token)
 
         const isOnJoinRoomPage = window.location.pathname === '/join' ||
-                                 window.location.pathname === '/spectatorJoin';
+          window.location.pathname === '/spectatorJoin';
         if (!isOnJoinRoomPage) {
           authenticateUser(token)
         }
@@ -55,31 +56,51 @@ const useAuth = () => {
 
 
   const login = async (email: string, password: string) => {
-      setLoading(true);
-      setError(null); // Clear any previous errors
-      const auth = getAuth(app);
-  
-      try {
-          // Set persistence to 'local' before signing in
-          await setPersistence(auth, browserLocalPersistence);
-  
-          const userCredential = await signInWithEmailAndPassword(
-              auth,
-              email,
-              password
-          );
-          setUser(userCredential.user);
-          console.log("userCredential", userCredential);
-          return userCredential.user;
-      } catch (err: any) {
-          console.error("Error:", err.message);
-          setError(err.message);
-          return null;
-      } finally {
-          setLoading(false);
-      }
-  };
+    setLoading(true);
+    setError(null); // Clear any previous errors
+    const auth = getAuth(app);
 
+    try {
+      // Set persistence to 'local' before signing in
+      await setPersistence(auth, browserLocalPersistence);
+
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      setUser(userCredential.user);
+      console.log("userCredential", userCredential);
+      return userCredential.user;
+    } catch (err: any) {
+      console.error("Error:", err.message);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+  const register = async (email: string, password: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const auth = getAuth();
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      setUser(userCredential.user);
+      console.log("Registration successful:", userCredential);
+      return userCredential.user;
+    } catch (err: any) {
+      console.error("Error during registration:", err.message);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
   const logout = async () => {
     setLoading(true);
     setError(null); // Clear any previous errors
@@ -139,7 +160,12 @@ const useAuth = () => {
     return null;
   };
 
-  return { user, login, logout, getToken, loading, error, signInWithoutPassword, authenticateUserManually };
+  const isAuthenticated = () => {
+    const auth = getAuth();
+    return !!auth.currentUser;
+  };
+
+  return { user, login, register, logout, getToken, loading, error, signInWithoutPassword, authenticateUserManually, isAuthenticated };
 };
 
 export default useAuth;

@@ -4,12 +4,14 @@ import { useSearchParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../app/store";
 import { setIsInputDisabled } from "../app/store/slices/gameSlice";
 import { gameApi } from "../shared/services";
+import useGameApi from "../shared/hooks/api/useGameApi";
 
 type TimeStartContextType = {
   timeLeft: number;
   timeElapsed: number,
   playerAnswerTime: number,
   setPlayerAnswerTime: React.Dispatch<React.SetStateAction<number>>,
+  handleTimeEnd: () => void
   setTimeLeft: React.Dispatch<React.SetStateAction<number>>,
   startTimer: (duration: number) => void;
   setExternalTimer: (seconds: number) => void;
@@ -24,7 +26,7 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
 }) => {
   // const {setAnimationKey} = useHost();
   const dispatch = useAppDispatch()
-  const {currentPlayer} = useAppSelector(state => state.game)
+  const { currentPlayer, selectedChoice } = useAppSelector(state => state.game)
   const [timeLeft, setTimeLeft] = useState<number>(-1);
   const [timeElapsed, settimeElapsed] = useState<number>(0)
   const [playerAnswerTime, setPlayerAnswerTime] = useState<number>(0)
@@ -32,13 +34,17 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
   const sounds = useSounds();
   const [searchParams] = useSearchParams();
   const round = searchParams.get("round") || "1";
+  const roomMode = searchParams.get("roomMode") || "room";
+  const testName = searchParams.get("testName") || ""
+  const pathname = window.location.pathname
   const roundRef = useRef(round);
-  const {submitAnswer} = gameApi;
+  const { submitAnswer } = gameApi;
+  const { multiplayerSubmit } = useGameApi()
 
 
   const handleTimeEnd = async () => {
     console.log("Time is up!");
-
+    if(pathname.includes("host")) return
     dispatch(setIsInputDisabled(true))
 
     const submittedAnswer = {
@@ -48,7 +54,19 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
       player_name: currentPlayer?.userName || "",
       avatar: currentPlayer?.avatar || ""
     }
+    if (roomMode === "multiplayer") {
+      if (selectedChoice === null) {
+        if(!submittedAnswer.answer) {
+          await multiplayerSubmit(roomId, "", submittedAnswer.stt, submittedAnswer.time, submittedAnswer.player_name, submittedAnswer.avatar, testName)
+        } else {
+          await multiplayerSubmit(roomId, submittedAnswer.answer, submittedAnswer.stt, submittedAnswer.time, submittedAnswer.player_name, submittedAnswer.avatar, testName)
+        }
+      }
 
+      
+
+      return
+    }
     await submitAnswer(submittedAnswer, roomId)
   };
 
@@ -76,7 +94,7 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
       const remainingMs = Math.max(durationInMs - elapsedMs, 0);
       const remainingSec = remainingMs / 1000;
 
-      const timeElapsed = duration - remainingSec; 
+      const timeElapsed = duration - remainingSec;
       console.log("timeElapsed", parseFloat(timeElapsed.toFixed(2)), "s");
       settimeElapsed(parseFloat(timeElapsed.toFixed(2)))
       setTimeLeft((prev) => {
@@ -99,7 +117,7 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
 
 
   return (
-    <TimeStartContext.Provider value={{ timeLeft, timeElapsed, playerAnswerTime, setPlayerAnswerTime, setTimeLeft, startTimer, setExternalTimer }}>
+    <TimeStartContext.Provider value={{ timeLeft, timeElapsed, playerAnswerTime, handleTimeEnd, setPlayerAnswerTime, setTimeLeft, startTimer, setExternalTimer }}>
       {children}
     </TimeStartContext.Provider>
   );

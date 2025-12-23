@@ -47,6 +47,18 @@ export const useRoomApi = () => {
         }
     }, []);
 
+
+    const addTestNameToRoom = useCallback(async (roomId: string, testName: string) => {
+        try {
+
+
+            const response = await roomApi.updateRoom(roomId, testName)
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
     const retrieveHistory = useCallback(async () => {
         try {
             const history = await roomApi.retrieveHistory();
@@ -68,7 +80,7 @@ export const useRoomApi = () => {
         validateRoom,
         createRoom,
         joinAsSpectator,
-
+        addTestNameToRoom,
         // extra
         retrieveHistory,
         playSound,

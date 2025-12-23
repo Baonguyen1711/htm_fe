@@ -19,6 +19,9 @@ const InformationForm = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const roomId = searchParams.get("roomid");
+  const roomMode = searchParams.get("roomMode") || "room";
+  const testName = searchParams.get("testName") || "";
+  const isRoomOwner = searchParams.get("isRoomOwner") === "true";
   const [username, setUsername] = useState("");
   const [playerNumber, setPlayerNumber] = useState("");
   const [avatar, setAvatar] = useState<string | null>(defaultAvatar); // sẽ lưu key trả về
@@ -30,9 +33,12 @@ const InformationForm = () => {
   // Room info state
   const [roomInfo, setRoomInfo] = useState<{
     max_players: number;
+    room_mode: string;
     current_players_count: number;
     occupied_positions: number[];
     available_positions: number[];
+    status: string,
+    test_name: string,
     current_players: Array<{
       uid: string;
       userName: string;
@@ -60,12 +66,14 @@ const InformationForm = () => {
       try {
         setLoadingRoomInfo(true);
         const info = await roomApi.getRoomInfo(roomId, password);
+        console.log("info", info)
         setRoomInfo(info);
 
         // Auto-select first available position if none selected
         if (!playerNumber && info.available_positions.length > 0) {
           setPlayerNumber(info.available_positions[0].toString());
         }
+
       } catch (error: any) {
         console.error('Failed to fetch room info:', error);
         if (error.response?.status === 404) {
@@ -105,7 +113,13 @@ const InformationForm = () => {
 
   const handleSubmit = async () => {
     if (isLoading) return; // Prevent multiple login attempts
-
+    if(roomInfo?.status === "started") {
+      toast.error('Phòng đã bắt đầu, không thể tham gia!', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
+      return;
+    }
     setIsLoading(true); // Set loading state to true
     const toastId = toast.info('Đang tham gia phòng, vui lòng chờ...', {
       position: 'top-right',
@@ -139,8 +153,30 @@ const InformationForm = () => {
 
         // Start auto-refresh timer for the new access token
         tokenRefreshService.startAutoRefresh(tokenResponse.accessToken);
+        if (roomInfo?.room_mode === "multiplayer") {
+          navigate(`/lobby?roomId=${roomId}&roomMode=multiplayer&testName=${roomInfo.test_name}`);
+          toast.dismiss(toastId); // Dismiss the loading toast
+          toast.success('Tham gia phòng thành công!', {
+            position: 'top-right',
+            autoClose: 3000,
+          });
+          return;
+        }
+        if (roomMode === "practice" || roomInfo?.room_mode === "practice") {
+          let baseUrl = `/play?roomId=${roomId}&roomMode=practice&playMode=auto&testName=${testName}`
+          if (isRoomOwner) {
+            baseUrl += `&isRoomOwner=true`
+          }
 
-        navigate(`/play?round=1&roomId=${roomId}`);
+          navigate(baseUrl);
+          toast.dismiss(toastId); // Dismiss the loading toast
+          toast.success('Tham gia phòng thành công!', {
+            position: 'top-right',
+            autoClose: 3000,
+          });
+          return;
+        }
+        navigate(`/play?round=1&roomId=${roomId}&testName=${roomInfo?.test_name}`);
         toast.dismiss(toastId); // Dismiss the loading toast
         toast.success('Tham gia phòng thành công!', {
           position: 'top-right',
@@ -213,56 +249,60 @@ const InformationForm = () => {
                   />
                 </div>
               </div>
-
-              <div className="mb-6">
-                <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="playerPosition">
-                  Số thứ tự
-                </label>
-                {loadingRoomInfo ? (
-                  <div className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-blue-300/50 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-400 mr-2"></div>
-                    Đang tải thông tin phòng...
-                  </div>
-                ) : roomInfo ? (
-                  <div className="relative">
-                    <select
-                      id="playerPosition"
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm appearance-none"
-                      value={playerNumber}
-                      onChange={(e) => setPlayerNumber(e.target.value)}
-                    >
-                      <option value="" disabled className="text-gray-400">
-                        Chọn vị trí
-                      </option>
-                      {roomInfo.available_positions.map((position) => (
-                        <option key={position} value={position.toString()} className="text-white bg-slate-700">
-                          Vị trí {position}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute right-8 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                      <svg className="w-4 h-4 text-blue-300/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full px-4 py-3 bg-red-700/50 border border-red-400/30 rounded-lg text-red-300 text-center">
-                    Không thể tải thông tin phòng
-                  </div>
-                )}
-                {roomInfo && (
-                  <p className="text-blue-300/60 text-xs mt-1">
-                    Phòng có tối đa {roomInfo.max_players} người chơi.
-                    Hiện tại có {roomInfo.current_players_count} người đã tham gia.
-                    {roomInfo.occupied_positions.length > 0 && (
-                      <span className="block mt-1">
-                        Vị trí đã có người: {roomInfo.occupied_positions.join(', ')}
-                      </span>
+              {
+                roomMode !== "multiplayer" && (
+                  <div className="mb-6">
+                    <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="playerPosition">
+                      Số thứ tự
+                    </label>
+                    {loadingRoomInfo ? (
+                      <div className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-blue-300/50 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-400 mr-2"></div>
+                        Đang tải thông tin phòng...
+                      </div>
+                    ) : roomInfo ? (
+                      <div className="relative">
+                        <select
+                          id="playerPosition"
+                          className="w-full px-4 py-3 bg-slate-700/50 border border-blue-400/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm appearance-none"
+                          value={playerNumber}
+                          onChange={(e) => setPlayerNumber(e.target.value)}
+                        >
+                          <option value="" disabled className="text-gray-400">
+                            Chọn vị trí
+                          </option>
+                          {roomInfo.available_positions.map((position) => (
+                            <option key={position} value={position.toString()} className="text-white bg-slate-700">
+                              Vị trí {position}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-8 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <svg className="w-4 h-4 text-blue-300/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full px-4 py-3 bg-red-700/50 border border-red-400/30 rounded-lg text-red-300 text-center">
+                        Không thể tải thông tin phòng
+                      </div>
                     )}
-                  </p>
-                )}
-              </div>
+                    {roomInfo && (
+                      <p className="text-blue-300/60 text-xs mt-1">
+                        Phòng có tối đa {roomInfo.max_players} người chơi.
+                        Hiện tại có {roomInfo.current_players_count} người đã tham gia.
+                        {roomInfo.occupied_positions.length > 0 && (
+                          <span className="block mt-1">
+                            Vị trí đã có người: {roomInfo.occupied_positions.join(', ')}
+                          </span>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )
+              }
+
 
               <div className="mb-6">
                 <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="roomPassword">

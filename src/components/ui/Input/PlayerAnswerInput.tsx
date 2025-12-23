@@ -2,15 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { Question } from "../../../shared/types";
 import { useTimeStart } from "../../../context/timeListenerContext";
 import { useAppDispatch, useAppSelector } from "../../../app/store"
-import { setCurrentPlayer, setPlayerAnswer } from "../../../app/store/slices/gameSlice";
+import { setCurrentPlayer, setIsInputDisabled, setPlayerAnswer } from "../../../app/store/slices/gameSlice";
 
 interface PlayerAnswerInputProps {
     isHost: boolean;
-
+    phase?: string
     playerAnswerRef?: React.RefObject<string>;
 }
 
-const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, playerAnswerRef: externalPlayerAnswerRef }) => {
+const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, phase, playerAnswerRef: externalPlayerAnswerRef }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const { timeElapsed, setPlayerAnswerTime } = useTimeStart()
     const dispatch = useAppDispatch()
@@ -18,6 +18,12 @@ const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, playerAns
     const playerAnswer = useAppSelector((state) => state.game.currentPlayer?.answer)
     const { isInputDisabled } = useAppSelector((state) => state.game)
     const { currentQuestion } = useAppSelector((state) => state.game)
+
+    useEffect(() => {
+        if(phase === "QUESTION") {
+            dispatch(setIsInputDisabled(false))
+        }
+    },[phase])
 
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -31,6 +37,8 @@ const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, playerAns
                 answer: inputElement.value,
                 time: timeElapsed
             }))
+
+            console.log("Submitted answer:", inputElement.value);
 
             inputElement.value = "";
         }
@@ -64,7 +72,7 @@ const PlayerAnswerInput: React.FC<PlayerAnswerInputProps> = ({ isHost, playerAns
             <input
                 type="text"
                 ref={inputRef}
-                className="w-full h-14 border border-gray-300 rounded-lg px-4 text-lg text-center"
+                className="w-full h-14 border border-gray-300 rounded-lg px-4 text-lg text-center text-black placeholder-gray-500"
                 placeholder="Type your answer..."
                 onKeyDown={handleKeyDown}
                 disabled={isInputDisabled}

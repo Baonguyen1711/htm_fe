@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import useTestApi from "../../../shared/hooks/api/useTestApi";
 import { toast } from 'react-toastify';
 import { Button } from '../../../shared/components/ui';
 
 const UploadTest: React.FC = () => {
-  const { uploadTestToServer } = useTestApi();
+  const { uploadTestToServer, uploadMultiplayerTestToServer } = useTestApi();
+  const [type, setType] = useState<"single" | "multi">("single"); // default: phòng thi
+  const [isPublic, setIsPublic] = useState(false); // default: private
+
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -27,7 +30,11 @@ const UploadTest: React.FC = () => {
       console.log(`🚀 Starting test upload: ${testNameInput}`);
       toast.info("Đang tải lên bộ đề...");
 
-      await uploadTestToServer(testNameInput, file);
+      if (type === "single") {
+        await uploadTestToServer(testNameInput, file);
+      } else {
+        await uploadMultiplayerTestToServer(testNameInput, file, isPublic);
+      }
 
       toast.success(`✅ Tải lên bộ đề "${testNameInput}" thành công!`);
       console.log(`✅ Test upload completed successfully: ${testNameInput}`);
@@ -50,9 +57,60 @@ const UploadTest: React.FC = () => {
         <p className="text-blue-200/80">Tải lên file Excel chứa câu hỏi thi</p>
       </div>
 
+      {/* Tabs */}
+      <div className="flex mb-6 space-x-4">
+        <button
+          type="button"
+          onClick={() => setType("single")}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            type === "single"
+              ? "bg-blue-600 text-white"
+              : "bg-slate-600/50 text-blue-200 hover:bg-slate-600"
+          }`}
+        >
+          Phòng thi
+        </button>
+        <button
+          type="button"
+          onClick={() => setType("multi")}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            type === "multi"
+              ? "bg-blue-600 text-white"
+              : "bg-slate-600/50 text-blue-200 hover:bg-slate-600"
+          }`}
+        >
+          Nhiều người chơi
+        </button>
+      </div>
+
+      <div className="flex mb-6 space-x-4">
+        <button
+          type="button"
+          onClick={() => setIsPublic(false)}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            !isPublic
+              ? "bg-blue-600 text-white"
+              : "bg-slate-600/50 text-blue-200 hover:bg-slate-600"
+          }`}
+        >
+          Riêng tư
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsPublic(true)}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            isPublic
+              ? "bg-blue-600 text-white"
+              : "bg-slate-600/50 text-blue-200 hover:bg-slate-600"
+          }`}
+        >
+          Công khai bộ đề cho luyện tập
+        </button>
+      </div>
+
       {/* Upload Form */}
       <div className="bg-slate-700/50 backdrop-blur-sm border border-blue-400/30 rounded-xl p-8">
-        <form method="POST" encType="multipart/form-data" onSubmit={(event) => handleFormSubmit(event)}>
+        <form method="POST" encType="multipart/form-data" onSubmit={handleFormSubmit}>
           <div className="mb-6">
             <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="fileUpload">
               Tải Lên File Excel
@@ -112,7 +170,7 @@ const UploadTest: React.FC = () => {
             fullWidth
             className="font-medium shadow-lg"
           >
-             Tải Lên Đề Thi
+             {type === "single" ? "Tải Lên Đề Thi (Phòng thi)" : "Tải Lên Đề Thi (Nhiều người chơi)"}
           </Button>
         </form>
       </div>
@@ -139,6 +197,6 @@ const UploadTest: React.FC = () => {
       </div>
     </div>
   );
-}
+};
 
 export default UploadTest;

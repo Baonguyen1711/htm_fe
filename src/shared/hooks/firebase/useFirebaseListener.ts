@@ -17,7 +17,8 @@ import {
   setUsedPackesName,
   setShouldReturnToTopicSelection,
   setCurrentRound,
-  addPlayer
+  addPlayer,
+  setNumberOfPlayer
 } from '../../../app/store/slices/gameSlice';
 import {
   setCurrentRoom,
@@ -25,7 +26,7 @@ import {
   setSpectators
 } from '../../../app/store/slices/roomSlice';
 // import { firebaseRealtimeService } from '../../services/firebase/realtime';
-import { PlayerData, Question, Score, Room } from '../../types';
+import { PlayerData, Question, Score, Room, MultiplayerGameState } from '../../types';
 
 import { useSearchParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -33,7 +34,7 @@ import firebaseServices from '../../services/firebase/firebaseServices';
 export const useFirebaseListener = () => {
   const dispatch = useAppDispatch();
 
-  const { currentRound,players } = useAppSelector(state => state.game);
+  const { currentRound, players } = useAppSelector(state => state.game);
   const [searchParams] = useSearchParams();
   const round = searchParams.get("round") || "";
   const roomId = searchParams.get("roomId") || "";
@@ -87,7 +88,9 @@ export const useFirebaseListener = () => {
     return firebaseServices.listenToPlayers(roomId, (players) => {
       console.log("players", players);
       dispatch(addPlayer(players))
-
+      if (Array.isArray(players)) {
+        dispatch(setNumberOfPlayer(players.length))
+      }
       callback?.()
     });
   }
@@ -149,7 +152,7 @@ export const useFirebaseListener = () => {
     if (!roomId) return () => { };
 
     return firebaseServices.listenToOpenBuzz(roomId, (isBuzzOpened) => {
-      if(!isBuzzOpened) return;
+      if (!isBuzzOpened) return;
 
       callback?.(isBuzzOpened)
     });
@@ -189,14 +192,27 @@ export const useFirebaseListener = () => {
   const listenToScoresRanking = useCallback((callback?: (scores: Score[]) => void) => {
     if (!roomId) return () => { };
 
-    return firebaseServices.listenToScoresRanking(roomId, (scores) => {
-      console.log("scores", scores);
+    return firebaseServices.listenToScoresRanking(roomId, (scoresObj) => {
+      console.log("listened scores", scoresObj);
+
+      const scores = Array.isArray(scoresObj)
+        ? (scoresObj.filter(Boolean) as Score[]) // removes empty slots
+        : Object.values(scoresObj || {}) as Score[];
 
       dispatch(setScoresRanking(scores))
 
       callback?.(scores)
     });
   }, [roomId]);
+
+  const listenToPlayerAnswerList = useCallback((callback?: (data: any) => void) => {
+    if (!roomId) return () => { };
+    return firebaseServices.listenToPlayerAnswerList(roomId, (data) => {
+      console.log("player_answer", data);
+      // Call optional callback
+      callback?.(data);
+    });
+  }, [roomId, dispatch]);
 
   /**
    * Listen to player answers
@@ -254,7 +270,7 @@ export const useFirebaseListener = () => {
     if (!roomId) return () => { };
 
     return firebaseServices.listenToCorrectAnswer(roomId, (answer) => {
-      if(!answer) return;
+      if (!answer) return;
       console.log("answer", answer);
       dispatch(setCurrentCorrectAnswer(answer.join("/ ")));
 
@@ -315,7 +331,7 @@ export const useFirebaseListener = () => {
     });
   }, [roomId, dispatch]);
 
-  
+
 
   /**
    * Listen to packets nam
@@ -402,7 +418,7 @@ export const useFirebaseListener = () => {
   /**
    * Listen to buzzed player
    */
-  const listenToBuzzedPlayer = useCallback((callback?: (playerName:string) => void) => {
+  const listenToBuzzedPlayer = useCallback((callback?: (playerName: string) => void) => {
     if (!roomId) return () => { };
 
     return firebaseServices.listenToBuzzing(roomId, (playerName) => {
@@ -516,6 +532,58 @@ export const useFirebaseListener = () => {
   }, [roomId]);
 
   /**
+   * Listen to multiplayer game start
+   */
+  const listenToMultiplayerGameStart = useCallback((callback?: (schedule: any) => void) => {
+    if (!roomId) return () => { };
+
+    return firebaseServices.listenToMultiplayerGameStart(roomId, (schedule) => {
+      console.log("schedule", schedule);
+      callback?.(schedule);
+    });
+  }, [roomId]);
+
+  const listenToMultiplayerGamePause = useCallback((callback?: (data: any) => void) => {
+    if (!roomId) return () => { };
+
+    return firebaseServices.listenToMultiplayerGamePause(roomId, (data) => {
+      callback?.(data);
+    });
+  }, [roomId]);
+
+  const listenToMultiplayerGameEnd = useCallback((callback?: (data: any) => void) => {
+    if (!roomId) return () => { };
+
+    return firebaseServices.listenToMultiplayerGameEnd(roomId, (data) => {
+      callback?.(data);
+    });
+  }, [roomId]);
+
+  const listenToCountDownStarted = useCallback((callback?: (data: string) => void) => {
+    if (!roomId) return () => { };
+
+    return firebaseServices.listenToCountDownStarted(roomId, (data) => {
+      callback?.(data);
+    });
+  }, [roomId]);
+
+  const listenToMultiplayerGameState = useCallback((callback?: (data: MultiplayerGameState) => void) => {
+    if (!roomId) return () => { };
+
+    return firebaseServices.listenToMultiplayerGameState(roomId, (data) => {
+      callback?.(data);
+    });
+  }, [roomId]);
+
+  const listenToGroupInvite = useCallback((callback?: (data: any) => void) => {
+    if (!roomId) return () => { };
+
+    return firebaseServices.listenToGroupInvite(roomId, (data) => {
+      callback?.(data);
+    });
+  }, [roomId]);
+
+  /**
    * Setup all firebaseServicess at once
    */
   // const setupAllfirebaseServicess = useCallback((callbacks?: {
@@ -601,7 +669,7 @@ export const useFirebaseListener = () => {
 
   const removeSpectator = useCallback((spectatorPath: string) => {
     console.log("Removing spectator from path:", spectatorPath);
-    
+
     if (!spectatorPath) {
       console.warn("No spectator path provided");
       return;
@@ -617,8 +685,8 @@ export const useFirebaseListener = () => {
     }
   }, []);
 
-        
-  const startWatchingPendingRemovals  = async (roomId: string) => {
+
+  const startWatchingPendingRemovals = async (roomId: string) => {
     if (!roomId) return;
 
     await firebaseServices.startWatchingPendingRemovals(roomId)
@@ -676,6 +744,13 @@ export const useFirebaseListener = () => {
     listenToRules,
     listenToMedia,
 
+    listenToMultiplayerGameStart,
+    listenToMultiplayerGameState,
+    listenToPlayerAnswerList,
+    listenToMultiplayerGamePause,
+    listenToMultiplayerGameEnd,
+    listenToCountDownStarted,
+    listenToGroupInvite,
     setupDisconnect,
     startWatchingPendingRemovals,
     connectOnRejoin,

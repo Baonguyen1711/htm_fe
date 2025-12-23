@@ -4,6 +4,7 @@ import PlayerScore from '../../components/PlayerScore'
 import PlayerAnswer from '../../components/PlayerAnswer'
 import { useFirebaseListener } from '../../shared/hooks'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import MultipleChoice from '../../components/ui/MultipleChoice'
 
 interface UserInterfaceProps {
   QuestionComponent: React.ReactNode,
@@ -17,11 +18,13 @@ const User: React.FC<UserInterfaceProps> = ({ QuestionComponent, isSpectator = f
   const navigate = useNavigate();
   const roomId = searchParams.get("roomId") || "";
   const round = searchParams.get("round") || "";
+  const roomMode = searchParams.get("roomMode") || "room";
   const isPlayer = window.location.pathname.includes('play');
 
   useEffect(() => {
     const unsubscribePlayers = listenToRoundStart(
       (round) => {
+        if(roomMode === "multiplayer") return
         if (isSpectator) {
           navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
         }
@@ -38,7 +41,7 @@ const User: React.FC<UserInterfaceProps> = ({ QuestionComponent, isSpectator = f
   return (
     <Play
       questionComponent={QuestionComponent}
-      PlayerScore={<PlayerAnswer isSpectator={isSpectator} />}
+      PlayerScore={roomMode === "multiplayer" || roomMode === "practice" ? null : <PlayerAnswer isSpectator={isSpectator} />}
       SideBar={<PlayerScore />}
       isHost={false}
       isSpectator={isSpectator}

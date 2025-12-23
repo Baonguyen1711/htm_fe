@@ -31,6 +31,15 @@ export const useTestApi = () => {
         }
     }, []);
 
+    const uploadMultiplayerTestToServer = useCallback(async (testName: string, file: File, isPublic: boolean) => {
+        try {
+            const uploadedTest = await testApi.uploadMultiplayerTestToServer(testName, file, isPublic);
+            return uploadedTest;
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
     const updateQuestion = useCallback(async (question_id: string, updated_data: any) => {
         try {
             const updatedQuestion = await testApi.updateQuestion(question_id, updated_data);
@@ -39,9 +48,21 @@ export const useTestApi = () => {
             throw error;
         }
     }, []);
+
+    const getRandomQuestions = useCallback(async (limit: number, catergory?: string) => {
+    try {
+        const questions = await testApi.getRandomQuestions(limit, catergory);
+        return questions;   
+    } catch (error) {
+        throw error;
+    }
+    }, []);
+
     return {
         uploadTestToServer,
+        uploadMultiplayerTestToServer,
         updateQuestion,
+        getRandomQuestions,
         getTestContent,
         getTestsNameByUserId,   
     };

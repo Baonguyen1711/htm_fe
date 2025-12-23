@@ -14,8 +14,12 @@ import {
   SetPlayerColorResponse,
   Question,
   Score,
-  ScoreRule
+  ScoreRule,
+  Statistic,
+  GameState,
+  MultiplayerGameState
 } from '../../types';
+import { data } from 'react-router-dom';
 
 
 export const gameApi = {
@@ -33,6 +37,43 @@ export const gameApi = {
         difficulty: params?.difficulty,
       },
     });
+
+    console.log("getQuestions response", response)
+    console.log("getQuestions data", response.data)
+    return response.data;
+  },
+
+  /**
+   * Auto get next question
+   */
+  async getNextQuestions(params: GetQuestionsRequest): Promise<Question> {
+    const response = await api.get<Question>(API_ENDPOINTS.GAME.NEXT_QUESTION, {
+      params: {
+        room_id: params.roomId,
+        test_name: params.testName,
+        round: params.round,
+        question_number: params.questionNumber,
+        packet_name: params?.packetName,
+        difficulty: params?.difficulty,
+      },
+    });
+
+    console.log("getQuestions response", response)
+    console.log("getQuestions data", response.data)
+    return response.data;
+  },
+
+   /**
+   * Auto get next question
+   */
+  async updateGameState(roomId: string, state: Partial<MultiplayerGameState>): Promise<Question> {
+    const response = await api.post(
+      `${API_ENDPOINTS.STATE.UPDATE}?room_id=${roomId}`,
+      state
+    );
+
+    console.log("updateGameState response", response)
+    console.log("updateGameState data", response.data)
     return response.data;
   },
 
@@ -189,6 +230,8 @@ export const gameApi = {
     );
     return response.data;
   },
+
+  
 
   /**
    * Broadcast player answers
@@ -403,6 +446,126 @@ export const gameApi = {
   async stopMedia(roomId: string) {
     const response = await api.post(
       `${API_ENDPOINTS.GAME.MEDIA_STOP}?room_id=${roomId}`
+    );
+    return response.data;
+  },
+
+
+  /**
+   * Start multiplayer game
+   */
+  async multiplayerStart(roomId: string, testName: string, playMode: string, currentQuestionNumber?: number) {
+    console.log("currentQuestionNumber", currentQuestionNumber)
+    const params = new URLSearchParams();
+    params.append("room_id", roomId);
+    params.append("test_name", testName);
+    params.append("play_mode", playMode);
+    if (currentQuestionNumber) params.append("current_question_number", currentQuestionNumber.toString());
+    const response = await api.post(
+      `${API_ENDPOINTS.GAME.MULTIPLAYER_START}?${params.toString()}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Pause multiplayer game
+   */
+  async multiplayerPause(roomId: string) {
+    const response = await api.post(
+      `${API_ENDPOINTS.GAME.MULTIPLAYER_PAUSE}?room_id=${roomId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Pause multiplayer game
+   */
+  async multiplayerResume(roomId: string, testName: string) {
+    const response = await api.post(
+      `${API_ENDPOINTS.GAME.MULTIPLAYER_RESUME}?room_id=${roomId}&test_name=${testName}`
+    );
+    return response.data;
+  },
+
+  /**
+   * End multiplayer game
+   */
+  async multiplayerEnd(roomId: string) {
+    const response = await api.post(
+      `${API_ENDPOINTS.GAME.MULTIPLAYER_END}?room_id=${roomId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Submit multiplayer answer
+   */
+  async multiplayerSubmit(params: { roomId: string; answer: string; stt: string; time: number; player_name: string; avatar: string, testName: string, groupId?: string }) {
+    console.log("multiplayerSubmit params", params)
+    const queryParams = new URLSearchParams();
+    queryParams.append("room_id", params.roomId);
+    queryParams.append("test_name", params.testName)
+    if (params.groupId) queryParams.append("group_id", params.groupId);
+    const response = await api.post(
+      `${API_ENDPOINTS.GAME.MULTIPLAYER_SUBMIT}?${queryParams.toString()}`,
+      params
+    );
+    return response.data;
+  },
+
+  /**
+   * Invite player to join group in multiplayer game
+   */
+  async multiplayerInvite(params: { roomId: string; targetPlayerUid: string; playerName: string; groupId?: string }) {
+    const inviteParams = new URLSearchParams();
+    inviteParams.append("room_id", params.roomId);
+    inviteParams.append("target_player_uid", params.targetPlayerUid);
+    inviteParams.append("player_name", params.playerName);
+    if (params.groupId) inviteParams.append("group_id", params.groupId);
+    const response = await api.post(
+      `${API_ENDPOINTS.GAME.MULTIPLAYER_INVITE}?${inviteParams.toString()}`
+    );
+    return response.data;
+  }
+  ,
+  async multiplayerAcceptInvite(params: { roomId: string; groupId: string, inviterUid?: string }) {
+    const inviteParams = new URLSearchParams();
+    inviteParams.append("room_id", params.roomId);
+    inviteParams.append("group_id", params.groupId);
+    if (params.inviterUid) inviteParams.append("inviter_uid", params.inviterUid);
+    const response = await api.post(
+      `${API_ENDPOINTS.GAME.MULTIPLAYER_ACCEPT_INVITE}?${inviteParams.toString()}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Add new user statistic
+   */
+  async addStatistic(testId: string, data: Statistic) {
+    const response = await api.post(
+      `${API_ENDPOINTS.STATISTICS.ADD}?testId=${testId}`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Get all statistic by user
+   */
+  async getAllStatistic() {
+    const response = await api.get(
+      `${API_ENDPOINTS.STATISTICS.GET_ALL}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get all statistic by user and test
+   */
+  async getStatisticByTest(testId: string) {
+    const response = await api.get(
+      `${API_ENDPOINTS.STATISTICS.GET_BY_TEST}?test_id=${testId}`
     );
     return response.data;
   },

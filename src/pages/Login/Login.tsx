@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../shared/hooks/auth/useAuth';
 import { Button } from '../../shared/components/ui';
 import { toast } from 'react-toastify';
+import { authApi } from '../../shared/services';
 
 
 const Login = () => {
@@ -37,8 +38,14 @@ const Login = () => {
           autoClose: 2000,
         });
         // Wait for the success toast to be visible and for the auth cookie
+        const isHost = await authApi.isHost()
+        console.log("is host", isHost)
         await new Promise(resolve => setTimeout(resolve, 2000)); // Match autoClose duration
-        navigate('/host/dashboard');
+        if(isHost) {
+          navigate('/host/dashboard');
+        } else {
+          navigate('/user/dashboard')
+        }
       } else {
         toast.dismiss(toastId); // Dismiss the loading toast
         toast.error('Email hoặc mật khẩu không đúng!', {

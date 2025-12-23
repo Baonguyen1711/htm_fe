@@ -9,10 +9,10 @@ import {
 } from "@heroicons/react/24/solid";
 import '../index.css';
 import { useAppDispatch, useAppSelector } from '../app/store';
-import { setCurrentCorrectAnswer, clearPlayerAnswerList, setCurrentPlayer, setCurrentRound } from '../app/store/slices/gameSlice';
+import { setCurrentCorrectAnswer, clearPlayerAnswerList, setCurrentPlayer, setCurrentRound, setCurrentQuestionNumber } from '../app/store/slices/gameSlice';
 import { useSounds } from '../context/soundContext';
-
-
+import { setIsPausedButtonDisabled } from '../app/store/slices/gameSlice';
+import { nextQuestion } from '../app/store/slices/gameSlice';
 interface PlayProps {
     questionComponent: ReactNode;
     isHost?: boolean;
@@ -56,6 +56,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     const [userId, setUserId] = useState(localStorage.getItem("userId"))
     const [params] = useSearchParams()
     const round = (params.get("round") as "1" | "2" | "3" | "4" | "turn") || "1"
+
     const { timeLeft, startTimer } = useTimeStart();
     const [roomRules, setRoomRules] = useState(null)
 
@@ -66,6 +67,8 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     const currentRound = searchParams.get("round") || "1";
     const testName = searchParams.get("testName") || "1"
     const roomId = searchParams.get("roomId") || "";
+    const roomMode = searchParams.get("roomMode") || "room"
+    const playMode = searchParams.get("playMode") || "manual"
 
     const {
         listenToCurrentQuestion,
@@ -81,7 +84,8 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         deletePath
     } = useFirebaseListener();
     const dispatch = useAppDispatch();
-    const { mode, scoreRules, currentPlayer } = useAppSelector(state => state.game)
+    const { mode, scoreRules, currentPlayer, currentQuestionNumber } = useAppSelector(state => state.game)
+    const currentQuestionNumberRef = useRef(currentQuestionNumber)
     const { spectatorsCount } = useAppSelector(state => state.room)
     const isInitialMount = useRef(true);
     const styles = `
@@ -127,7 +131,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     //     }
     // }, [])
 
-        useEffect(() => {
+    useEffect(() => {
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
             event.preventDefault();
             event.returnValue = ""; // cần gán returnValue để trình duyệt hiện cảnh báo
@@ -210,6 +214,12 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
                 dispatch(setCurrentCorrectAnswer(""))
             }
 
+            if(roomMode === "multiplayer" && playMode === "auto" && isHost) {
+                console.log("setting current question number")
+                console.log("currentQuestionNumberRef.current", currentQuestionNumberRef.current)
+                dispatch(nextQuestion())
+            }
+            dispatch(setIsPausedButtonDisabled(true))
             dispatch(clearPlayerAnswerList())
         })
 
@@ -240,9 +250,11 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
         const unsubscribeAnswer = listenToCorrectAnswer(
             () => {
                 const audio = sounds['correct'];
-                if (audio) {
+                if (audio && roomMode !== "multiplayer") {
                     audio.play();
                 }
+
+                dispatch(setIsPausedButtonDisabled(false))
 
                 if (currentRound === "3" && !isHost) {
                     timeout = setTimeout(() => {
@@ -303,8 +315,11 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
     }, [roomId, listenToRules])
 
     return (
-        <div className="relative "
-            style={{ zoom: "0.75" }}
+        <div className="relative  min-h-screen"
+            style={{ 
+                zoom: "0.75",
+                height: !PlayerScore ? '134vh' : undefined
+             }}
         >
             {/* Ocean/Starry Night Background */}
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-blue-900 to-blue-600">
@@ -319,6 +334,7 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
             {/* Content overlay */}
             <div className="relative z-10 flex flex-col min-h-full">
                 <Header isHost={isHost} spectatorCount={spectatorsCount} />
+
 
                 <div className="flex flex-1 p-4 gap-4">
                     <div className="w-full lg:w-4/5 flex flex-col">
@@ -336,14 +352,19 @@ const Play: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerSc
                         </div>
 
                         {/* Question component with ocean-themed styling */}
-                        <div className={`bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4  ${isHost ? "min-h-[400px]" : "min-h-[400px]"}`}>
+                        <div className={`bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl flex-1 p-6 mb-4 h-full ${PlayerScore ? "min-h-[400px]" : "min-h-[500px]"} `}>
                             {questionComponent}
                         </div>
 
                         {/* Player score with ocean theme */}
-                        <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-xl">
-                            {PlayerScore}
-                        </div>
+                        {
+                            PlayerScore && (
+                                <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-xl">
+                                    {PlayerScore}
+                                </div>
+                            )
+                        }
+
                     </div>
 
                     <div className="hidden lg:flex lg:w-1/5 flex-col gap-4">
