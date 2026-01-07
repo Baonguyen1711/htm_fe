@@ -1,5 +1,5 @@
 import './App.css';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Routes, Route, useSearchParams, useLocation } from "react-router-dom";
 import CreateRoom from './pages/Host/Room/CreateRoom';
 
@@ -14,6 +14,7 @@ import ErrorBoundary from './components/ui/Error/ErrorBoundary';
 import 'react-toastify/dist/ReactToastify.css';
 import { AnimatePresence, circIn, motion } from "framer-motion";
 import "./index.css";
+import { useFirebaseListener } from './shared/hooks';
 
 
 const Home = React.lazy(() => import('./pages/Home/Home'));
@@ -23,7 +24,9 @@ const UserRound2 = React.lazy(() => import('./pages/User/Round2/UserRound2'));
 const UserRound3 = React.lazy(() => import('./pages/User/Round3/UserRound3'));
 const UserRound4 = React.lazy(() => import('./pages/User/Round4/UserRound4'));
 const UserRoundTurn = React.lazy(() => import('./pages/User/Round1/UserRound1'));
+const NewLayout = React.lazy(() => import("./layouts/GameLayout"))
 const UserMultipleChoice = React.lazy(() => import('./pages/User/MultipleChoice/MultipleChoice'));
+const NewUserRound1 = React.lazy(() => import('./pages/User/NewUserRound1'))
 
 
 const HostRound1 = React.lazy(() => import('./pages/Host/Management/HostRound1'));
@@ -46,23 +49,31 @@ const InfoForm = React.lazy(() => import('./pages/User/InformationForm/Informati
 
 const HostFinalScore = React.lazy(() => import('./pages/FinalScore/HostFinalScore'));
 const PlayerFinalScore = React.lazy(() => import('./pages/FinalScore/PlayerFinalScore'));
-const Dashboard = React.lazy(() => import('./pages/Host/Dashboard/Dashboard'))
+const HostDashboard = React.lazy(() => import('./pages/Host/Dashboard/Dashboard'))
 const UserDashboard = React.lazy(() => import('./pages/User/Dashboard/UserDashboard'))
 
 const CreatePracticeRoom = React.lazy(() => import('./pages/Practice/CreatePracticeRoom'))
 const PrivatePractice = React.lazy(() => import('./pages/Practice/PrivatePractice'))
-function PlayComponent() {
+function PlayComponent(roundMapping: any) {
   const [searchParams] = useSearchParams();
 
-  const round = searchParams.get("round");
+  console.log("roundMapping inside host component", roundMapping)
+  const round = searchParams.get("round") || "1";
+  const currentRound = roundMapping && roundMapping[parseInt(round) - 1]
+    ? roundMapping[parseInt(round) - 1]
+    : round;
+
+  // Hoặc tốt hơn: hiển thị loading khi chưa có mapping (vì mapping rất quan trọng cho game)
+  if (roundMapping === undefined) {
+    return <div>Loading round configuration...</div>; // hoặc spinner
+  }
   const roomMode = searchParams.get("roomMode") || "room";
-  const location = useLocation();
 
   // MIGRATED: Using Redux-based components with new hooks
-  if (round === "1") return <UserRound1 />;
-  if (round === "2") return <UserRound2 />;
-  if (round === "3") return <UserRound3 />;
-  if (round === "4") return <UserRound4 />;
+  if (currentRound === "1") return <UserRound1 />;
+  if (currentRound === "2") return <UserRound2 />;
+  if (currentRound === "3") return <UserRound3 />;
+  if (currentRound === "4") return <UserRound4 />;
   if (round === "turn") return <UserRoundTurn />;
   if (round === "final") return <FinalRanking isHost={false} />;
   if (roomMode === "multiplayer" || roomMode === "practice") return <HostMultipleChoice isHost={false} />;
@@ -71,23 +82,33 @@ function PlayComponent() {
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
 }
 
-function HostComponent() {
+function HostComponent(roundMapping: any) {
   const [searchParams] = useSearchParams();
-  const round = searchParams.get("round");
+  console.log("roundMapping inside host component", roundMapping)
+  const round = searchParams.get("round") || "1";
+  const currentRound = roundMapping && roundMapping[parseInt(round) - 1]
+    ? roundMapping[parseInt(round) - 1]
+    : round;
+
+  // Hoặc tốt hơn: hiển thị loading khi chưa có mapping (vì mapping rất quan trọng cho game)
+  if (roundMapping === undefined) {
+    return <div>Loading round configuration...</div>; // hoặc spinner
+  }
   const roomMode = searchParams.get("roomMode") || "room";
   console.log("room mode", roomMode);
-  if (round === "1") return <HostRound1 />;
-  if (round === "2") return <HostRound2 />;
-  if (round === "3") return <HostRound3 />;
-  if (round === "4") return <HostRound4 />;
+  console.log("mappedRound", currentRound)
+  if (currentRound === "1") return <HostRound1 />;
+  if (currentRound === "2") return <HostRound2 />;
+  if (currentRound === "3") return <HostRound3 />;
+  if (currentRound === "4") return <HostRound4 />;
   if (round === "turn") return <HostRoundTurn />;
   if (round === "final") return <FinalRanking isHost={true} />;
-  if (roomMode === "multiplayer") return <HostMultipleChoice isHost={true}/>;
+  if (roomMode === "multiplayer") return <HostMultipleChoice isHost={true} />;
 
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
 }
 
-function SpectatorComponent() {
+function SpectatorComponent(roundMapping: any) {
   const [searchParams] = useSearchParams();
   const round = searchParams.get("round") || "1";
 
@@ -103,6 +124,22 @@ function SpectatorComponent() {
 }
 
 function App() {
+  const [roundMapping, setRoundMapping] = useState<any>()
+  const { listenToRoundMapping } = useFirebaseListener()
+
+  useEffect(() => {
+    const unsubscribe = listenToRoundMapping(
+      (round_mapping) => {
+        console.log("round_mapping", round_mapping)
+        setRoundMapping(round_mapping)
+      }
+    )
+
+    return () => {
+      unsubscribe();
+    };
+  }, [])
+
   const pageVariants = {
     initial: { opacity: 0, x: 100 },
     in: { opacity: 1, x: 0 },
@@ -153,7 +190,7 @@ function App() {
                         <TimeStartProvider roomId={roomId}>
                           <SoundProvider>
                             <ErrorBoundary onRetry={() => window.location.reload()}>
-                              <PlayComponent />
+                              <PlayComponent roundMapping={roundMapping} />
                             </ErrorBoundary>
                           </SoundProvider>
                         </TimeStartProvider>
@@ -191,18 +228,18 @@ function App() {
                               //   className="h-full w-full"
                               // >
                               // <HostLobby />
-                              <Lobby isHost={true}/>
+                              <Lobby isHost={true} />
                               // </motion.div>
                             }
                           />
                           <Route path="/login" element={<Login />} />
-                          <Route path="dashboard" element={<ProtectedRoute element={<Dashboard />} requireAccessToken={false} requireHost={true} />} />
+                          <Route path="dashboard" element={<ProtectedRoute element={<HostDashboard />} requireAccessToken={false} requireHost={true} />} />
                           <Route path="create_room" element={<ProtectedRoute element={<CreateRoom />} requireAccessToken={false} requireHost={true} />} />
                           <Route
                             path=""
                             element={
                               <ProtectedRoute
-                                element={<HostComponent />}
+                                element={<HostComponent roundMapping={roundMapping} />}
                                 requireAccessToken={true}
                               />
                               // <motion.div
@@ -233,7 +270,7 @@ function App() {
                         <Routes>
                           <Route path="" element={
                             <ErrorBoundary onRetry={() => window.location.reload()}>
-                              <SpectatorComponent />
+                              <SpectatorComponent roundMapping={roundMapping} />
                             </ErrorBoundary>
                           } />
                         </Routes>

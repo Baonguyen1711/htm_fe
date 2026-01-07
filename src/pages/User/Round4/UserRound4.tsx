@@ -94,7 +94,7 @@ function UserRound4({ isSpectator }: UserRound4Props) {
         // <Round4 isHost={false}/>
         <>
             <User
-                QuestionComponent={<PlayerQuestionBoxRound4 questions={exampleQuestions} initialGrid={initialGrid} isHost={false} isSpectator={isSpectator} />}
+                questionComponent={<PlayerQuestionBoxRound4 questions={exampleQuestions} initialGrid={initialGrid} isHost={false} isSpectator={isSpectator} />}
                 isSpectator={isSpectator}
             />
             {showModal && buzzedPlayer &&

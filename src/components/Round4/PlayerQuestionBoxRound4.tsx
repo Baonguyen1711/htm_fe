@@ -11,6 +11,7 @@ import { useFirebaseListener } from '../../shared/hooks';
 import { useAppSelector, useAppDispatch } from '../../app/store'
 import GameGridRound4 from './GameGridRound4';
 import QuestionAndAnswer from '../../components/ui/QuestionAndAnswer/QuestionAndAnswer';
+import QuestionTimerBar from '../ui/QuestionTimeBar';
 
 interface QuestionComponentProps {
     initialGrid: string[][]; // 5x5 grid (can be passed from parent or generated)
@@ -247,6 +248,8 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     return (
         <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full max-w-3xl mx-auto min-h-[470px]">
             {/* Display selected question */}
+
+            <QuestionTimerBar isHost={false}/>
             <QuestionAndAnswer
                 currentQuestion={currentQuestion}
                 currentCorrectAnswer={currentCorrectAnswer}

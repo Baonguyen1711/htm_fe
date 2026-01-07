@@ -71,7 +71,13 @@ const Register = () => {
       </div>
 
       {/* Content overlay */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-4"
+              style={{
+        backgroundImage: "url('/images/background_curve_3.jpg')",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+      }}
+      >
         <div className="w-full max-w-md">
           {/* Welcome Section */}
           <div className="text-center mb-8">

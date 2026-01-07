@@ -41,6 +41,11 @@
 
   --radius: 0.75rem;
 
+  /* Wave colors */
+  --wave-1: 199 89% 30% / 0.4;
+  --wave-2: 187 85% 40% / 0.3;
+  --wave-3: 199 89% 48% / 0.2;
+  
   /* Sidebar */
   --sidebar-background: 222 47% 8%;
   --sidebar-foreground: 199 95% 85%;
@@ -59,18 +64,14 @@
   --star-bright: 45 100% 85%;
 
   /* Gradients */
-  --gradient-ocean: linear-gradient(
-    180deg,
-    hsl(222 47% 11%) 0%,
-    hsl(213 50% 25%) 50%,
-    hsl(199 70% 35%) 100%
-  );
+  --gradient-ocean: linear-gradient(180deg,
+      hsl(222 47% 11%) 0%,
+      hsl(213 50% 25%) 50%,
+      hsl(199 70% 35%) 100%);
 
-  --gradient-header: linear-gradient(
-    90deg,
-    hsl(199 95% 85%) 0%,
-    hsl(187 85% 70%) 100%
-  );
+  --gradient-header: linear-gradient(90deg,
+      hsl(199 95% 85%) 0%,
+      hsl(187 85% 70%) 100%);
 
   /* Shadows */
   --shadow-glow: 0 0 30px hsl(199 89% 48% / 0.3);
@@ -125,7 +126,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Playfair Display', serif;
 }
 
@@ -160,15 +166,12 @@ code {
   left: 0;
   right: 0;
   height: 8rem;
-  background: linear-gradient(
-    to top,
-    hsl(var(--ocean-light) / 0.3),
-    transparent
-  );
+  background: linear-gradient(to top,
+      hsl(var(--ocean-light) / 0.3),
+      transparent);
 }
 
 .glass-card {
-  background-color: hsl(var(--card) / 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid hsl(var(--border) / 0.5);
@@ -187,42 +190,105 @@ code {
    Animations
 ========================= */
 @keyframes twinkle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes welcomeFade {
-  0%, 10% { opacity: 1; }
-  20%, 100% { opacity: 0; }
+
+  0%,
+  10% {
+    opacity: 1;
+  }
+
+  20%,
+  100% {
+    opacity: 0;
+  }
 }
 
 @keyframes imageSlide {
-  0% { transform: translateX(-100%); visibility: visible; z-index: 1; }
-  33.33%, 66.66% { transform: translateX(0); visibility: visible; z-index: 1; }
-  99.99% { transform: translateX(100%); visibility: visible; z-index: 1; }
-  100% { transform: translateX(100%); visibility: hidden; z-index: 0; }
+  0% {
+    transform: translateX(-100%);
+    visibility: visible;
+    z-index: 1;
+  }
+
+  33.33%,
+  66.66% {
+    transform: translateX(0);
+    visibility: visible;
+    z-index: 1;
+  }
+
+  99.99% {
+    transform: translateX(100%);
+    visibility: visible;
+    z-index: 1;
+  }
+
+  100% {
+    transform: translateX(100%);
+    visibility: hidden;
+    z-index: 0;
+  }
 }
 
 @keyframes flashGreen {
-  0% { background-color: rgba(34, 197, 94, 0.6); }
-  50% { background-color: rgba(34, 197, 94, 0.4); }
-  100% { background-color: rgba(51, 65, 85, 0.6); }
+  0% {
+    background-color: rgba(34, 197, 94, 0.6);
+  }
+
+  50% {
+    background-color: rgba(34, 197, 94, 0.4);
+  }
+
+  100% {
+    background-color: rgba(51, 65, 85, 0.6);
+  }
 }
 
 @keyframes flashRed {
-  0% { background-color: rgba(239, 68, 68, 0.6); }
-  50% { background-color: rgba(239, 68, 68, 0.4); }
-  100% { background-color: rgba(51, 65, 85, 0.6); }
+  0% {
+    background-color: rgba(239, 68, 68, 0.6);
+  }
+
+  50% {
+    background-color: rgba(239, 68, 68, 0.4);
+  }
+
+  100% {
+    background-color: rgba(51, 65, 85, 0.6);
+  }
 }
 
 @keyframes shrink {
-  from { width: 100%; }
-  to { width: 0%; }
+  from {
+    width: 100%;
+  }
+
+  to {
+    width: 0%;
+  }
 }
 
 /* =========================

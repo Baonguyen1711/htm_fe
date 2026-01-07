@@ -66,7 +66,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden"
+>
       {/* Ocean/Starry Night Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-blue-900 to-blue-600">
         {/* Stars overlay */}
@@ -78,7 +79,13 @@ const Login = () => {
       </div>
 
       {/* Content overlay */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-4"
+              style={{
+        backgroundImage: "url('/images/background_curve_3.jpg')",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+      }}
+      >
         <div className="w-full max-w-md">
           {/* Welcome Section */}
           <div className="text-center mb-8">
@@ -110,9 +117,6 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
-                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-300/50">
-                    📧
-                  </span>
                 </div>
               </div>
 
@@ -145,6 +149,7 @@ const Login = () => {
                 size="lg"
                 fullWidth
                 className="font-medium shadow-lg"
+                style={{ backgroundColor: '#001f3f' }}
               >
                 Đăng nhập
               </Button>
@@ -167,7 +172,7 @@ const Login = () => {
           <div className="text-center mt-6">
             <Link
               to="/"
-              className="text-blue-300/80 hover:text-blue-200 text-sm transition-colors"
+              className="text-black hover:text-blue-200 text-sm transition-colors"
             >
               ← Quay về trang chủ
             </Link>

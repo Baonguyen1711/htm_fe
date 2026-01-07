@@ -14,6 +14,7 @@ import { useConfirmModal } from '../../shared/hooks/ui/useConfirmModal';
 import { toast } from 'react-toastify';
 import Modal from '../ui/Modal/Modal';
 import QuestionAndAnswer from '../../components/ui/QuestionAndAnswer/QuestionAndAnswer';
+import QuestionTimerBar from '../ui/QuestionTimeBar';
 
 
 interface ButtonConfig {
@@ -221,7 +222,15 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     }, []);
 
     return (
-        <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4 relative">
+        <div className="      w-full
+      bg-slate-900/40 backdrop-blur-md
+      border border-blue-400/20
+      rounded-xl
+      shadow-xl
+      px-5 py-4
+      flex flex-col gap-4">
+        {/* Time bar */}
+            <QuestionTimerBar isHost={isHost} />
             <QuestionAndAnswer
                 currentQuestion={currentQuestion}
             />

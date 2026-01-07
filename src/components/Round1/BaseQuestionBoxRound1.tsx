@@ -9,6 +9,7 @@ import { useAppSelector } from '../../app/store';
 import QuestionAndAnswer from '../../components/ui/QuestionAndAnswer/QuestionAndAnswer';
 import { Button } from '../../shared/components/ui';
 import useGameApi from '../../shared/hooks/api/useGameApi';
+import QuestionTimerBar from '../ui/QuestionTimeBar';
 
 
 interface Round1Props {
@@ -105,116 +106,170 @@ const BaseQuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = fa
 
 
     return (
-        <div
-            className={`bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full flex flex-col items-center`}
-        >
-            <QuestionAndAnswer
-                currentQuestion={currentQuestion}
-                currentCorrectAnswer={currentCorrectAnswer}
+  <div
+    className="
+      w-full
+      bg-slate-900/40 backdrop-blur-md
+      border border-blue-400/20
+      rounded-xl
+      shadow-xl
+      px-5 py-4
+      flex flex-col gap-4
+    "
+  >
+    {/* Time bar */}
+    <QuestionTimerBar isHost={isHost} />
+
+    {/* Question */}
+    <QuestionAndAnswer
+      currentQuestion={currentQuestion}
+      currentCorrectAnswer={currentCorrectAnswer}
+    />
+
+    {/* Media preview */}
+    <div
+      className="
+        w-full
+        h-[360px]
+        flex items-center justify-center
+        rounded-lg
+        bg-slate-800/40
+        border border-blue-400/10
+        overflow-hidden
+        cursor-pointer
+      "
+      onClick={() => setIsModalOpen(true)}
+    >
+      {(() => {
+        const url = currentQuestion?.imgUrl
+        if (!url) {
+          return (
+            <span className="text-sm text-blue-200/60">
+              Không có media
+            </span>
+          )
+        }
+
+        const extension = url.split('.').pop()?.toLowerCase() || ""
+
+        if (["jpg", "jpeg", "png", "gif", "webp"].includes(extension)) {
+          return (
+            <img
+              src={url}
+              alt="Question Visual"
+              className="w-full h-full object-contain"
             />
+          )
+        }
 
-            {/* Media */}
-            <div
-                className={`w-full h-[400px] flex items-center justify-center overflow-hidden cursor-pointer mb-4 `}
-                onClick={() => setIsModalOpen(true)}
+        if (["m4a", "mp3", "wav", "ogg"].includes(extension)) {
+          return (
+            <audio ref={audioRef}>
+              <source src={url} type={`audio/${extension}`} />
+            </audio>
+          )
+        }
+
+        if (["mp4", "webm", "ogg"].includes(extension)) {
+          return (
+            <video
+              ref={videoRef}
+              className="w-full h-full object-contain"
             >
-                {(() => {
-                    const url = currentQuestion?.imgUrl;
-                    if (!url) return <p className="text-white">No media</p>;
+              <source src={url} type={`video/${extension}`} />
+            </video>
+          )
+        }
 
-                    const extension = url.split('.').pop()?.toLowerCase() || "";
+        return (
+          <span className="text-sm text-red-300">
+            Unsupported media
+          </span>
+        )
+      })()}
+    </div>
 
-                    if (["jpg", "jpeg", "png", "gif", "webp"].includes(extension)) {
-                        return <img src={url} alt="Question Visual" className="w-full h-full object-contain rounded-lg" />;
-                    }
+    {/* Host controls */}
+    {isHost && (
+      <div className="flex gap-2">
+        <button
+          onClick={handleClickPlayMedia}
+          className="
+            flex-1
+            py-2
+            rounded-md
+            text-sm font-semibold
+            text-blue-100
+            bg-slate-800/80
+            border border-blue-400/30
+            hover:bg-blue-600/20
+            transition
+          "
+        >
+          {isPlaying ? "Dừng media" : "Chạy media"}
+        </button>
+      </div>
+    )}
 
-                    if (["m4a", "mp3", "wav", "ogg"].includes(extension)) {
-                        return <audio ref={audioRef} className="w-full h-full object-contain ">
-                            <source src={url} type={`audio/${extension}`} />
-                            Your browser does not support the audio element.
-                        </audio>;
-                    }
+    {/* Answer input */}
+    {!isSpectator && (
+      <div className="pt-2">
+        <PlayerAnswerInput isHost={isHost} />
+      </div>
+    )}
 
-                    if (["mp4", "webm", "ogg"].includes(extension)) {
-                        return <video ref={videoRef} className="w-full h-full object-contain rounded-lg min-h-[400px]">
-                            <source src={url} type={`video/${extension}`} />
-                            Your browser does not support the video tag.
-                        </video>;
-                    }
+    {/* Modal */}
+    {isModalOpen && (
+      <div
+        className="
+          fixed inset-0 z-50
+          bg-black/80
+          flex items-center justify-center
+        "
+        onClick={() => setIsModalOpen(false)}
+      >
+        {(() => {
+          const url = currentQuestion?.imgUrl
+          if (!url) return null
 
-                    return <p className="text-white">Unsupported media type</p>;
-                })()}
-            </div>
+          const extension = url.split('.').pop()?.toLowerCase() || ""
 
-            {isHost && (
-                <div className="flex gap-2 mt-4 w-full">
-                    <Button
-                        onClick={handleClickPlayMedia}
-                        variant="primary"
-                        size="md"
-                        className="flex-1 whitespace-nowrap"
-                    >
-                        {isPlaying ? "Dừng media" : "Chạy media"}
-                    </Button>
+          if (["jpg", "jpeg", "png", "gif", "webp"].includes(extension)) {
+            return (
+              <img
+                src={url}
+                className="max-w-[90vw] max-h-[90vh] rounded-xl"
+              />
+            )
+          }
 
-                </div>
-            )}
+          if (["m4a", "mp3", "wav", "ogg"].includes(extension)) {
+            return (
+              <audio controls autoPlay>
+                <source src={url} type={`audio/${extension}`} />
+              </audio>
+            )
+          }
 
-            {/* Answer input */}
-            {
-                !isSpectator &&
-                <PlayerAnswerInput
-                    isHost={isHost}
-                />
-            }
+          if (["mp4", "webm", "ogg"].includes(extension)) {
+            return (
+              <video
+                controls
+                autoPlay
+                className="max-w-[90vw] max-h-[90vh] rounded-xl"
+              >
+                <source src={url} type={`video/${extension}`} />
+              </video>
+            )
+          }
 
+          return null
+        })()}
+      </div>
+    )}
+  </div>
+)
 
-            {/* Modal for full-size image */}
-            {isModalOpen && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50"
-                    onClick={() => setIsModalOpen(false)}
-                >
-                    {(() => {
-                        const url = currentQuestion?.imgUrl;
-                        if (!url) return <p className="text-white">No media</p>;
-
-                        const extension = url.split('.').pop()?.toLowerCase() || "";
-
-                        if (["jpg", "jpeg", "png", "gif", "webp"].includes(extension)) {
-                            return (
-                                <img
-                                    src={url}
-                                    alt="Full Size"
-                                    className="max-w-full max-h-full rounded-xl"
-                                />
-                            );
-                        }
-
-                        if (["m4a", "mp3", "wav", "ogg"].includes(extension)) {
-                            return (
-                                <audio className="max-w-full">
-                                    <source src={url} type={`audio/${extension}`} />
-                                    Your browser does not support the audio element.
-                                </audio>
-                            );
-                        }
-
-                        if (["mp4", "webm", "ogg"].includes(extension)) {
-                            return (
-                                <video className="max-w-full max-h-full rounded-xl">
-                                    <source src={url} type={`video/${extension}`} />
-                                    Your browser does not support the video tag.
-                                </video>
-                            );
-                        }
-
-                        return <p className="text-white">Unsupported media type</p>;
-                    })()}
-                </div>
-            )}
-        </div>
-    );
 };
 
 

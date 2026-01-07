@@ -9,7 +9,8 @@ import {
   browserLocalPersistence,
   browserSessionPersistence,
   setPersistence,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  
 } from "firebase/auth";
 import app from "../../../shared/services/firebase/config";
 import { useAppDispatch } from "../../../app/store";

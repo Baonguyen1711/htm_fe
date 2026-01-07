@@ -106,112 +106,53 @@ function PlayerScore({ playerColors: propPlayerColors = {} }: PlayerScoreProps) 
     : [];
 
   return (
-
-    <>
-      <div className="bg-slate-800/80 backdrop-blur-md rounded-2xl border border-blue-400/40 shadow-xl p-5 w-full max-w-full mx-auto">
-        {
-          roomMode === "practice" && isRoomOwner && (
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={handleStartClick}
-                variant="success"
-                size="md"
-                fullWidth
-                leftIcon={<PlayCircleIcon className="w-4 h-4" />}
-                className="p-2 lg:p-3 shadow-md transition-all duration-200 hover:scale-105 font-medium text-sm lg:text-base"
-              >
-                {roomMode === "practice" ? "BẮT ĐẦU" : "BẮT ĐẦU VÒNG THI"}
-              </Button>
-              {/* Current Question Index Input */}
-
-            </div>
-          )
-        }
-        <h2 className="text-white font-extrabold text-2xl mb-4 text-center border-b border-blue-400/30 pb-3 tracking-wide">
-          Bảng Điểm
-        </h2>
-
-        <div className="flex flex-col gap-3">
-          <AnimatePresence>
-            {sortedScoresRanking.map((player: PlayerData, index: number) => (
-              <motion.div
-                key={player.userName || player.groupId || index}
-                layout
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -30 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className="flex flex-col gap-3 bg-gradient-to-r from-slate-700/70 to-slate-600/70 rounded-xl border border-blue-400/20 shadow-md p-4"
-              >
-                {/* Rank */}
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full text-white font-bold text-lg shadow-lg">
-                    {index + 1}
-                  </div>
-
-                  {/* if group */}
-                  {player.groupId && Array.isArray(player.avatar) ? (
-                    <div className="flex flex-wrap items-center gap-3">
-                      {player.avatar?.map((avatarUrl, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <img
-                            src={avatarUrl}
-                            alt={player.userName?.[i]}
-                            className="w-12 h-12 rounded-full border-2 border-blue-400/50 shadow-md"
-                          />
-                          <p className="text-white font-semibold text-sm">{player.userName?.[i]}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    // single player display
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={player.avatar}
-                        alt={player.userName}
-                        className="w-14 h-14 rounded-full border-2 border-blue-400/50 shadow-md"
-                      />
-                      {/* ✅ Invite Button */}
-                      <button
-                        onClick={() =>
-                          handleInviteClick(player.uid || "")
-                        }
-                        className="text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-transform"
-                      >
-                        <PlusCircle className="w-5 h-5" />
-                      </button>
-                      <p className="text-white font-semibold text-base">{player.userName}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Score */}
-                <div className="bg-gradient-to-r from-blue-600/50 to-cyan-500/50 backdrop-blur-sm text-white text-center py-1 px-3 rounded-lg font-mono text-lg border border-blue-400/30 shadow-sm whitespace-nowrap">
-                  {`${player.score} điểm`}
-                </div>
-              </motion.div>
-            ))}
-
-          </AnimatePresence>
-        </div>
-
-        {showInviteModal && (
-          <Modal
-            text={`${invitePlayerName} mời bạn tham gia nhóm của họ.`}
-            buttons={[
-              { text: "Chấp nhận", onClick: handleAcceptInvite, variant: "primary" },
-              { text: "Từ chối", onClick: () => setShowInviteModal(false), variant: "secondary" },
-            ]}
-            onClose={() => setShowInviteModal(false)}
-          />
-        )}
+    <div className="bg-slate-800/70 backdrop-blur-md border border-white/10 rounded-xl shadow-lg overflow-hidden">
+      {/* Header */}
+      <div className="h-10 flex items-center px-3 text-sm font-semibold text-white/80 border-b border-white/10">
+        Bảng điểm
       </div>
 
-      {/* Invite Modal */}
+      {/* Fixed 4 rows */}
+      <div className="flex flex-col">
+        {[0, 1, 2, 3].map((index) => {
+          const player = sortedScoresRanking[index];
 
-    </>
+          return (
+            <div
+              key={index}
+              className="h-14 flex items-center gap-3 px-3 border-b last:border-b-0 border-white/5 bg-slate-700/40"
+            >
+              {player ? (
+                <>
+                  {/* Avatar */}
+                  <img
+                    src={player.avatar}
+                    alt={player.userName}
+                    className="w-9 h-9 rounded-full border border-white/50 shrink-0 object-cover"
+                  />
 
+                  {/* Name */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white truncate">
+                      {player.userName}
+                    </p>
+                  </div>
+
+                  {/* Score */}
+                  <div className="text-sm font-mono text-cyan-300 shrink-0">
+                    {player.score}
+                  </div>
+                </>
+              ) : (
+                <div className="w-full h-full opacity-30" />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
+
 
 }
 

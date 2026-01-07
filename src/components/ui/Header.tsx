@@ -1,104 +1,138 @@
-import React from 'react'
+import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useFirebaseListener } from '../../shared/hooks';
-import {
-    EyeIcon,
-} from "@heroicons/react/24/solid";
+import { EyeIcon } from "@heroicons/react/24/solid";
 import { useAppDispatch } from '../../app/store';
-import { setCurrentCorrectAnswer, setCurrentQuestion, setCurrentRound } from '../../app/store/slices/gameSlice';
-interface RoundTab {
-    isHost?: boolean;
-    spectatorCount?: number
+import {
+  setCurrentCorrectAnswer,
+  setCurrentQuestion,
+  setCurrentRound
+} from '../../app/store/slices/gameSlice';
+
+interface HeaderProps {
+  isHost?: boolean;
+  spectatorCount?: number;
 }
-const Header: React.FC<RoundTab> = ({ isHost, spectatorCount }) => {
-    const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
-    const roomId = searchParams.get("roomId") || "";
-    const testName = searchParams.get("testName") || "";
-    const currentRound = searchParams.get("round") || "1";
-    const roomMode = searchParams.get("roomMode") || "room"
 
-    const { deletePath } = useFirebaseListener();
-    const dispatch = useAppDispatch();
-    const roundTabs = [
-        { key: "1", label: "NHỔ NEO" },
-        { key: "2", label: "VƯỢT SÓNG" },
-        { key: "3", label: "BỨT PHÁ" },
-        { key: "4", label: "CHINH PHỤC" },
-        { key: "final", label: "Tổng kết điểm" },
-        { key: "turn", label: "Phân lượt" },
-    ];
+const Header: React.FC<HeaderProps> = ({ isHost = false, spectatorCount = 0 }) => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { deletePath } = useFirebaseListener();
 
+  const roomId = searchParams.get("roomId") || "";
+  const testName = searchParams.get("testName") || "";
+  const currentRound = searchParams.get("round") || "1";
+  const roomMode = searchParams.get("roomMode") || "room";
 
+  const roundTabs = [
+    { key: "1", label: "NHỔ NEO" },
+    { key: "2", label: "VƯỢT SÓNG" },
+    { key: "3", label: "BỨT PHÁ" },
+    { key: "4", label: "CHINH PHỤC" },
+    { key: "final", label: "TỔNG KẾT" },
+    { key: "turn", label: "PHÂN LƯỢT" },
+  ];
 
-    return (
-        <div className="relative z-20 bg-slate-900/20 backdrop-blur-md border-b border-blue-400/20 shadow-lg">
-            <div className="flex flex-row items-center p-4 lg:p-6 gap-4 w-full">
-                {/* Logo and App Name - left */}
-                <a href="/" className="flex items-center space-x-3 lg:space-x-4 min-w-0 flex-1 hover:opacity-80 transition-opacity duration-200 cursor-pointer">
-                    <img
-                        src="/images/magellan-logo.png"
-                        alt="Magellan Logo"
-                        className="w-10 h-10 lg:w-12 lg:h-12 rounded-full shadow-lg border-blue-400/50"
-                    />
-                    <div className="flex flex-col">
-                        <h1 className="font-serif text-xl lg:text-2xl xl:text-3xl font-bold text-transparent bg-gradient-to-r from-blue-200 to-cyan-100 bg-clip-text">
-                            Hành Trình Magellan
-                        </h1>
-                        <p className="text-xs lg:text-sm text-blue-200/80 font-light tracking-wide hidden sm:block">
-                            Khám phá tri thức vượt đại dương
-                        </p>
-                    </div>
-                </a>
+  const handleRoundChange = async (key: string) => {
+    dispatch(setCurrentCorrectAnswer(""));
+    dispatch(setCurrentQuestion(null));
+    dispatch(setCurrentRound(key));
 
-                {/* Round Tabs - center, but tabs fit content and don't wrap */}
-                {isHost && roomMode !== "multiplayer" && (
-                    <div className="flex flex-1 justify-center">
-                        <div className="inline-flex bg-slate-800/80 rounded-xl shadow-lg px-2 py-1 gap-1 whitespace-nowrap">
-                            {roundTabs.map(tab => (
-                                <button
-                                    key={tab.key}
-                                    onClick={async () => {
-                                        if (["1", "2", "3", "4", "turn"].includes(tab.key)) {
-                                            dispatch(setCurrentCorrectAnswer(""))
-                                            dispatch(setCurrentQuestion(null))
-                                            dispatch(setCurrentRound(tab.key))
-                                            await deletePath("questions");
-                                            await deletePath("answers");
-                                            navigate(`/host?round=${tab.key}&testName=${testName}&roomId=${roomId}`);
-                                        }
+    // Xóa dữ liệu cũ
+    if (["1", "2", "3", "4", "turn"].includes(key)) {
+      await deletePath("questions");
+      await deletePath("answers");
+    }
 
-                                        if (tab.key === "final") {
-                                            dispatch(setCurrentCorrectAnswer(""))
-                                            dispatch(setCurrentQuestion(null))
-                                            dispatch(setCurrentRound(tab.key))
-                                            navigate(`/host?round=final&roomId=${roomId}&testName=${testName}`);
-                                        }
-                                    }}
-                                    className={`px-4 py-2 font-bold text-base rounded-lg transition-colors
-                                    ${currentRound === tab.key
-                                            ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow"
-                                            : "text-blue-200 hover:bg-blue-600/20"}
-                                `}
-                                    disabled={currentRound === tab.key}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
+    // Điều hướng
+    if (key === "final") {
+      navigate(`/host?round=final&roomId=${roomId}&testName=${testName}`);
+    } else {
+      navigate(`/host?round=${key}&testName=${testName}&roomId=${roomId}`);
+    }
+  };
 
-                {/* Right side: empty but takes same space as left for perfect centering */}
-                <div className="flex justify-end flex-1">
-                    <div className="flex items-center bg-slate-800/70 backdrop-blur-sm px-3 py-1 rounded-full border border-blue-400/30 shadow-md">
-                        <EyeIcon className="w-5 h-5 mr-2 text-blue-300" />
-                        <span className="text-blue-100 font-medium">{spectatorCount}</span>
-                    </div>
-                </div>
-            </div>
+  return (
+    <header className="relative z-20  from-cyan-900 via-blue-900 to-blue-950 border-b border-cyan-700/50">
+      <div className="container mx-auto px-6 h-full flex items-center justify-between">
+
+        {/* LEFT: Logo + Title */}
+        <a href="/" className="flex items-center gap-4 hover:opacity-90 transition">
+          <div className="w-14 h-14  rounded-2xl flex items-center justify-center shadow-xl ">
+            <img 
+              src="/images/magellan-logo.png" 
+              alt="Magellan Logo"
+              className="w-10 h-10 object-contain"
+            />
+          </div>
+          <div className="leading-tight">
+            <h1 className="text-2xl font-bold text-white tracking-wide">
+              Hành Trình Magellan
+            </h1>
+            <p className="text-sm text-cyan-200 opacity-90">
+              Khám phá tri thức vượt đại dương
+            </p>
+          </div>
+        </a>
+
+        {/* CENTER: Round Tabs (chỉ hiện cho Host và không phải multiplayer) */}
+        {isHost && roomMode !== "multiplayer" && (
+          <div className="hidden lg:flex items-center gap-2 bg-black/30 backdrop-blur border border-cyan-600/40 rounded-xl px-3 py-2 shadow-inner">
+            {roundTabs.map((tab) => {
+              const isActive = currentRound === tab.key;
+
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => handleRoundChange(tab.key)}
+                  disabled={isActive}
+                  className={`
+                    px-4 py-2 text-sm font-bold rounded-lg transition-all duration-200
+                    ${isActive
+                      ? "bg-cyan-500 text-blue-950 shadow-md scale-105"
+                      : "text-cyan-100 hover:bg-cyan-600/40 hover:text-white hover:shadow"
+                    }
+                  `}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* RIGHT: Spectator Count */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur border border-cyan-500/50 shadow-md">
+            <EyeIcon className="w-5 h-5 text-cyan-300" />
+            <span className="text-lg font-bold text-white">
+              {spectatorCount}
+            </span>
+            <span className="text-sm text-cyan-200">khán giả</span>
+          </div>
         </div>
-    )
-}
+
+      </div>
+
+      {/* Mobile Round Tabs (nếu cần sau này có thể thêm dropdown) */}
+      {isHost && roomMode !== "multiplayer" && (
+        <div className="lg:hidden container mx-auto px-6 pb-3">
+          <select
+            value={currentRound}
+            onChange={(e) => handleRoundChange(e.target.value)}
+            className="w-full px-4 py-2 bg-black/50 backdrop-blur border border-cyan-600/50 rounded-lg text-white font-medium"
+          >
+            {roundTabs.map(tab => (
+              <option key={tab.key} value={tab.key}>
+                {tab.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+    </header>
+  );
+};
 
 export default Header;

@@ -1,13 +1,23 @@
 import React, { useRef, useState } from 'react'
-import Play from '../../components/Play'
-import HostAnswer from '../../components/HostAnswer'
-import HostManagement from '../../components/HostManagement'
+// import Play from '../../components/Play'
+// import HostAnswer from '../../components/HostAnswer'
+// import HostManagement from '../../components/HostManagement'
 import MultipleChoice from '../../components/ui/MultipleChoice'
 import { MultipleChoiceProps } from '../../shared/types'
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useFirebaseListener } from '../../shared/hooks'
 import { useAppSelector } from '../../app/store'
+import Play from '../../components/NewPlay'
+import PlayerScore from '../../components/PlayerScore'
+import PlayerAnswer from '../../components/PlayerAnswer'
+import HostControlPanel from '../../components/HostControlPanel'
+import GameLayout from '../GameLayout'
+import HostManagement from '../../components/NewHostControlPanel'
+
+import { ScoreRanking } from '../ScoreRanking'
+import RoomModeLeaderboard from '../../components/ui/RoomModeLeaderboard'
+import HostAnswer from '../../components/NewHostAnswer'
 
 interface HostInterfaceProps {
   QuestionComponent: React.ReactNode
@@ -19,10 +29,10 @@ const Host: React.FC<HostInterfaceProps> = ({ QuestionComponent }) => {
 
 
   return (
-    <Play
+    <GameLayout
       questionComponent={QuestionComponent}
-      PlayerScore={roomMode === "multiplayer" ? null : <HostAnswer />}
-      SideBar={<HostManagement />}
+      PlayerScore={<HostAnswer/>}
+      HostManagement={<HostManagement/>}
       isHost={true}
     />
   )

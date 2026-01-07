@@ -102,6 +102,8 @@ export const useFirebaseListener = () => {
     if (!roomId) return () => { };
 
     return firebaseServices.listenToBroadcastedAnswer(roomId, (players) => {
+
+      console.log("players answers",players)
       dispatch(setPlayers(players))
 
       callback?.()
@@ -575,6 +577,15 @@ export const useFirebaseListener = () => {
     });
   }, [roomId]);
 
+  const listenToRoundMapping = useCallback((callback?: (data: any) => void) => {
+    if (!roomId) return () => { };
+
+    return firebaseServices.listenToRoundMapping(roomId, (data) => {
+      callback?.(data);
+    });
+  }, [roomId]);
+
+
   const listenToGroupInvite = useCallback((callback?: (data: any) => void) => {
     if (!roomId) return () => { };
 
@@ -712,6 +723,7 @@ export const useFirebaseListener = () => {
     listenToRoundStart,
     listenToNewPlayer,
     listenToSpectatorJoin,
+    listenToRoundMapping,
     // listenToPlayerAnswers,
     listenToCorrectAnswer,
     listenToBroadcastedAnswer,

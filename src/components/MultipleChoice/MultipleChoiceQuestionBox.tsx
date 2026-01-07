@@ -15,6 +15,7 @@ import { useAppDispatch } from '../../app/store';
 import CountdownCard from '../ui/CountDownCard';
 import { setSelectedChoice } from '../../app/store/slices/gameSlice';
 import { setIsPausedButtonDisabled } from '../../app/store/slices/gameSlice';
+import QuestionTimerBar from '../ui/QuestionTimeBar';
 
 
 interface Round1Props {
@@ -172,9 +173,11 @@ const MultipleChoiceQuestionBox: React.FC<Round1Props> = ({ isHost, questionInde
 
     return (
         <>
-            <div className="rounded-2xl border border-white/10 bg-slate-800/50 backdrop-blur-xl overflow-hidden">
+            <div className="flex-1 flex flex-col rounded-2xl border border-white/10 bg-slate-800/50 backdrop-blur-xl overflow-hidden">
                 {/* Question Header */}
+
                 <div className="p-6 border-b border-white/10">
+                    <QuestionTimerBar isHost={isHost} />
                     <div className="flex items-center gap-3 mb-4">
                         <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-sm font-medium">
                             Câu {questionIndex || "1"}
@@ -227,7 +230,7 @@ const MultipleChoiceQuestionBox: React.FC<Round1Props> = ({ isHost, questionInde
                 </div>
 
                 {/* Answer Options */}
-                <div className="p-6 grid grid-cols-2 gap-4">
+                <div className="p-6 flex-1 gap-4">
                     {
                         currentQuestion?.type === "TRAC_NGHIEM" && (
                             <MultipleChoice

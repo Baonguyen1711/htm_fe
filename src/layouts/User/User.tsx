@@ -1,53 +1,43 @@
-import React, { useEffect } from 'react'
-import Play from '../../components/Play'
+import React, { useRef, useState } from 'react'
+// import Play from '../../components/Play'
+import HostAnswer from '../../components/HostAnswer'
+import HostManagement from '../../components/HostManagement'
+import MultipleChoice from '../../components/ui/MultipleChoice'
+import { MultipleChoiceProps } from '../../shared/types'
+import { useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { useFirebaseListener } from '../../shared/hooks'
+import { useAppSelector } from '../../app/store'
+import Play from '../../components/NewPlay'
 import PlayerScore from '../../components/PlayerScore'
 import PlayerAnswer from '../../components/PlayerAnswer'
-import { useFirebaseListener } from '../../shared/hooks'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import MultipleChoice from '../../components/ui/MultipleChoice'
+import HostControlPanel from '../../components/HostControlPanel'
+import GameLayout from '../GameLayout'
+import { ScoreRanking } from '../ScoreRanking'
+import { PlayerAnswers } from '../PlayerAnswers'
 
-interface UserInterfaceProps {
-  QuestionComponent: React.ReactNode,
+import Leaderboard from '../../components/ui/LeaderBoard'
+import RoomModeLeaderboard from '../../components/ui/RoomModeLeaderboard'
+
+
+interface PlayerInterfaceProps {
+  questionComponent: React.ReactNode,
   isSpectator?: boolean
 }
 
+const Player: React.FC<PlayerInterfaceProps> = ({ questionComponent, isSpectator }) => {
+  const [params] = useSearchParams()
+  const roomMode = params.get("roomMode") || "room"
 
-const User: React.FC<UserInterfaceProps> = ({ QuestionComponent, isSpectator = false }) => {
-  const { listenToRoundStart } = useFirebaseListener();
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const roomId = searchParams.get("roomId") || "";
-  const round = searchParams.get("round") || "";
-  const roomMode = searchParams.get("roomMode") || "room";
-  const isPlayer = window.location.pathname.includes('play');
 
-  useEffect(() => {
-    const unsubscribePlayers = listenToRoundStart(
-      (round) => {
-        if(roomMode === "multiplayer") return
-        if (isSpectator) {
-          navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
-        }
-        if (isPlayer) {
-          navigate(`/play?round=${round}&roomId=${roomId}`, { replace: true });
-        }
-      }
-    )
-
-    return () => {
-      unsubscribePlayers();
-    };
-  }, [round]);
   return (
-    <Play
-      questionComponent={QuestionComponent}
-      PlayerScore={roomMode === "multiplayer" || roomMode === "practice" ? null : <PlayerAnswer isSpectator={isSpectator} />}
-      SideBar={<PlayerScore />}
+    <GameLayout
+      questionComponent={questionComponent}
+      PlayerScore={<RoomModeLeaderboard/>}
+      // PlayerAnswer={<PlayerAnswer/>}
       isHost={false}
-      isSpectator={isSpectator}
     />
   )
 }
 
-export default User
-
+export default Player

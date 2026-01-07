@@ -1,55 +1,28 @@
-import { useState, useEffect } from "react";
-import { Trophy, Medal, Award, Crown, Sparkles } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Trophy, Medal, Award, Crown, Home } from "lucide-react";
 import Leaderboard from "./ui/LeaderBoard";
 import { useAppSelector } from "../app/store";
-
-type AnswerStatus = "correct" | "wrong" | "pending";
-
-interface Player {
-  id: number;
-  name: string;
-  score: number;
-  avatar?: string;
-  answerHistory?: AnswerStatus[];
-}
+import { useNavigate } from "react-router-dom";
 
 interface FinalRankingProps {
-    isHost: boolean
+  isHost: boolean;
 }
 
-const FinalResultPage:React.FC<FinalRankingProps> = ({isHost}) => {
+const FinalResultPage: React.FC<FinalRankingProps> = ({ isHost }) => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [podiumRevealed, setPodiumRevealed] = useState([false, false, false]);
-  const {scoresRanking} = useAppSelector(state => state.game)
+  const [podiumRevealed, setPodiumRevealed] = useState([false, false, true, true]);
+  const { scoresRanking } = useAppSelector(state => state.game);
+  const navigate = useNavigate();
 
-  // Mock data - top 3 players
-//   const scoresRanking: Player[] = [
-//     { id: 1, name: "Nguyễn Văn A", score: 1250, answerHistory: ["correct", "correct", "correct", "correct", "correct"] },
-//     { id: 2, name: "Trần Thị B", score: 1100, answerHistory: ["correct", "wrong", "correct", "correct", "correct"] },
-//     { id: 3, name: "Lê Văn C", score: 950, answerHistory: ["correct", "correct", "wrong", "correct", "correct"] },
-//   ];
+  const topPlayers = [...(scoresRanking || [])]
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+    .slice(0, 4);
 
-  // Reveal podium positions one by one (3rd -> 2nd -> 1st)
   useEffect(() => {
-    // Reveal 3rd place
-    const timer1 = setTimeout(() => {
-      setPodiumRevealed(prev => [prev[0], prev[1], true]);
-    }, 500);
-
-    // Reveal 2nd place
-    const timer2 = setTimeout(() => {
-      setPodiumRevealed(prev => [prev[0], true, prev[2]]);
-    }, 1200);
-
-    // Reveal 1st place
-    const timer3 = setTimeout(() => {
-      setPodiumRevealed(prev => [true, prev[1], prev[2]]);
-    }, 1900);
-
-    // Switch to leaderboard after 5 seconds
-    const timer4 = setTimeout(() => {
-      setShowLeaderboard(true);
-    }, 5000);
+    const timer1 = setTimeout(() => setPodiumRevealed([false, false, true, true]), 600);
+    const timer2 = setTimeout(() => setPodiumRevealed([false, true, true, true]), 1400);
+    const timer3 = setTimeout(() => setPodiumRevealed([true, true, true, true]), 2200);
+    const timer4 = setTimeout(() => setShowLeaderboard(true), 5500);
 
     return () => {
       clearTimeout(timer1);
@@ -59,207 +32,189 @@ const FinalResultPage:React.FC<FinalRankingProps> = ({isHost}) => {
     };
   }, []);
 
-  const getPodiumStyle = (position: number) => {
-    switch (position) {
-      case 1:
-        return {
-          height: "h-40",
-          bg: "bg-gradient-to-t from-amber-600 to-amber-400",
-          border: "border-amber-300",
-          glow: "shadow-[0_0_60px_rgba(251,191,36,0.4)]",
-          icon: <Crown className="w-8 h-8 text-amber-300" />,
-          label: "1ST",
-        };
-      case 2:
+  const getPodiumStyle = (rank: number) => {
+    switch (rank) {
+      case 0: // 1st
         return {
           height: "h-28",
-          bg: "bg-gradient-to-t from-slate-500 to-slate-300",
-          border: "border-slate-200",
-          glow: "shadow-[0_0_40px_rgba(148,163,184,0.3)]",
-          icon: <Medal className="w-7 h-7 text-slate-200" />,
-          label: "2ND",
+          bg: "bg-gradient-to-t from-amber-600 to-amber-400",
+          border: "border-amber-300",
+          glow: "shadow-[0_0_40px_rgba(251,191,36,0.3)]",
+          icon: <Crown className="w-7 h-7 text-amber-300 drop-shadow-lg" />,
+          label: "1ST",
         };
-      case 3:
+      case 1: // 2nd
         return {
           height: "h-20",
-          bg: "bg-gradient-to-t from-amber-800 to-amber-600",
-          border: "border-amber-500",
-          glow: "shadow-[0_0_30px_rgba(180,83,9,0.3)]",
-          icon: <Award className="w-6 h-6 text-amber-400" />,
-          label: "3RD",
+          bg: "bg-gradient-to-t from-slate-500 to-slate-300",
+          border: "border-slate-200",
+          glow: "shadow-[0_0_30px_rgba(148,163,184,0.2)]",
+          icon: <Medal className="w-6 h-6 text-slate-200 drop-shadow-md" />,
+          label: "2ND",
         };
-      default:
+      case 2: // 3rd
+      case 3: // 4th
         return {
           height: "h-16",
-          bg: "bg-slate-700",
-          border: "border-slate-600",
-          glow: "",
-          icon: null,
-          label: "",
+          bg: "bg-gradient-to-t from-amber-800 to-amber-600",
+          border: "border-amber-500",
+          glow: "shadow-[0_0_20px_rgba(180,83,9,0.2)]",
+          icon: <Award className="w-5 h-5 text-amber-400 drop-shadow-sm" />,
+          label: rank === 2 ? "3RD" : "4TH",
         };
+      default:
+        return {};
     }
   };
 
+  const getPlayerAvatar = (player: any, size: string = "w-16 h-16") => (
+    <div className={`relative ${size}`}>
+      <div className="rounded-full bg-slate-600 border-3 border-white/15 overflow-hidden shadow-lg ring-2 ring-white/10">
+        {player.avatar ? (
+          <img src={player.avatar} alt={player.userName} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-xl font-bold text-white/70">
+            {player.userName?.charAt(0).toUpperCase()}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-900">
-      {/* Animated Background */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: "4s" }} />
+    <div className="h-screen bg-gradient-to-b from-cyan-900 via-blue-900 to-blue-950 relative overflow-hidden flex flex-col">
+      {/* Ocean Background */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1708864163871-311332fb9d5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvY2VhbiUyMHVuZGVyd2F0ZXIlMjBibHVlfGVufDF8fHx8MTc2NjQ4OTMzMnww&ixlib=rb-4.1.0&q=80&w=1080')] bg-cover bg-center" />
       </div>
 
-      {/* Sparkle particles */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {[...Array(20)].map((_, i) => (
-          <Sparkles
+      {/* Bubbles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(15)].map((_, i) => (
+          <div
             key={i}
-            className="absolute text-amber-400/30 animate-pulse"
+            className="absolute rounded-full bg-white opacity-20 animate-float"
             style={{
+              width: `${Math.random() * 30 + 10}px`,
+              height: `${Math.random() * 30 + 10}px`,
               left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              width: `${12 + Math.random() * 12}px`,
+              bottom: `-50px`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${Math.random() * 10 + 10}s`,
             }}
           />
         ))}
       </div>
 
       {/* Header */}
-      <header className="relative z-10 backdrop-blur-xl border-b border-white/10 bg-slate-900/60">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-center">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                <Trophy className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-center">
-                <h1 className="text-2xl font-bold text-white">Kết Quả Cuối Cùng</h1>
-                <p className="text-xs text-white/60">Chúc mừng các thí sinh xuất sắc!</p>
-              </div>
+      <header className="relative z-20 shrink-0 backdrop-blur-xl bg-cyan-900/70 border-b border-cyan-700/50">
+        <div className="container mx-auto px-6 py-4 text-center">
+          <div className="flex items-center justify-center gap-3">
+            <div>
+              <h1 className="text-2xl font-bold text-white">KẾT QUẢ CHUNG CUỘC</h1>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="relative z-10 p-6">
+      {/* Main */}
+      <main className="relative z-10 flex-1 flex items-center justify-center p-6">
         {!showLeaderboard ? (
-          /* Podium View */
-          <div className="max-w-4xl mx-auto h-[calc(100vh-160px)] flex flex-col items-center justify-center">
-            <h2 className="text-3xl font-bold text-white mb-12 text-center animate-fade-in">
-              🎉 Top 3 Thí Sinh Xuất Sắc 🎉
-            </h2>
+          <div className="w-full max-w-4xl mx-auto">
 
-            {/* Podium */}
-            <div className="flex items-end justify-center gap-4 md:gap-8">
-              {/* 2nd Place */}
-              <div className="flex flex-col items-center">
-                <div
-                  className={`transform transition-all duration-700 ease-out ${
-                    podiumRevealed[1] ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
-                  }`}
-                >
-                  {/* Player Info */}
+            <div className="flex items-end justify-center gap-6">
+              {/* 2nd */}
+              {topPlayers[1] && (
+                <div className={`transform transition-all duration-1000 ${podiumRevealed[1] ? "translate-y-0 opacity-100" : "translate-y-24 opacity-0"}`}>
                   <div className="mb-4 text-center">
-                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-slate-600 border-4 border-slate-300 mx-auto mb-2 flex items-center justify-center overflow-hidden shadow-xl">
-                      <span className="text-2xl md:text-3xl font-bold text-white/80">
-                        {scoresRanking[1]?.userName?.charAt(0)}
-                      </span>
-                    </div>
-                    <p className="text-white font-bold text-sm md:text-base">{scoresRanking[1]?.userName}</p>
-                    <p className="text-slate-300 font-bold text-lg md:text-xl">{scoresRanking[1]?.score} điểm</p>
+                    <div className="w-16 h-16 md:w-20 md:h-20">{getPlayerAvatar(topPlayers[1], "w-16 h-16 md:w-20 md:h-20")}</div>
+                    <p className="text-white font-semibold text-base mt-2">{topPlayers[1].userName}</p>
+                    <p className="text-slate-300 font-bold text-lg">{topPlayers[1].score} điểm</p>
                   </div>
-
-                  {/* Podium Block */}
-                  <div
-                    className={`w-24 md:w-32 ${getPodiumStyle(2).height} ${getPodiumStyle(2).bg} ${getPodiumStyle(2).glow} rounded-t-xl border-t-4 ${getPodiumStyle(2).border} flex flex-col items-center justify-start pt-3`}
-                  >
-                    {getPodiumStyle(2).icon}
-                    <span className="text-white font-black text-xl mt-1">{getPodiumStyle(2).label}</span>
+                  <div className={`w-24 md:w-28 ${getPodiumStyle(1).height} ${getPodiumStyle(1).bg} ${getPodiumStyle(1).glow} rounded-t-2xl border-t-5 ${getPodiumStyle(1).border} flex flex-col items-center justify-center pt-2`}>
+                    {getPodiumStyle(1).icon}
+                    <span className="text-white font-black text-xl mt-1">{getPodiumStyle(1).label}</span>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* 1st Place */}
-              <div className="flex flex-col items-center">
-                <div
-                  className={`transform transition-all duration-700 ease-out ${
-                    podiumRevealed[0] ? "translate-y-0 opacity-100 scale-100" : "translate-y-20 opacity-0 scale-95"
-                  }`}
-                >
-                  {/* Crown */}
-                  <div className="flex justify-center mb-2 animate-bounce">
-                    <Crown className="w-10 h-10 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]" />
+              {/* 1st */}
+              {topPlayers[0] && (
+                <div className={`transform transition-all duration-1000 delay-200 ${podiumRevealed[0] ? "translate-y-0 opacity-100" : "translate-y-32 opacity-0"}`}>
+                  <div className="flex justify-center mb-3 animate-bounce-slow">
+                    <Crown className="w-10 h-10 text-amber-300 drop-shadow-[0_0_15px_rgba(251,191,36,0.7)]" />
                   </div>
-
-                  {/* Player Info */}
-                  <div className="mb-4 text-center">
-                    <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-amber-500 border-4 border-amber-300 mx-auto mb-2 flex items-center justify-center overflow-hidden shadow-xl shadow-amber-500/50 ring-4 ring-amber-400/30">
-                      <span className="text-3xl md:text-4xl font-bold text-white">
-                        {scoresRanking[0]?.userName?.charAt(0)}
-                      </span>
-                    </div>
-                    <p className="text-white font-bold text-base md:text-lg">{scoresRanking[0]?.userName}</p>
-                    <p className="text-amber-400 font-bold text-xl md:text-2xl">{scoresRanking[0]?.score} điểm</p>
+                  <div className="mb-5 text-center">
+                    <div className="w-20 h-20 md:w-24 md:h-24">{getPlayerAvatar(topPlayers[0], "w-20 h-20 md:w-24 md:h-24")}</div>
+                    <p className="text-white font-bold text-lg mt-3">{topPlayers[0].userName}</p>
+                    <p className="text-amber-400 font-black text-2xl">{topPlayers[0].score} điểm</p>
                   </div>
-
-                  {/* Podium Block */}
-                  <div
-                    className={`w-28 md:w-36 ${getPodiumStyle(1).height} ${getPodiumStyle(1).bg} ${getPodiumStyle(1).glow} rounded-t-xl border-t-4 ${getPodiumStyle(1).border} flex flex-col items-center justify-start pt-4`}
-                  >
-                    <Trophy className="w-10 h-10 text-white drop-shadow-lg" />
-                    <span className="text-white font-black text-2xl mt-1">{getPodiumStyle(1).label}</span>
+                  <div className={`w-28 md:w-32 ${getPodiumStyle(0).height} ${getPodiumStyle(0).bg} ${getPodiumStyle(0).glow} rounded-t-2xl border-t-6 ${getPodiumStyle(0).border} flex flex-col items-center justify-center pt-3`}>
+                    <Trophy className="w-8 h-8 text-white drop-shadow-lg mb-1" />
+                    <span className="text-white font-black text-2xl">{getPodiumStyle(0).label}</span>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* 3rd Place */}
-              <div className="flex flex-col items-center">
-                <div
-                  className={`transform transition-all duration-700 ease-out ${
-                    podiumRevealed[2] ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
-                  }`}
-                >
-                  {/* Player Info */}
-                  <div className="mb-4 text-center">
-                    <div className="w-18 h-18 md:w-20 md:h-20 rounded-full bg-amber-700 border-4 border-amber-500 mx-auto mb-2 flex items-center justify-center overflow-hidden shadow-xl w-[72px] h-[72px] md:w-20 md:h-20">
-                      <span className="text-xl md:text-2xl font-bold text-white/80">
-                        {scoresRanking[2]?.userName?.charAt(0)}
-                      </span>
-                    </div>
-                    <p className="text-white font-bold text-sm md:text-base">{scoresRanking[2]?.userName}</p>
-                    <p className="text-amber-500 font-bold text-base md:text-lg">{scoresRanking[2]?.score} điểm</p>
-                  </div>
-
-                  {/* Podium Block */}
+              {/* 3rd & 4th */}
+              <div className="flex items-end gap-6">
+                {[2, 3].map(idx => topPlayers[idx] && (
                   <div
-                    className={`w-20 md:w-28 ${getPodiumStyle(3).height} ${getPodiumStyle(3).bg} ${getPodiumStyle(3).glow} rounded-t-xl border-t-4 ${getPodiumStyle(3).border} flex flex-col items-center justify-start pt-2`}
+                    key={idx}
+                    className={`transform transition-all duration-1000 ${podiumRevealed[idx] ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"}`}
                   >
-                    {getPodiumStyle(3).icon}
-                    <span className="text-white font-black text-lg mt-1">{getPodiumStyle(3).label}</span>
+                    <div className="mb-3 text-center">
+                      <div className="w-14 h-14 md:w-16 md:h-16">{getPlayerAvatar(topPlayers[idx], "w-14 h-14 md:w-16 md:h-16")}</div>
+                      <p className="text-white font-semibold text-sm mt-2">{topPlayers[idx].userName}</p>
+                      <p className="text-amber-500 font-bold text-base">{topPlayers[idx].score} điểm</p>
+                    </div>
+                    <div className={`w-20 md:w-24 ${getPodiumStyle(2).height} ${getPodiumStyle(2).bg} ${getPodiumStyle(2).glow} rounded-t-2xl border-t-4 ${getPodiumStyle(2).border} flex flex-col items-center justify-center pt-2`}>
+                      {getPodiumStyle(2).icon}
+                      <span className="text-white font-black text-lg mt-1">{idx === 2 ? "3RD" : "4TH"}</span>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
             </div>
 
-            {/* Progress indicator */}
-            <div className="mt-12 text-center animate-pulse">
-              <p className="text-white/50 text-sm">Đang chuyển sang bảng xếp hạng đầy đủ...</p>
+            <div className="text-center mt-12 animate-pulse">
+              <p className="text-white/60 text-base">Đang chuyển sang bảng xếp hạng đầy đủ...</p>
             </div>
           </div>
         ) : (
-          /* Leaderboard View */
-          <div className="max-w-2xl mx-auto animate-fade-in">
-            <div className="h-[calc(100vh-160px)]">
-              <Leaderboard
-                isHost={isHost}
-              />
-            </div>
+          <div className="w-full max-w-3xl mx-auto h-full animate-fade-in">
+            <Leaderboard isHost={isHost} />
           </div>
         )}
       </main>
+
+      {/* Nút Quay về Trang chủ - cố định dưới cùng */}
+      <div className="relative z-20 shrink-0 p-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <button
+            onClick={() => navigate("/")}
+            className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-cyan-200 font-semibold text-lg transition-all shadow-xl hover:shadow-cyan-500/30"
+          >
+            <Home className="w-6 h-6" />
+            Quay về Trang chủ
+          </button>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes float {
+          0% { transform: translateY(100vh); opacity: 0; }
+          10% { opacity: 0.2; }
+          90% { opacity: 0.2; }
+          100% { transform: translateY(-100px) translateX(${Math.random() * 100 - 50}px); opacity: 0; }
+        }
+        .animate-float { animation: float linear infinite; }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+        .animate-bounce-slow { animation: bounce-slow 2s ease-in-out infinite; }
+      `}</style>
     </div>
   );
 };

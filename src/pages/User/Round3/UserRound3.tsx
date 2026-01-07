@@ -10,7 +10,7 @@ function UserRound3({ isSpectator }: UserRound3Props) {
 
     return (
         <User
-            QuestionComponent={<PlayerQuestionBoxRound3 isHost={false} />}
+            questionComponent={<PlayerQuestionBoxRound3 isHost={false} />}
             isSpectator={isSpectator}
         />
     );

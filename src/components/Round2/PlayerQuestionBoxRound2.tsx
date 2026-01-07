@@ -10,6 +10,7 @@ import { store, useAppDispatch, useAppSelector } from '../../app/store';
 import { setCurrentCorrectAnswer, setCurrentQuestion, setRound2Grid } from '../../app/store/slices/gameSlice';
 import QuestionAndAnswer from '../../components/ui/QuestionAndAnswer/QuestionAndAnswer';
 import PlayerAnswerInput from '../ui/Input/PlayerAnswerInput';
+import QuestionTimerBar from '../ui/QuestionTimeBar';
 
 interface MatchPosition {
     x: number;
@@ -213,39 +214,60 @@ const PlayerQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     // Close menu on outside click
 
     return (
-        <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-xl border border-blue-400/30 shadow-2xl p-6 mb-4 relative">
+        <div
+            className="
+      w-full
+      bg-slate-900/40 backdrop-blur-md
+      border border-blue-400/20
+      rounded-xl
+      shadow-xl
+      px-5 py-4
+      flex flex-col gap-4
+    "
+        >
+            {/* Time bar */}
+            <QuestionTimerBar isHost={isHost} />
+
+            {/* Question */}
             <QuestionAndAnswer
                 currentQuestion={currentQuestion}
                 currentCorrectAnswer={currentCorrectAnswer}
             />
-            {isLoading ?
-                <FallBack />
-                : <GameGridRound2
-                    cellStyles={cellStyles}
-                    hintWords={hintWords}
-                    obstacleWord={obstacleWord}
-                    menu={menu}
-                    menuRef={menuRef as React.RefObject<HTMLDivElement>}
-                    isHost={false}
-                    isOpenAll={isOpenAll}
-                    isSpectator={isSpectator}
-                    showModal={showModal}
 
+            {/* Grid replaces media */}
+            <div className="w-full">
+                {isLoading ? (
+                    <FallBack />
+                ) : (
+                    <GameGridRound2
+                        cellStyles={cellStyles}
+                        hintWords={hintWords}
+                        obstacleWord={obstacleWord}
+                        menu={menu}
+                        menuRef={menuRef}
+                        isHost={isHost}
+                        isOpenAll={isOpenAll}
+                        isSpectator={isSpectator}
+                        showModal={showModal}
+                        onNumberClick={handleNumberClick}
+                        onMenuAction={handleMenuAction}
+                        onOpenObstacle={handleOpenObstacle}
+                        onShuffleGrid={handleSuffleGrid}
+                        onConfirmGrid={handleConfirmGrid}
+                    />
+                )}
+            </div>
 
-                    onNumberClick={handleNumberClick}
-                    onMenuAction={handleMenuAction}
-                    onOpenObstacle={handleOpenObstacle}
-                    onShuffleGrid={handleSuffleGrid}
-                    onConfirmGrid={handleConfirmGrid}
-
-                />}
+            {/* Answer input */}
             {!isSpectator && (
-                <PlayerAnswerInput isHost={isHost} />
+                <div className="pt-2">
+                    <PlayerAnswerInput isHost={isHost} />
+                </div>
             )}
         </div>
+    );
 
 
-    )
 }
 
 export default PlayerQuestionBoxRound2

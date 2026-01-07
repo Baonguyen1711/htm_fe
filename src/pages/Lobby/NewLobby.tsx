@@ -34,7 +34,7 @@ const LobbyRoom = ({ isHost = false }: LobbyRoomProps) => {
     const roomId = searchParams.get("roomId") || "1";
     const testName = searchParams.get("testName") || ""
     const multiplayerScoringMode = searchParams.get("playMode") || "manual"
-    const {multiplayerStart} = useGameApi()
+    const { multiplayerStart } = useGameApi()
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -73,7 +73,7 @@ const LobbyRoom = ({ isHost = false }: LobbyRoomProps) => {
         return () => {
             unsubscribe();
         };
-    },[])
+    }, [])
 
     // Countdown effect
     useEffect(() => {
@@ -93,7 +93,7 @@ const LobbyRoom = ({ isHost = false }: LobbyRoomProps) => {
                 navigate(`/host?roomId=${roomId}&testName=${testName}&roomMode=multiplayer&playMode=${multiplayerScoringMode}`);
             }
 
-            if(!isHost) {
+            if (!isHost) {
                 navigate(`/play?roomId=${roomId}&testName=${testName}&roomMode=multiplayer&playMode=${multiplayerScoringMode}`);
             }
         }
@@ -145,7 +145,7 @@ const LobbyRoom = ({ isHost = false }: LobbyRoomProps) => {
         }
     }, [isHost]);
 
-    
+
 
     /* =======================
        Handle disconnect
@@ -192,31 +192,54 @@ const LobbyRoom = ({ isHost = false }: LobbyRoomProps) => {
     };
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-slate-900">
+        <div className="h-screen bg-slate-800/60 relative flex flex-col overflow-hidden">
             {/* Background */}
-            <div className="fixed inset-0 -z-10">
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900" />
+            <div className="absolute bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.3)_1px,transparent_1px),radial-gradient(circle_at_75%_75%,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[length:100px_100px]"></div>
+
+            {/* Animated ocean background */}
+            {/* <div className="absolute inset-0 opacity-20 pointer-events-none">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1708864163871-311332fb9d5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvY2VhbiUyMHVuZGVyd2F0ZXIlMjBibHVlfGVufDF8fHx8MTc2NjQ4OTMzMnww&ixlib=rb-4.1.0&q=80&w=1080')] bg-cover bg-center" />
+            </div> */}
+
+            {/* Floating bubbles animation */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {[...Array(15)].map((_, i) => (
+                    <div
+                        key={i}
+                        className="absolute rounded-full bg-white opacity-20 animate-float"
+                        style={{
+                            width: `${Math.random() * 30 + 10}px`,
+                            height: `${Math.random() * 30 + 10}px`,
+                            left: `${Math.random() * 100}%`,
+                            bottom: `-50px`,
+                            animationDelay: `${Math.random() * 5}s`,
+                            animationDuration: `${Math.random() * 10 + 10}s`,
+                        }}
+                    />
+                ))}
             </div>
+            {/* <div className="fixed inset-0 -z-10">
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900" />
+            </div> */}
 
             {/* Header */}
-            <header className="backdrop-blur-xl border-b border-white/10 bg-slate-900/60">
-                <div className="px-6 py-4 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center">
-                            <img src="/images/magellan-logo.png" className="w-6 h-6 text-slate-900" ></img>
+            <header className="relative z-20  from-cyan-900 via-blue-900 to-blue-950 border-b border-cyan-700/50">
+                      <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center">
+                            <img src="/images/magellan-logo.png" className="w-8 h-8 text-slate-900" ></img>
                         </div>
-                        <div>
-                            <h1 className="text-xl font-bold text-white">
-                                Hành Trình Magellan
-                            </h1>
-                            <p className="text-xs text-white/60">
-                                Khám phá tri thức vượt đại dương
+                          <div>
+                            <h1 className="text-2xl font-bold text-white">Hành Trình Magellan</h1>
+                            <p className="text-sm text-cyan-200">
+                              Khám phá tri thức vượt đại dương
                             </p>
+                          </div>
                         </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <button
+            
+                        <div className="flex items-center gap-6">
+                          <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-white/10 text-white">
+                          <button
                             onClick={handleCopyCode}
                             className="flex items-center gap-3 px-4 py-2 rounded-lg bg-white/10 border border-white/20"
                         >
@@ -230,19 +253,15 @@ const LobbyRoom = ({ isHost = false }: LobbyRoomProps) => {
                                 <Copy className="w-4 h-4 text-white/60" />
                             )}
                         </button>
-
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 text-white/80">
-                            <Users className="w-5 h-5" />
-                            <span className="font-medium">
-                                {players.length}
-                            </span>
+                            <Users className="w-6 h-6" />
+                            <span className="text-lg font-semibold">{players.length}</span>
+                          </div>
                         </div>
-                    </div>
-                </div>
-            </header>
+                      </div>
+                    </header>
 
             {/* Status */}
-            <div className="px-6 py-3 flex justify-center bg-slate-800/50 border-b border-white/5">
+            <div className="px-6 py-3 flex justify-center  border-b border-white/5">
                 <div className="flex items-center gap-2 text-amber-400">
                     <Clock className="w-4 h-4 animate-pulse" />
                     <span className="text-sm">Đang chờ bắt đầu...</span>

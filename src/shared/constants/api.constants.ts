@@ -28,6 +28,7 @@ export const API_ENDPOINTS = {
     USED_PACKETS: '/game/packet/used',
     RETURN_TO_PACKET_SELECTION: '/game/packet/return',
     GRID: '/game/grid',
+    ROUND_MAPPING: '/game/round/mapping',
     ROUND_START: '/game/round/start',
     TIME_START: '/game/time',
     ROW_ACTION: '/game/row/action',

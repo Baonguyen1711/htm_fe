@@ -16,15 +16,17 @@ export default function LinkPreviewPanel({ links }: LinkPreviewPanelProps) {
     const fetchAll = async () => {
       const result: any[] = [];
 
-      for (let url of links) {
-        try {
-          const res = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`);
+      try {
+          const res = await fetch(`https://api.microlink.io?url=${encodeURIComponent(links[0])}`);
           const data = await res.json();
-          result.push({ url, data: data.data });
+          result.push({ url: links[0], data: data.data });
         } catch (err) {
           console.error(err);
         }
-      }
+
+      // for (let url of links) {
+        
+      // }
 
       setPreviews(result);
     };

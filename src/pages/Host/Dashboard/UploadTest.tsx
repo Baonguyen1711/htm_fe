@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import useTestApi from "../../../shared/hooks/api/useTestApi";
 import { toast } from 'react-toastify';
 import { Button } from '../../../shared/components/ui';
 
 const UploadTest: React.FC = () => {
   const { uploadTestToServer, uploadMultiplayerTestToServer } = useTestApi();
-  const [type, setType] = useState<"single" | "multi">("single"); // default: phòng thi
-  const [isPublic, setIsPublic] = useState(false); // default: private
+  const [type, setType] = useState<"single" | "multi">("single");
+  const [isPublic, setIsPublic] = useState(false);
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -14,7 +14,6 @@ const UploadTest: React.FC = () => {
     const fileInput = document.getElementById("fileUpload") as HTMLInputElement;
     const testNameInput = (document.getElementById("testName") as HTMLInputElement).value;
     const file = fileInput.files?.[0];
-    console.log("file", file);
 
     if (!file) {
       toast.error("Vui lòng chọn một file!");
@@ -27,7 +26,6 @@ const UploadTest: React.FC = () => {
     }
 
     try {
-      console.log(`🚀 Starting test upload: ${testNameInput}`);
       toast.info("Đang tải lên bộ đề...");
 
       if (type === "single") {
@@ -36,167 +34,134 @@ const UploadTest: React.FC = () => {
         await uploadMultiplayerTestToServer(testNameInput, file, isPublic);
       }
 
-      toast.success(`✅ Tải lên bộ đề "${testNameInput}" thành công!`);
-      console.log(`✅ Test upload completed successfully: ${testNameInput}`);
+      toast.success(`Tải lên bộ đề "${testNameInput}" thành công!`);
 
       // Reset form
       (document.getElementById("testName") as HTMLInputElement).value = "";
       fileInput.value = "";
-
+      setType("single");
+      setIsPublic(false);
     } catch (error) {
-      console.error(`❌ Test upload failed:`, error);
-      toast.error(`❌ Tải lên bộ đề thất bại. Vui lòng thử lại.`);
+      console.error("Upload failed:", error);
+      toast.error("Tải lên bộ đề thất bại. Vui lòng thử lại.");
     }
   };
 
   return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Tải Lên Đề Thi</h2>
-        <p className="text-blue-200/80">Tải lên file Excel chứa câu hỏi thi</p>
-      </div>
+    <div className="space-y-6">
+      {/* ===== CARD 1: TYPE / MODE ===== */}
+      <div className="bg-slate-800/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl shadow-sm p-6">
+        <div className="flex items-center justify-between pb-4">
+          <h3 className="text-lg font-medium text-white">Loại đề thi</h3>
+        </div>
 
-      {/* Tabs */}
-      <div className="flex mb-6 space-x-4">
-        <button
-          type="button"
-          onClick={() => setType("single")}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            type === "single"
-              ? "bg-blue-600 text-white"
-              : "bg-slate-600/50 text-blue-200 hover:bg-slate-600"
-          }`}
-        >
-          Phòng thi
-        </button>
-        <button
-          type="button"
-          onClick={() => setType("multi")}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            type === "multi"
-              ? "bg-blue-600 text-white"
-              : "bg-slate-600/50 text-blue-200 hover:bg-slate-600"
-          }`}
-        >
-          Nhiều người chơi
-        </button>
-      </div>
-
-      <div className="flex mb-6 space-x-4">
-        <button
-          type="button"
-          onClick={() => setIsPublic(false)}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            !isPublic
-              ? "bg-blue-600 text-white"
-              : "bg-slate-600/50 text-blue-200 hover:bg-slate-600"
-          }`}
-        >
-          Riêng tư
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsPublic(true)}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            isPublic
-              ? "bg-blue-600 text-white"
-              : "bg-slate-600/50 text-blue-200 hover:bg-slate-600"
-          }`}
-        >
-          Công khai bộ đề cho luyện tập
-        </button>
-      </div>
-
-      {/* Upload Form */}
-      <div className="bg-slate-700/50 backdrop-blur-sm border border-blue-400/30 rounded-xl p-8">
-        <form method="POST" encType="multipart/form-data" onSubmit={handleFormSubmit}>
-          <div className="mb-6">
-            <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="fileUpload">
-              Tải Lên File Excel
-            </label>
-            <div className="relative">
-              <input
-                type="file"
-                id="fileUpload"
-                name="excelFile"
-                accept=".xlsx"
-                className="w-full px-4 py-3 bg-slate-600/50 border border-blue-400/30 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm transition-all duration-300"
-                required
-              />
-            </div>
-            <p className="text-blue-300/60 text-xs mt-1">
-              Chỉ chấp nhận file .xlsx
-            </p>
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="testName">
-              Tên Bộ Đề
-            </label>
-            <div className="relative">
-              <input
-                id="testName"
-                name="testName"
-                className="w-full px-4 py-3 bg-slate-600/50 border border-blue-400/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent backdrop-blur-sm"
-                placeholder="Nhập tên bộ đề thi"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Template Download */}
-          <div className="mb-6">
-            <div className="bg-blue-600/20 border border-blue-400/30 rounded-lg p-4">
-              <div className="flex items-center">
-                <span className="text-2xl mr-3">💡</span>
-                <div>
-                  <p className="text-blue-200 font-medium">Cần mẫu file Excel?</p>
-                  <a 
-                    href="/example-template" 
-                    className="text-cyan-300 hover:text-cyan-200 font-medium transition-colors underline"
-                  >
-                    Tải xuống file mẫu tại đây
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            className="font-medium shadow-lg"
+        <div className="flex gap-4">
+          <button
+            type="button"
+            onClick={() => setType("single")}
+            className={`px-6 py-3 rounded-lg font-medium transition-all ${type === "single"
+                ? "bg-white text-slate-900"
+                : "bg-slate-700/50  hover:bg-slate-700"
+              }`}
           >
-             {type === "single" ? "Tải Lên Đề Thi (Phòng thi)" : "Tải Lên Đề Thi (Nhiều người chơi)"}
+            Phòng thi đơn
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setType("multi")}
+            className={`px-6 py-3 rounded-lg font-medium transition-all ${type === "multi"
+                ? "bg-white text-slate-900"
+                : "bg-slate-700/50  hover:bg-slate-700"
+              }`}
+          >
+            Nhiều người chơi
+          </button>
+        </div>
+
+        {type === "multi" && (
+          <div className="flex gap-4 mt-4">
+            <button
+              type="button"
+              onClick={() => setIsPublic(false)}
+              className={`px-5 py-2 rounded-lg ${!isPublic
+                  ? "bg-white text-slate-900"
+                  : "bg-slate-700/50 "
+                }`}
+            >
+              Riêng tư
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsPublic(true)}
+              className={`px-5 py-2 rounded-lg ${isPublic
+                  ? "bg-white text-slate-900"
+                  : "bg-slate-700/50 "
+                }`}
+            >
+              Công khai
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ===== CARD 2: UPLOAD FORM ===== */}
+      <div className="bg-slate-800/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl shadow-sm p-6">
+        <div className="flex items-center justify-between pb-4">
+          <h3 className="text-lg font-medium text-white">Tải lên đề thi</h3>
+        </div>
+
+        <form onSubmit={handleFormSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm ">File Excel</label>
+            <input
+              id="fileUpload"
+              type="file"
+              accept=".xlsx"
+              className="w-full px-4 py-3 bg-slate-700/60 border border-cyan-500/40 rounded-lg text-white"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm ">Tên bộ đề</label>
+            <input
+              id="testName"
+              type="text"
+              className="w-full px-4 py-3 bg-slate-700/60 border border-cyan-500/40 rounded-lg text-white"
+              placeholder="Ví dụ: Đề thi thử Toán 2025"
+            />
+          </div>
+
+          <Button type="submit" className="bg-slate-700/50 hover:bg-slate-700 h-11 px-6">
+            Tải lên đề thi
           </Button>
         </form>
       </div>
 
-      {/* Instructions */}
-      <div className="mt-8 bg-slate-700/30 backdrop-blur-sm border border-blue-400/20 rounded-xl p-6">
-        <h3 className="text-blue-200 font-medium mb-3 text-center">
-           Hướng dẫn tải lên
-        </h3>
-        <ul className="text-blue-200/80 text-sm space-y-2">
-          <li className="flex items-start">
-            <span className="text-cyan-300 mr-2">•</span>
-            File phải có định dạng .xlsx (Excel)
-          </li>
-          <li className="flex items-start">
-            <span className="text-cyan-300 mr-2">•</span>
-            Sử dụng file mẫu để đảm bảo định dạng đúng
-          </li>
-          <li className="flex items-start">
-            <span className="text-cyan-300 mr-2">•</span>
-            Tên bộ đề nên ngắn gọn và dễ nhớ
-          </li>
+      {/* ===== CARD 3: GUIDE ===== */}
+      <div className="bg-slate-800/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl shadow-sm p-6">
+        <div className="flex items-center justify-between pb-4">
+          <h3 className="text-lg font-medium text-white">Hướng dẫn</h3>
+        </div>
+
+        <ul className="space-y-2 text-sm">
+          <li>• Chỉ chấp nhận file Excel (.xlsx)</li>
+          <li>• Sử dụng đúng file mẫu để tránh lỗi</li>
+          <li>• Đề nhiều người chơi có thể chọn công khai</li>
         </ul>
+
+        <a
+          href="/templates/mau-de-thi.xlsx"
+          download
+          className="inline-block mt-4 hover:underline"
+        >
+          📄 Tải file mẫu Excel
+        </a>
       </div>
     </div>
   );
+
 };
 
 export default UploadTest;

@@ -78,7 +78,7 @@ function UserRound2({ isSpectator }: UserRound2Props) {
   return (
     <>
       <User
-        QuestionComponent={
+        questionComponent={
           <PlayerQuestionBoxRound2 isHost={false} isSpectator={isSpectator} />
         }
         isSpectator={isSpectator}

@@ -1,7 +1,7 @@
 import React from 'react';
 import PlayerAnswerInput from '../ui/Input/PlayerAnswerInput';
 import Cell from './Cell';
-import {  useAppSelector } from '../../app/store';
+import { useAppSelector } from '../../app/store';
 import { Button } from '../../shared/components/ui';
 
 
@@ -57,13 +57,17 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
   onShuffleGrid,
   onConfirmGrid,
 }) => {
+  const baseBtn =
+    "w-full px-4 py-2 rounded-xl border border-white/10 bg-slate-800/60 text-slate-100 \
+   hover:bg-slate-700/60 hover:border-white/20 transition-all duration-200 \
+   disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
 
   const { round2Grid } = useAppSelector(state => state.game);
 
 
   return (
     <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 mb-4 w-full max-w-3xl mx-auto">
-        
+
       {/* CNV Display for Host */}
       {isHost && obstacleWord && (
         <div className="mb-4 p-3 bg-red-900/30 border border-red-400/50 rounded-lg">
@@ -86,7 +90,7 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
                   const cellKey = `${rowIndex}-${colIndex}`;
                   const cellStyle = cellStyles[cellKey] || {
                     background: cell === '' || cell === ' ' ? 'transparent' : 'bg-white',
-                    textColor: typeof cell === 'string' && cell.includes('number') ? 'text-blue-400' : (isHost ? 'text-black' : isOpenAll? 'text-black': 'text-transparent'),
+                    textColor: typeof cell === 'string' && cell.includes('number') ? 'text-blue-400' : (isHost ? 'text-black' : isOpenAll ? 'text-black' : 'text-transparent'),
                   };
                   // console.log("cellStyle", cellStyle);
 
@@ -117,30 +121,17 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
 
       {isHost && (
         <div className="flex gap-2 mt-4 w-full">
-          <Button
-            onClick={onOpenObstacle}
-            variant="primary"
-            size="md"
-            className="flex-1 whitespace-nowrap"
-          >
+          <button className={baseBtn} onClick={onOpenObstacle}>
             Mở CNV
-          </Button>
-          <Button
-            onClick={onShuffleGrid}
-            variant="primary"
-            size="md"
-            className="flex-1 whitespace-nowrap"
-          >
+          </button>
+
+          <button className={baseBtn} onClick={onShuffleGrid}>
             Xáo trộn hàng ngang
-          </Button>
-          <Button
-            onClick={onConfirmGrid}
-            variant="primary"
-            size="md"
-            className="flex-1 whitespace-nowrap"
-          >
+          </button>
+          <button className={baseBtn} onClick={onConfirmGrid}>
             Xác nhận hàng ngang
-          </Button>
+          </button>
+
         </div>
       )}
 

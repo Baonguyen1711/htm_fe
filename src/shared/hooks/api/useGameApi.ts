@@ -520,6 +520,17 @@ export const useGameApi = () => {
         }
     }, []);
 
+    const addRoundMapping = useCallback(async (roomId: string, round_mapping: number[]) => {
+        try {
+            await gameApi.addRoundMappingForCustomize({
+                roomId: roomId,
+                round_mapping: round_mapping
+            })
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
     const multiplayerPause = useCallback(async (roomId: string) => {
         try {
             await gameApi.multiplayerPause(roomId);
@@ -606,6 +617,7 @@ export const useGameApi = () => {
         //     getPrefetchQuestion,
         //     getPacketNames,
         //     sendGrid,
+        addRoundMapping,
         startRound,
         startTimer,
         //     submitPlayerAnswer,

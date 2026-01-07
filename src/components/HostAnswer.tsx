@@ -223,7 +223,7 @@ function HostAnswer() {
     return (
         <div className="flex gap-6">
             {/* Left: Player grid */}
-            <div className={`grid ${spots.length > 4 ? 'grid-cols-4 grid-rows-2' : 'grid-cols-2'} gap-4 flex-1`}>
+            <div className={` gap-4 flex-1`}>
                 {spots.map((spotNumber) => {
                     console.log("localPlayersScore", localPlayersScore);
                     const player = players !== null ? players.find((p: PlayerData) => {

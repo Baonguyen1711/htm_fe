@@ -206,13 +206,10 @@ const InformationForm = () => {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Ocean/Starry Night Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-blue-900 to-blue-600">
+      <div className="absolute inset-0 bg-slate-800/60">
         {/* Stars overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.3)_1px,transparent_1px),radial-gradient(circle_at_75%_75%,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[length:100px_100px]"></div>
         {/* Ocean waves effect */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-blue-500/50 to-transparent"></div>
-        {/* Animated waves */}
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent animate-pulse"></div>
       </div>
 
       {/* Content overlay */}
@@ -250,7 +247,7 @@ const InformationForm = () => {
                 </div>
               </div>
               {
-                roomMode !== "multiplayer" && (
+                roomInfo?.room_mode !== "multiplayer" && (
                   <div className="mb-6">
                     <label className="block text-blue-200 text-sm font-medium mb-2" htmlFor="playerPosition">
                       Số thứ tự

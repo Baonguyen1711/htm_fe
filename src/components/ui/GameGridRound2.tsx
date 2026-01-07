@@ -75,42 +75,48 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
       )}
 
       {
-        round2Grid?.grid && round2Grid.grid.length > 0 && round2Grid.grid[0].length > 0 && (
-          <div
-            className="grid [grid-template-columns:repeat(var(--cols),32px)] [grid-auto-rows:max-content] gap-1 max-h-[750px] overflow-y-auto overflow-visible"
-            style={{ '--cols': round2Grid?.grid[0]?.length || 1 } as React.CSSProperties}
-          >
-            {round2Grid?.grid && round2Grid.grid.map((row, rowIndex) => (
-              <React.Fragment key={rowIndex}>
-                {row.map((cell, colIndex) => {
-                  const cellKey = `${rowIndex}-${colIndex}`;
-                  const cellStyle = cellStyles[cellKey] || {
-                    background: cell === '' || cell === ' ' ? 'transparent' : 'bg-white',
-                    textColor: typeof cell === 'string' && cell.includes('number') ? 'text-blue-400' : (isHost ? 'text-black' : isOpenAll? 'text-black': 'text-transparent'),
-                  };
-                  // console.log("cellStyle", cellStyle);
+  round2Grid?.grid && round2Grid.grid.length > 0 && round2Grid.grid[0].length > 0 && (
+    <div className="w-full max-w-full overflow-hidden">
+      <div
+        className="grid gap-1 mx-auto"
+        style={{
+          gridTemplateColumns: `repeat(${round2Grid.grid[0].length}, minmax(0, 1fr))`,
+          aspectRatio: `${round2Grid.grid[0].length} / ${round2Grid.grid.length}`,
+          maxWidth: '100%',
+          maxHeight: '100%',
+        }}
+      >
+        {round2Grid.grid.map((row, rowIndex) =>
+          row.map((cell, colIndex) => {
+            const cellKey = `${rowIndex}-${colIndex}`;
+            const cellStyle = cellStyles[cellKey] || {
+              background: cell === '' || cell === ' ' ? 'transparent' : 'bg-white',
+              textColor: typeof cell === 'string' && cell.includes('number') 
+                ? 'text-blue-400' 
+                : (isHost ? 'text-black' : isOpenAll ? 'text-black' : 'text-transparent'),
+            };
 
-                  return (
-                    <Cell
-                      key={cellKey}
-                      cell={cell}
-                      cellStyle={cellStyle}
-                      hintWords={hintWords}
-                      menu={menu}
-                      menuRef={menuRef as React.RefObject<HTMLDivElement>}
-                      isHost={isHost}
-                      colIndex={colIndex}
-                      rowIndex={rowIndex}
-                      onNumberClick={onNumberClick}
-                      onMenuAction={onMenuAction}
-                    />
-                  );
-                })}
-              </React.Fragment>
-            ))}
-          </div>
-        )
-      }
+            return (
+              <Cell
+                key={cellKey}
+                cell={cell}
+                cellStyle={cellStyle}
+                hintWords={hintWords}
+                menu={menu}
+                menuRef={menuRef as React.RefObject<HTMLDivElement>}
+                isHost={isHost}
+                colIndex={colIndex}
+                rowIndex={rowIndex}
+                onNumberClick={onNumberClick}
+                onMenuAction={onMenuAction}
+              />
+            );
+          })
+        )}
+      </div>
+    </div>
+  )
+}
 
 
       {!isSpectator && (

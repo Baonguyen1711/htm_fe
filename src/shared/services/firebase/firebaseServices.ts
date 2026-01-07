@@ -205,6 +205,10 @@ const firebaseServices = {
     return firebaseServices.listen(roomId, "player_answer", callback);
   },  
 
+  listenToRoundMapping: (roomId: string, callback: (data: any) => void) => {
+    return firebaseServices.listen(roomId, "round_mapping", callback);
+  },  
+
   findPlayerKey: async (playersRef: DatabaseReference, userId: string, roomId: string) => {
     try {
       const snapshot = await get(playersRef);

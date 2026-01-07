@@ -3,6 +3,7 @@ import { useFirebaseListener } from '../../shared/hooks';
 import { useTimeStart } from '../../context/timeListenerContext';
 import { useSounds } from '../../context/soundContext';
 import { Button } from '../../shared/components/ui';
+import QuestionTimerBar from '../ui/QuestionTimeBar';
 
 interface GameGridProps {
     initialGrid: string[][];

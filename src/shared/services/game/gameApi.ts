@@ -208,6 +208,16 @@ export const gameApi = {
   },
 
   /**
+   * Add round mapping for custom test
+   */
+  async addRoundMappingForCustomize(params: { roomId: string, round_mapping: number[] }): Promise<void> {
+    await api.post(
+      `${API_ENDPOINTS.GAME.ROUND_MAPPING}?room_id=${params.roomId}`,
+      JSON.stringify(params.round_mapping)
+    );
+  },
+
+  /**
    * Start a new round
    */
   async startTimer(params: { roomId: string }): Promise<void> {
