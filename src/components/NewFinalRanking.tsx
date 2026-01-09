@@ -82,11 +82,12 @@ const FinalResultPage: React.FC<FinalRankingProps> = ({ isHost }) => {
   );
 
   return (
-    <div className="h-screen bg-gradient-to-b from-cyan-900 via-blue-900 to-blue-950 relative overflow-hidden flex flex-col">
+    <div className="h-screen bg-slate-800/60 relative overflow-hidden flex flex-col">
       {/* Ocean Background */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
+      {/* <div className="absolute inset-0 opacity-20 pointer-events-none">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1708864163871-311332fb9d5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvY2VhbiUyMHVuZGVyd2F0ZXIlMjBibHVlfGVufDF8fHx8MTc2NjQ4OTMzMnww&ixlib=rb-4.1.0&q=80&w=1080')] bg-cover bg-center" />
-      </div>
+      </div> */}
+      <div className="absolute bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.3)_1px,transparent_1px),radial-gradient(circle_at_75%_75%,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[length:100px_100px]"></div>
 
       {/* Bubbles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

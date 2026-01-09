@@ -18,9 +18,10 @@ interface LeaderboardProps {
     isHost?: boolean;
     currentQuestion?: number;
     onOpenNewTab?: () => void;
+    isMultiplayer?: boolean
 }
 
-const RoomModePlayerAnswer = ({ isHost = false, currentQuestion = 0, onOpenNewTab }: LeaderboardProps) => {
+const RoomModePlayerAnswer = ({ isHost = false, currentQuestion = 0, onOpenNewTab, isMultiplayer = false }: LeaderboardProps) => {
     const [params] = useSearchParams();
     const round = params.get("round") || "1";
     const roomId = params.get("roomId") || "1";
@@ -41,11 +42,15 @@ const RoomModePlayerAnswer = ({ isHost = false, currentQuestion = 0, onOpenNewTa
     };
 
     const { scoresRanking } = useAppSelector(state => state.game);
-    
-      const sortedPlayers = useMemo(() => {
+
+    const sortedPlayers = useMemo(() => {
         if (!Array.isArray(scoresRanking)) return [];
-        return [...scoresRanking].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-      }, [scoresRanking]);
+        if(isMultiplayer) {
+            return [...scoresRanking].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+        } else {
+            return [...scoresRanking].sort((a, b) => (a.time ?? 0) - (b.time ?? 0));
+        }
+    }, [scoresRanking]);
 
 
     // const sortedScoresRanking = Array.isArray(scoresRanking)
@@ -73,10 +78,15 @@ const RoomModePlayerAnswer = ({ isHost = false, currentQuestion = 0, onOpenNewTa
         <div className="h-full flex flex-col rounded-2xl border border-white/10 bg-slate-800/50 backdrop-blur-xl overflow-hidden">
             {/* Header */}
             <div className="shrink-0 p-4 border-b border-white/10 flex items-center justify-between">
-                <h3 className="text-white font-bold text-lg flex items-center gap-3">
-                    Câu trả lời thí sinh
-                </h3>
-                {isHost && (
+                {
+                    !isMultiplayer && (
+                        <h3 className="text-white font-bold text-lg flex items-center gap-3">
+                            Câu trả lời thí sinh
+                        </h3>
+                    )
+                }
+
+                {isHost && !isMultiplayer && (
                     <button
                         onClick={closeLeaderboard}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-700/70 text-white/70 text-sm hover:bg-slate-600 transition-all"
@@ -91,19 +101,19 @@ const RoomModePlayerAnswer = ({ isHost = false, currentQuestion = 0, onOpenNewTa
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {sortedPlayers.length === 0 ? (
                     <div className="text-center py-8 text-white/50">
-                        Chưa có dữ liệu 
+                        Chưa có dữ liệu
                     </div>
                 ) : (
                     sortedPlayers.map((player, idx) => (
                         <div
                             key={player.uid}
                             className={`rounded-xl p-4 transition-all border ${idx === 0
-                                    ? "bg-amber-500/20 border-amber-500/40"
-                                    : idx === 1
-                                        ? "bg-slate-400/10 border-slate-400/30"
-                                        : idx === 2
-                                            ? "bg-amber-700/20 border-amber-700/40"
-                                            : "bg-slate-700/40 border-white/10"
+                                ? "bg-amber-500/20 border-amber-500/40"
+                                : idx === 1
+                                    ? "bg-slate-400/10 border-slate-400/30"
+                                    : idx === 2
+                                        ? "bg-amber-700/20 border-amber-700/40"
+                                        : "bg-slate-700/40 border-white/10"
                                 }`}
                         >
                             <div className="flex items-center gap-4">
@@ -126,23 +136,36 @@ const RoomModePlayerAnswer = ({ isHost = false, currentQuestion = 0, onOpenNewTa
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
                                     <p className="text-white font-semibold truncate">{player.userName}</p>
-
-                                    <div className="mt-2 space-y-1">
-                                        {player.answer ? (
-                                            <>
-                                                <p className="text-cyan-300 text-sm">
-                                                    <span className="font-medium">Câu trả lời:</span> {player.answer}
+                                    {
+                                        isMultiplayer && (
+                                            <div className="mt-2 space-y-1">
+                                                <p className="text-cyan-300">
+                                                    {`${player.score} điểm`}
                                                 </p>
-                                                {player.time !== undefined && (
-                                                    <p className="text-amber-400 text-sm">
-                                                        <span className="font-medium">Thời gian:</span> {player.time.toFixed(1)}s
-                                                    </p>
+                                            </div>
+                                        )
+                                    }
+                                    {
+                                        !isMultiplayer && (
+                                            <div className="mt-2 space-y-1">
+                                                {player.answer ? (
+                                                    <>
+                                                        <p className="text-cyan-300 text-sm">
+                                                            <span className="font-medium">Câu trả lời:</span> {player.answer}
+                                                        </p>
+                                                        {player.time !== undefined && (
+                                                            <p className="text-amber-400 text-sm">
+                                                                <span className="font-medium">Thời gian:</span> {player.time.toFixed(1)}s
+                                                            </p>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <p className="text-white/50 text-sm italic">Chưa trả lời</p>
                                                 )}
-                                            </>
-                                        ) : (
-                                            <p className="text-white/50 text-sm italic">Chưa trả lời</p>
-                                        )}
-                                    </div>
+                                            </div>
+                                        )
+                                    }
+
                                 </div>
                             </div>
 

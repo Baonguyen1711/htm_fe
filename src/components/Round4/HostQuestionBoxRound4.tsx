@@ -61,7 +61,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || "4"
     //api
-    const { sendGrid, sendSelectedCell, sendSelectedCellColor, resetBuzz } = useGameApi()
+    const { sendGrid, sendSelectedCell, sendSelectedCellColor, resetBuzz, openBuzz, closeBuzz } = useGameApi()
 
     //firebase listener
     const { listenToTimeStart, listenToRound4Grid } = useFirebaseListener()
@@ -145,6 +145,24 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
             confirmText: 'Xác nhận bảng',
             confirmVariant: 'primary'
         });
+    }
+
+    const hanldeOpenBuzz = async () => {
+        let timeId: any
+        try {
+            await openBuzz(roomId)
+            toast.success("đã mở bấm chuông!")
+
+            timeId = setTimeout(async () => {
+                await closeBuzz(roomId)
+            },5000)
+        } catch(e: any) {
+            toast.error("lỗi khi mở bấm chuông")
+        }
+
+        return () => {
+            clearTimeout(timeId)
+        }
     }
 
     const colorMap: Record<string, string> = {
@@ -328,6 +346,10 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
 
                 <button className={baseBtn} onClick={handleConfirmGrid}>
                     Xác nhận bảng
+                </button>
+
+                <button className={baseBtn} onClick={hanldeOpenBuzz}>
+                    Mở bấm chuông
                 </button>
 
             </div>

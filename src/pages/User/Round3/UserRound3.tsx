@@ -6,7 +6,7 @@ interface UserRound3Props {
     isSpectator?: boolean;
 }
 
-function UserRound3({ isSpectator }: UserRound3Props) {
+function UserRound3({ isSpectator = false }: UserRound3Props) {
 
     return (
         <User

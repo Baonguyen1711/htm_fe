@@ -163,6 +163,7 @@ const useAuth = () => {
 
   const isAuthenticated = () => {
     const auth = getAuth();
+    console.log("auth after logout", auth)
     return !!auth.currentUser;
   };
 

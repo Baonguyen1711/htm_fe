@@ -15,6 +15,7 @@ type TimeStartContextType = {
   setTimeLeft: React.Dispatch<React.SetStateAction<number>>,
   startTimer: (duration: number) => void;
   setExternalTimer: (seconds: number) => void;
+  pauseTimer: () => void
 
 };
 
@@ -113,11 +114,16 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
   };
 
   const isInitialMount = useRef(true);
-
+  const pauseTimer = () => {
+  if (timerRef.current) {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
+};
 
 
   return (
-    <TimeStartContext.Provider value={{ timeLeft, timeElapsed, playerAnswerTime, handleTimeEnd, setPlayerAnswerTime, setTimeLeft, startTimer, setExternalTimer }}>
+    <TimeStartContext.Provider value={{ timeLeft, timeElapsed, playerAnswerTime, handleTimeEnd, setPlayerAnswerTime, setTimeLeft, startTimer, setExternalTimer, pauseTimer }}>
       {children}
     </TimeStartContext.Provider>
   );

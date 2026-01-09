@@ -27,6 +27,7 @@ import { scale } from "framer-motion";
 interface PlayProps {
     questionComponent: ReactNode;
     isHost?: boolean;
+    isMultiplayerMode?: boolean
     isSpectator?: boolean;
     PlayerScore?: ReactNode
     HostManagement?: ReactNode
@@ -54,7 +55,7 @@ interface AnswerStats {
     count: number;
 }
 
-const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerScore, HostManagement, isSpectator = false }) => {
+const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerScore, HostManagement, isSpectator = false, isMultiplayerMode = false }) => {
 
     const roundTabs = [
         { key: "1", label: "NHỔ NEO" },
@@ -153,6 +154,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
 
                 if (isSpectator) {
                     navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
+                    return
                 }
 
                 console.log("isHost", isHost)
@@ -458,83 +460,94 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
 
 
     return (
-    <>
-        {/* Layer 1: Background cố định, luôn full màn hình */}
-        <div className="fixed inset-0 z-0 overflow-hidden">
-            {/* Gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-cyan-900 via-blue-900 to-blue-950" />
+        <>
+            {/* Layer 1: Background cố định, luôn full màn hình */}
+            <div className="fixed inset-0 z-0 overflow-hidden">
+                {/* Gradient background */}
+                <div className="absolute inset-0 bg-gradient-to-b from-cyan-900 via-blue-900 to-blue-950" />
 
-            {/* Hình ảnh đại dương */}
-            <div className="absolute inset-0 opacity-20">
-                <div 
-                    className="w-full h-full bg-cover bg-center"
-                    style={{
-                        backgroundImage: "url('https://images.unsplash.com/photo-1708864163871-311332fb9d5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvY2VhbiUyMHVuZGVyd2F0ZXIlMjBibHVlfGVufDF8fHx8MTc2NjQ4OTMzMnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral')"
-                    }}
-                />
-            </div>
-
-            {/* Bong bóng nổi */}
-            <div className="absolute inset-0 pointer-events-none">
-                {[...Array(15)].map((_, i) => (
+                {/* Hình ảnh đại dương */}
+                <div className="absolute inset-0 opacity-20">
                     <div
-                        key={i}
-                        className="absolute rounded-full bg-white opacity-20 animate-float"
+                        className="w-full h-full bg-cover bg-center"
                         style={{
-                            width: `${Math.random() * 30 + 10}px`,
-                            height: `${Math.random() * 30 + 10}px`,
-                            left: `${Math.random() * 100}%`,
-                            bottom: `-50px`,
-                            animationDelay: `${Math.random() * 5}s`,
-                            animationDuration: `${Math.random() * 10 + 10}s`,
+                            backgroundImage: "url('https://images.unsplash.com/photo-1708864163871-311332fb9d5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvY2VhbiUyMHVuZGVyd2F0ZXIlMjBibHVlfGVufDF8fHx8MTc2NjQ4OTMzMnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral')"
                         }}
                     />
-                ))}
+                </div>
+
+                {/* Bong bóng nổi */}
+                <div className="absolute inset-0 pointer-events-none">
+                    {[...Array(15)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="absolute rounded-full bg-white opacity-20 animate-float"
+                            style={{
+                                width: `${Math.random() * 30 + 10}px`,
+                                height: `${Math.random() * 30 + 10}px`,
+                                left: `${Math.random() * 100}%`,
+                                bottom: `-50px`,
+                                animationDelay: `${Math.random() * 5}s`,
+                                animationDuration: `${Math.random() * 10 + 10}s`,
+                            }}
+                        />
+                    ))}
+                </div>
             </div>
-        </div>
 
-        {/* Layer 2: Nội dung chính, có thể scroll nếu cần */}
-        <div className="relative z-10 min-h-screen flex flex-col">
-            {/* Header */}
-            <Header isHost={isHost} />
+            {/* Layer 2: Nội dung chính, có thể scroll nếu cần */}
+            <div className="relative z-10 min-h-screen flex flex-col">
+                {/* Header */}
+                <Header isHost={isHost} isMultiplayer={isMultiplayerMode} spectatorCount={spectatorsCount}/>
 
-            {/* Main Content */}
-            <div className="container mx-auto px-4 py-4 flex-1">
-                <div className="grid grid-cols-12 gap-4 h-full">
-                    {/* Question */}
-                    <div className={isHost ? "col-span-6 flex" : "col-span-7 flex"}>
-                        {questionComponent}
-                    </div>
-
-                    {/* Host controls */}
-                    {isHost && (
-                        <div className="col-span-3 flex flex-col gap-4">
-                            {HostManagement}
+                {/* Main Content */}
+                <div className="container mx-auto px-4 py-4 flex-1"
+                    style={{
+                        zoom: isMultiplayerMode ? 0.87 : 0.95
+                    }}
+                >
+                    <div className="grid grid-cols-12 gap-4 h-full">
+                        {/* Question */}
+                        <div className={`
+    ${isHost ? "col-span-6" : isMultiplayerMode ? "col-span-12" : "col-span-7"}
+    flex min-h-[90vh]
+  `}>
+                            {questionComponent}
                         </div>
-                    )}
 
-                    {/* Leaderboard / PlayerScore */}
-                    <div className={isHost ? "col-span-3" : "col-span-5"}>
-                        {PlayerScore}
+                        {/* Host controls */}
+                        {isHost && (
+                            <div className="col-span-3 flex flex-col gap-4">
+                                {HostManagement}
+                            </div>
+                        )}
+
+                        {/* Leaderboard / PlayerScore */}
+                        <div className={isHost ? "col-span-3" : "col-span-5"}>
+                            {PlayerScore}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {/* Leaderboard overlay */}
-        {showLeaderboard && (
-            <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-8">
-                <div className="w-full max-w-md animate-scale-in">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-white font-bold text-lg">Bảng Xếp Hạng</h3>
+            {/* Leaderboard overlay */}
+            {showLeaderboard && (
+                <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-start justify-center p-8">
+                    <div className="w-full max-w-md animate-scale-in mt-8">
+                        {
+                            isMultiplayerMode && (
+                                <div className="mb-4 flex items-center justify-between">
+                                    <h3 className="text-white font-bold text-lg">Bảng Xếp Hạng</h3>
+                                </div>
+                            )
+                        }
+                        <RoomModePlayerAnswer isHost={isHost} isMultiplayer={isMultiplayerMode} />
                     </div>
-                    <RoomModePlayerAnswer isHost={isHost} />
                 </div>
-            </div>
-        )}
+            )}
 
-        {/* CSS cho animation float */}
-        <style>{`
+            {/* CSS cho animation float */}
+            <style>{`
             @keyframes float {
                 0% {
                     transform: translateY(100vh) translateX(0);
@@ -555,8 +568,8 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                 animation: float linear infinite;
             }
         `}</style>
-    </>
-);
+        </>
+    );
 }
 
 export default GameLayout

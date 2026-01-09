@@ -28,7 +28,7 @@ interface UserRound4Props {
     isSpectator?: boolean;
 }
 
-function UserRound4({ isSpectator }: UserRound4Props) {
+function UserRound4({ isSpectator = false }: UserRound4Props) {
 
 
     const initialGrid = [

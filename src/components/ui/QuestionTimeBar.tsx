@@ -69,9 +69,9 @@ const QuestionTimerBar: React.FC<QuestionTimerBarProps> = ({
                         />
                     </div>
 
-                    <div className="mt-1 text-center text-white/70 font-mono text-sm">
+                    {/* <div className="mt-1 text-center text-white/70 font-mono text-sm">
                         {timeLeft !== null && `${formatSeconds(timeLeft)} s`}
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Control button – host only */}

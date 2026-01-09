@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useFirebaseListener } from '../../shared/hooks';
 import { EyeIcon } from "@heroicons/react/24/solid";
@@ -8,17 +8,25 @@ import {
   setCurrentQuestion,
   setCurrentRound
 } from '../../app/store/slices/gameSlice';
+import { useSounds } from '../../context/soundContext';
+import { Music, Users, VolumeX } from 'lucide-react';
+import { useAppSelector } from '../../app/store';
 
 interface HeaderProps {
   isHost?: boolean;
   spectatorCount?: number;
+  isMultiplayer?: boolean
 }
 
-const Header: React.FC<HeaderProps> = ({ isHost = false, spectatorCount = 0 }) => {
+const Header: React.FC<HeaderProps> = ({ isHost = false, spectatorCount = 0, isMultiplayer = false }) => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { deletePath } = useFirebaseListener();
+  const [isGameEnded, setIsGameEnded] = useState<boolean>(false)
+  const [isMusicPaused, setIsMusicPaused] = useState<boolean>(false)
+  const sounds = useSounds()
+  const { players } = useAppSelector(state => state.game)
 
   const roomId = searchParams.get("roomId") || "";
   const testName = searchParams.get("testName") || "";
@@ -53,6 +61,35 @@ const Header: React.FC<HeaderProps> = ({ isHost = false, spectatorCount = 0 }) =
     }
   };
 
+  const handleMusicIconClick = async () => {
+    if (isMusicPaused) {
+      setIsMusicPaused(false)
+    }
+
+    if (!isMusicPaused) {
+      setIsMusicPaused(true)
+    }
+  }
+
+  useEffect(() => {
+    if(!isMultiplayer) return 
+    const lobbyMusic = sounds["lobby_game"];
+    if (lobbyMusic) {
+      console.log("lobbyMusic", lobbyMusic)
+      if (!lobbyMusic.paused) {
+        console.log("pause music")
+        lobbyMusic.pause();
+        lobbyMusic.currentTime = 0;
+      } else {
+        console.log("music resume")
+        lobbyMusic.play();
+        lobbyMusic.currentTime = 0;
+      }
+
+
+    }
+  }, [isMusicPaused])
+
   return (
     <header className="relative z-20  from-cyan-900 via-blue-900 to-blue-950 border-b border-cyan-700/50">
       <div className="container mx-auto px-6 h-full flex items-center justify-between">
@@ -60,8 +97,8 @@ const Header: React.FC<HeaderProps> = ({ isHost = false, spectatorCount = 0 }) =
         {/* LEFT: Logo + Title */}
         <a href="/" className="flex items-center gap-4 hover:opacity-90 transition">
           <div className="w-14 h-14  rounded-2xl flex items-center justify-center shadow-xl ">
-            <img 
-              src="/images/magellan-logo.png" 
+            <img
+              src="/images/magellan-logo.png"
               alt="Magellan Logo"
               className="w-10 h-10 object-contain"
             />
@@ -90,7 +127,7 @@ const Header: React.FC<HeaderProps> = ({ isHost = false, spectatorCount = 0 }) =
                   className={`
                     px-4 py-2 text-sm font-bold rounded-lg transition-all duration-200
                     ${isActive
-                      ? "bg-cyan-500 text-blue-950 shadow-md scale-105"
+                      ? "bg-white text-blue-950 shadow-md scale-105"
                       : "text-cyan-100 hover:bg-cyan-600/40 hover:text-white hover:shadow"
                     }
                   `}
@@ -103,15 +140,40 @@ const Header: React.FC<HeaderProps> = ({ isHost = false, spectatorCount = 0 }) =
         )}
 
         {/* RIGHT: Spectator Count */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur border border-cyan-500/50 shadow-md">
-            <EyeIcon className="w-5 h-5 text-cyan-300" />
-            <span className="text-lg font-bold text-white">
-              {spectatorCount}
-            </span>
-            <span className="text-sm text-cyan-200">khán giả</span>
-          </div>
-        </div>
+        {
+          isMultiplayer ? (
+            <div className="flex items-center gap-3">
+              {/* Music Button */}
+              <button
+                className="px-4 py-3 rounded-xl bg-white/10 text-white hover:bg-slate-500 transition-all flex items-center justify-center"
+                onClick={handleMusicIconClick}
+              >
+                {isMusicPaused ? (
+                  <VolumeX className="w-5 h-5" />
+                ) : (
+                  <Music className="w-5 h-5" />
+                )}
+              </button>
+
+              {/* Player Count */}
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 text-white/80">
+                <Users className="w-5 h-5" />
+                <span className="font-medium">{players.length}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur border border-cyan-500/50 shadow-md">
+                <EyeIcon className="w-5 h-5 text-cyan-300" />
+                <span className="text-lg font-bold text-white">
+                  {spectatorCount}
+                </span>
+                <span className="text-sm text-cyan-200">khán giả</span>
+              </div>
+            </div>
+          )
+        }
+
 
       </div>
 

@@ -10,8 +10,9 @@ interface Props {
   selectedChoice: string | null;
   correctAnswer: string;
   onChoiceClick: (position: string) => void;
-  phase?: string
+  phase?: string;
   isPrivatePractice?: boolean;
+  isHorizontal?: boolean; // 👈 NEW
 }
 
 const MultipleChoice: React.FC<Props> = ({
@@ -21,11 +22,13 @@ const MultipleChoice: React.FC<Props> = ({
   onChoiceClick,
   phase,
   isPrivatePractice,
+  isHorizontal = false, // 👈 default
 }) => {
   const [highlighted, setHighlighted] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!correctAnswer || !selectedChoice) return;
+
     const newHighlights: Record<string, string> = {};
 
     if (selectedChoice === correctAnswer) {
@@ -44,16 +47,17 @@ const MultipleChoice: React.FC<Props> = ({
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [correctAnswer, selectedChoice]);
+  }, [correctAnswer, selectedChoice, isPrivatePractice]);
 
   const isShowAnswer = phase === "SHOW_ANSWER";
-  const canRevealAnswer =
-    phase === "SHOW_ANSWER" && !!correctAnswer;
-
-
+  const canRevealAnswer = isShowAnswer && !!correctAnswer;
 
   return (
-    <div className="grid grid-cols-2 gap-6 mt-4 w-full">
+    <div
+      className={`grid mt-2 w-full
+        ${isHorizontal ? "grid-cols-4 gap-6" : "grid-cols-2 gap-8"}
+      `}
+    >
       {choices.map((choice) => {
         const isSelected = selectedChoice === choice.position;
 
@@ -69,22 +73,37 @@ const MultipleChoice: React.FC<Props> = ({
             className = "opacity-40";
           }
         } else if (isSelected) {
-          className = "bg-blue-700 text-white scale-[1.03]";
+          className = "bg-blue-700 text-white scale-[1.04]";
         }
-
 
         return (
           <button
             key={choice.position}
             disabled={!!selectedChoice || isShowAnswer}
             onClick={() => onChoiceClick(choice.position)}
-            className={`w-full p-6 rounded-2xl ${className}`}
+            className={`
+              w-full rounded-3xl transition-all
+              flex items-center justify-center text-center
+              ${isHorizontal ? "p-6 min-h-[120px] text-base" : "p-8 min-h-[140px] text-lg"}
+              ${className}
+            `}
           >
-            <b>{choice.position}.</b> {choice.content}
+            {isHorizontal ? (
+              <div className="flex flex-col items-center gap-2">
+                <b className="text-lg">{choice.position}</b>
+                <span className="leading-snug">
+                  {choice.content}
+                </span>
+              </div>
+            ) : (
+              <div className="leading-relaxed">
+                <b className="mr-2">{choice.position}.</b>
+                {choice.content}
+              </div>
+            )}
           </button>
         );
       })}
-
     </div>
   );
 };

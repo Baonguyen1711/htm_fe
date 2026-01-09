@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { useTimeStart } from "../../../context/timeListenerContext";
 import { useSounds } from "../../../context/soundContext";
 import QuestionTimerBar from "../../../components/ui/QuestionTimeBar";
+import GameLayout from "../../../layouts/GameLayout";
 
 interface Player {
   id: number;
@@ -85,7 +86,8 @@ const NewHostMultipleChoice: React.FC<NewHostMultipleChoiceProps> = ({ isHost })
   const { sendCorrectAnswer, startTimer, multiplayerResume, multiplayerPause, getSpecificQuestion, multiplayerSubmit, getNextQuestion, updateGameState, multiplayerEnd } = useGameApi()
   const currentQuestionRef = useRef(currentQuestion)
   const isFirstMouned = useRef(false)
-  const { timeLeft } = useTimeStart()
+  const { timeLeft, startTimer: startCountdownTimer, pauseTimer } = useTimeStart()
+  const [remainingMs, setRemainingMs] = useState<any>()
 
   const roundTime: Record<string, number> = {
     "1": 15,
@@ -243,6 +245,22 @@ const NewHostMultipleChoice: React.FC<NewHostMultipleChoiceProps> = ({ isHost })
           await sendCorrectAnswer(roomId);
         }
 
+        if (data && data.paused) {
+          console.log("state data", data)
+          pauseTimer()
+          const remaining = data.remainingMs ? data.remainingMs / 1000 : 15
+          setRemainingMs(remaining)
+          const lobbyMusic = sounds["lobby_game"];
+          if (lobbyMusic) {
+            console.log("lobbyMusic", lobbyMusic)
+            if (!lobbyMusic.paused) {
+              console.log("play music")
+              lobbyMusic.pause();
+              lobbyMusic.currentTime = 0;
+            }
+          }
+        }
+
         // if (data && data.phase === "LEADERBOARD") {
         //   console.log("state data", data)
         //   handleShowLeaderboardTimed()
@@ -391,35 +409,15 @@ const NewHostMultipleChoice: React.FC<NewHostMultipleChoiceProps> = ({ isHost })
   }, [])
 
   const prevPhaseRef = useRef<string | null>(null);
+  const prevPausedRef = useRef<string | null>(null);
   useEffect(() => {
     dispatch(setCurrentPlayer({
       answer: "",
     }))
 
-    if (currentState?.paused) {
-      const lobbyMusic = sounds["lobby_game"];
-      if (lobbyMusic) {
-        console.log("lobbyMusic", lobbyMusic)
-        if (!lobbyMusic.paused) {
-          console.log("pause music")
-          lobbyMusic.pause();
-          lobbyMusic.currentTime = 0;
-        }
-      }
-    }
 
-    if (!currentState?.paused) {
-      const lobbyMusic = sounds["lobby_game"];
-      if (lobbyMusic) {
-        console.log("lobbyMusic", lobbyMusic)
-        if (lobbyMusic.paused) {
-          console.log("pause music")
-          lobbyMusic.play();
-          lobbyMusic.currentTime = 0;
-        }
-      }
-    }
     if (currentState?.phase === "QUESTION") {
+      startCountdownTimer(15)
       hasSubmittedRef.current = false
       console.log("reset submitted ref")
     }
@@ -460,6 +458,34 @@ const NewHostMultipleChoice: React.FC<NewHostMultipleChoiceProps> = ({ isHost })
     handleTimeEnd()
 
   }, [currentState?.phase]);
+
+  useEffect(() => {
+    if (currentState?.paused) {
+      const lobbyMusic = sounds["lobby_game"];
+      if (lobbyMusic) {
+        console.log("lobbyMusic", lobbyMusic)
+        if (!lobbyMusic.paused) {
+          console.log("pause music")
+          lobbyMusic.pause();
+          lobbyMusic.currentTime = 0;
+        }
+      }
+    }
+
+    if (!currentState?.paused) {
+      console.log("state data", currentState)
+      startCountdownTimer(remainingMs)
+      const lobbyMusic = sounds["lobby_game"];
+      if (lobbyMusic) {
+        console.log("lobbyMusic", lobbyMusic)
+        if (lobbyMusic.paused) {
+          console.log("play music")
+          lobbyMusic.play();
+          lobbyMusic.currentTime = 0;
+        }
+      }
+    }
+  }, [currentState?.paused])
 
   useEffect(() => {
     let timeout: NodeJS.Timeout | undefined;
@@ -642,140 +668,131 @@ const NewHostMultipleChoice: React.FC<NewHostMultipleChoiceProps> = ({ isHost })
   }, [countdown]);
 
   return (
-    <div className="h-screen bg-gradient-to-b from-cyan-900 via-blue-900 to-blue-950 relative flex flex-col overflow-hidden">
-      {/* Animated ocean background */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1708864163871-311332fb9d5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvY2VhbiUyMHVuZGVyd2F0ZXIlMjBibHVlfGVufDF8fHx8MTc2NjQ4OTMzMnww&ixlib=rb-4.1.0&q=80&w=1080')] bg-cover bg-center" />
-      </div>
+    <>
+      <GameLayout
+        questionComponent={
+          <MultipleChoiceQuestionBox
+            questionIndex={currentState?.currentQuestion || 1}
+            isHost={isHost}
+            phase={currentState?.phase}
+          />}
+        PlayerScore={isHost ? (
+          <Leaderboard isHost={isHost} currentQuestion={currentState?.currentQuestion || 1} />) : null
+        }
+        HostManagement={isHost && (
+          <div className="col-span-3 space-y-4">
+            {/* Answer Stats Chart */}
+            <AnswerStatsChart stats={stats} totalPlayers={players.length} />
 
-      {/* Floating bubbles animation */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-white opacity-20 animate-float"
-            style={{
-              width: `${Math.random() * 30 + 10}px`,
-              height: `${Math.random() * 30 + 10}px`,
-              left: `${Math.random() * 100}%`,
-              bottom: `-50px`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${Math.random() * 10 + 10}s`,
-            }}
-          />
-        ))}
-      </div>
+            {/* Answer Display Controls */}
+            <div className="rounded-2xl border border-white/10 bg-slate-800/50 backdrop-blur-xl p-4 space-y-3">
+              <h4 className="text-white/70 text-sm font-medium px-2">Hiển thị đáp án</h4>
 
-      <div className="relative z-10 flex flex-col h-full overflow-auto">
-        {/* Header - giữ nguyên kiểu cũ nếu bạn có component Header riêng */}
-        <header className="relative z-20  from-cyan-900 via-blue-900 to-blue-950 border-b border-cyan-700/50">
-          <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg">
-                <img src="/images/magellan-logo.png" className="w-8 h-8 text-slate-900" ></img>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">Hành Trình Magellan</h1>
-                <p className="text-sm text-cyan-200">
-                  {isHost ? "Chế độ Host" : "Chế độ Thí sinh"} - Trắc nghiệm
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-6">
               <button
-                onClick={handleMusicIconClick}
-                className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all"
+                onClick={openLeaderBoard}
+                className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${showStudentAnswer
+                  ? "bg-cyan-500 text-slate-900"
+                  : "bg-slate-600 text-white hover:bg-slate-500"
+                  }`}
               >
-                {isMusicPaused ? <VolumeX className="w-6 h-6 text-white" /> : <Music className="w-6 h-6 text-white" />}
+                {showStudentAnswer ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showStudentAnswer ? "Ẩn thống kê" : "Hiện thống kê"}
               </button>
 
-              <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-white/10 text-white">
-                <Users className="w-6 h-6" />
-                <span className="text-lg font-semibold">{players.length}</span>
-              </div>
-            </div>
-          </div>
-        </header>
-
-
-
-        {/* Main Content */}
-        <div className="container mx-auto px-6 py-4 flex-1 ">
-          <div className="grid grid-cols-12 gap-6 h-full">
-            {/* Question Area */}
-
-            <div className={isHost ? "col-span-6 flex flex-col h-full" : "col-span-7 flex flex-col h-full"}>
-
-              <MultipleChoiceQuestionBox
-                questionIndex={currentState?.currentQuestion || 1}
-                isHost={isHost}
-                phase={currentState?.phase}
-              />
+              <button
+                onClick={() => {
+                  handleSendCorrectAnswer()
+                  setShowAnswer(!showAnswer)
+                }}
+                className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${showAnswer
+                  ? "bg-amber-500 text-slate-900"
+                  : "bg-slate-600 text-white hover:bg-slate-500"
+                  }`}
+              >
+                {showAnswer ? <EyeOff className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                {showAnswer ? "Ẩn đáp án" : "Hiện đáp án"}
+              </button>
             </div>
 
-            {/* Host Controls */}
-            {isHost && (
-              <div className="col-span-3 space-y-4">
-                <AnswerStatsChart stats={stats} totalPlayers={players.length} />
-
-                <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-cyan-500/20 p-4 space-y-3">
-                  <h4 className="text-cyan-200 text-sm font-semibold">Hiển thị đáp án</h4>
-                  <button
-                    onClick={() => setShowStudentAnswer(!showStudentAnswer)}
-                    className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all"
-                  >
-                    {showStudentAnswer ? "Ẩn thống kê" : "Hiện thống kê"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleSendCorrectAnswer();
-                      setShowAnswer(!showAnswer);
-                    }}
-                    className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold transition-all"
-                  >
-                    {showAnswer ? "Ẩn đáp án đúng" : "Hiện đáp án đúng"}
-                  </button>
-                </div>
-
-                <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-cyan-500/20 p-4 space-y-3">
-                  <h4 className="text-cyan-200 text-sm font-semibold">Điều hướng</h4>
-                  {/* Giữ nguyên logic playMode auto/manual như cũ */}
-                  {playMode === "auto" ? (
+            {/* Question Navigation */}
+            <div className="rounded-2xl border border-white/10 bg-slate-800/50 backdrop-blur-xl p-4 space-y-3">
+              <h4 className="text-white/70 text-sm font-medium px-2">Điều hướng</h4>
+              {
+                playMode === "auto" ?
+                  (
                     <>
-                      <button onClick={handlePauseGame} className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-400 text-white font-semibold">
-                        Tạm dừng
-                      </button>
-                      <button onClick={handleResumeGame} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handlePauseGame}
+                          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-600 text-white text-sm font-medium hover:bg-slate-500 transition-all"
+                        >
+                          <SkipForward className="w-4 h-4" />
+                          Tạm dừng
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={handleResumeGame}
+                        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 transition-all"
+                      >
+                        <ChevronRight className="w-4 h-4" />
                         Tiếp tục
                       </button>
                     </>
-                  ) : (
+                  )
+                  :
+                  (
                     <>
-                      <button onClick={handleNextQuestion} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          defaultValue={"1"}
+                          className="w-16 px-3 py-2 rounded-lg bg-slate-700 border border-white/10 text-white text-center text-sm"
+                        />
+                        <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-600 text-white text-sm font-medium hover:bg-slate-500 transition-all">
+                          <SkipForward className="w-4 h-4" />
+                          Đến câu
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={handleNextQuestion}
+                        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 transition-all"
+                      >
+                        <ChevronRight className="w-4 h-4" />
                         Câu tiếp theo
                       </button>
                     </>
-                  )}
-                </div>
+                  )
+              }
 
-                <button onClick={handleEndGameClick} className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold">
-                  Kết thúc trận đấu
+            </div>
+
+            {/* Utilities */}
+            <div className="rounded-2xl border border-white/10 bg-slate-800/50 backdrop-blur-xl p-4 space-y-3">
+              <button
+                className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-600 text-white text-sm font-medium hover:bg-slate-500 transition-all"
+                onClick={handleEndGameClick}
+              >
+                <RotateCcw className="w-4 h-4" />
+                Kết thúc trận đấu
+              </button>
+
+              {/* <button className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-600 text-white text-sm font-medium hover:bg-slate-500 transition-all">
+                  <RotateCcw className="w-4 h-4" />
+                  Chấm điểm tự động
                 </button>
-              </div>
-            )}
 
-            {/* Leaderboard / Player Answers */}
-            <div className={isHost ? "col-span-3" : "col-span-5"}>
-              <div className="h-full bg-white/5 backdrop-blur-md rounded-2xl border border-cyan-500/20 p-4">
-                <Leaderboard isHost={isHost} currentQuestion={currentState?.currentQuestion || 1} />
-              </div>
+                <button className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 transition-all">
+                  <Award className="w-4 h-4" />
+                  Xác nhận điểm
+                </button> */}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Countdown & Game End Overlay - giữ nguyên */}
+        )}
+        isHost={isHost}
+        isMultiplayerMode={true}
+      />
       {countdown !== null && (
         <div className="fixed inset-0 z-[100] bg-blue-950/95 flex items-center justify-center">
           <div className="text-center">
@@ -793,18 +810,165 @@ const NewHostMultipleChoice: React.FC<NewHostMultipleChoiceProps> = ({ isHost })
           </div>
         </div>
       )}
+    </>
 
-      {/* Animation styles */}
-      <style>{`
-        @keyframes float {
-          0% { transform: translateY(100vh) translateX(0); opacity: 0; }
-          10% { opacity: 0.2; }
-          90% { opacity: 0.2; }
-          100% { transform: translateY(-100px) translateX(${Math.random() * 100 - 50}px); opacity: 0; }
-        }
-        .animate-float { animation: float linear infinite; }
-      `}</style>
-    </div>
+    // <>
+
+    //   {/* <div className="fixed inset-0 z-0 overflow-hidden">
+    //     {/* Gradient background */}
+    //     <div className="absolute inset-0 bg-gradient-to-b from-cyan-900 via-blue-900 to-blue-950" />
+
+    //     {/* Hình ảnh đại dương */}
+    //     <div className="absolute inset-0 opacity-20">
+    //       <div
+    //         className="w-full h-full bg-cover bg-center"
+    //         style={{
+    //           backgroundImage: "url('https://images.unsplash.com/photo-1708864163871-311332fb9d5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvY2VhbiUyMHVuZGVyd2F0ZXIlMjBibHVlfGVufDF8fHx8MTc2NjQ4OTMzMnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral')"
+    //         }}
+    //       />
+    //     </div>
+
+    //     <div className="relative z-10 flex flex-col h-full overflow-auto">
+    //       {/* Header - giữ nguyên kiểu cũ nếu bạn có component Header riêng */}
+    //       <header className="relative z-20  from-cyan-900 via-blue-900 to-blue-950 border-b border-cyan-700/50">
+    //         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+    //           <div className="flex items-center gap-4">
+    //             <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg">
+    //               <img src="/images/magellan-logo.png" className="w-8 h-8 text-slate-900" ></img>
+    //             </div>
+    //             <div>
+    //               <h1 className="text-2xl font-bold text-white">Hành Trình Magellan</h1>
+    //               <p className="text-sm text-cyan-200">
+    //                 {isHost ? "Chế độ Host" : "Chế độ Thí sinh"} - Trắc nghiệm
+    //               </p>
+    //             </div>
+    //           </div>
+
+    //           <div className="flex items-center gap-6">
+    //             <button
+    //               onClick={handleMusicIconClick}
+    //               className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all"
+    //             >
+    //               {isMusicPaused ? <VolumeX className="w-6 h-6 text-white" /> : <Music className="w-6 h-6 text-white" />}
+    //             </button>
+
+    //             <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-white/10 text-white">
+    //               <Users className="w-6 h-6" />
+    //               <span className="text-lg font-semibold">{players.length}</span>
+    //             </div>
+    //           </div>
+    //         </div>
+    //       </header>
+
+
+
+    //       {/* Main Content */}
+    //       <div className="container mx-auto px-6 py-4 flex-1 ">
+    //         <div className="grid grid-cols-12 gap-6 h-full">
+    //           {/* Question Area */}
+
+    //           <div className={isHost ? "col-span-6 flex flex-col h-full" : "col-span-7 flex flex-col h-full"}>
+
+    //             <MultipleChoiceQuestionBox
+    //               questionIndex={currentState?.currentQuestion || 1}
+    //               isHost={isHost}
+    //               phase={currentState?.phase}
+    //             />
+    //           </div>
+
+    //           {/* Host Controls */}
+    //           {isHost && (
+    //             <div className="col-span-3 space-y-4">
+    //               <AnswerStatsChart stats={stats} totalPlayers={players.length} />
+
+    //               <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-cyan-500/20 p-4 space-y-3">
+    //                 <h4 className="text-cyan-200 text-sm font-semibold">Hiển thị đáp án</h4>
+    //                 <button
+    //                   onClick={() => setShowStudentAnswer(!showStudentAnswer)}
+    //                   className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all"
+    //                 >
+    //                   {showStudentAnswer ? "Ẩn thống kê" : "Hiện thống kê"}
+    //                 </button>
+    //                 <button
+    //                   onClick={() => {
+    //                     handleSendCorrectAnswer();
+    //                     setShowAnswer(!showAnswer);
+    //                   }}
+    //                   className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold transition-all"
+    //                 >
+    //                   {showAnswer ? "Ẩn đáp án đúng" : "Hiện đáp án đúng"}
+    //                 </button>
+    //               </div>
+
+    //               <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-cyan-500/20 p-4 space-y-3">
+    //                 <h4 className="text-cyan-200 text-sm font-semibold">Điều hướng</h4>
+    //                 {/* Giữ nguyên logic playMode auto/manual như cũ */}
+    //                 {playMode === "auto" ? (
+    //                   <>
+    //                     <button onClick={handlePauseGame} className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-400 text-white font-semibold">
+    //                       Tạm dừng
+    //                     </button>
+    //                     <button onClick={handleResumeGame} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold">
+    //                       Tiếp tục
+    //                     </button>
+    //                   </>
+    //                 ) : (
+    //                   <>
+    //                     <button onClick={handleNextQuestion} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold">
+    //                       Câu tiếp theo
+    //                     </button>
+    //                   </>
+    //                 )}
+    //               </div>
+
+    //               <button onClick={handleEndGameClick} className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold">
+    //                 Kết thúc trận đấu
+    //               </button>
+    //             </div>
+    //           )}
+
+    //           {/* Leaderboard / Player Answers */}
+    //           <div className={isHost ? "col-span-3" : "col-span-5"}>
+    //             <div className="h-full bg-white/5 backdrop-blur-md rounded-2xl border border-cyan-500/20 p-4">
+    //               <Leaderboard isHost={isHost} currentQuestion={currentState?.currentQuestion || 1} />
+    //             </div>
+    //           </div>
+    //         </div>
+    //       </div>
+    //     </div>
+
+    //     {/* Countdown & Game End Overlay - giữ nguyên */}
+    // {countdown !== null && (
+    //   <div className="fixed inset-0 z-[100] bg-blue-950/95 flex items-center justify-center">
+    //     <div className="text-center">
+    //       <div className="text-[180px] font-black text-cyan-400 drop-shadow-2xl">
+    //         {countdown > 0 ? countdown : "BẮT ĐẦU!"}
+    //       </div>
+    //     </div>
+    //   </div>
+    // )}
+
+    // {isGameEnded && (
+    //   <div className="fixed inset-0 z-[100] bg-blue-950/95 flex items-center justify-center">
+    //     <div className="text-center text-white">
+    //       <h1 className="text-6xl font-bold mb-8">Trận đấu đã kết thúc!</h1>
+    //     </div>
+    //   </div>
+    // )}
+
+    //     {/* Animation styles */}
+    //     <style>{`
+    //     @keyframes float {
+    //       0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    //       10% { opacity: 0.2; }
+    //       90% { opacity: 0.2; }
+    //       100% { transform: translateY(-100px) translateX(${Math.random() * 100 - 50}px); opacity: 0; }
+    //     }
+    //     .animate-float { animation: float linear infinite; }
+    //   `}</style>
+    //   </div> */}
+    // </>
+
   );
 };
 

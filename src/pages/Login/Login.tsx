@@ -166,6 +166,17 @@ const Login = () => {
                 </Link>
               </p>
             </div>
+            <div className="mt-6 text-center">
+              <p className="text-blue-200/70 text-sm">
+                Hoặc{' '}
+                <Link
+                  to="/spectatorJoin"
+                  className="text-cyan-300 hover:text-cyan-200 font-medium transition-colors"
+                >
+                  Tham gia phòng thi với tư cách khán giả
+                </Link>
+              </p>
+            </div>
           </div>
 
           {/* Back to Home */}

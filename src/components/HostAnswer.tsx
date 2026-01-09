@@ -28,7 +28,7 @@ function HostAnswer() {
     // Confirmation modal hook
     const { modalState, showConfirmModal, closeModal } = useConfirmModal();
 
-    const { listenToBroadcastedAnswer, listenToScores, listenToPlayerColors } = useFirebaseListener()
+    const { listenToBroadcastedAnswer, listenToScores, listenToPlayerColors, listenToCurrentTurn } = useFirebaseListener()
     const [localPlayersScore, setLocalPlayersScore] = useState<Partial<PlayerData[]>>([])
     const { openBuzz, sendCurrentTurn, updateScoring, setPlayerColor, closeBuzz } = useGameApi()
     const dispatch = useAppDispatch();
@@ -152,6 +152,11 @@ function HostAnswer() {
         setTurn(0);
     }, [round]);
 
+    useEffect(() => {
+        const unsub = listenToCurrentTurn((turn) => setCurrentTurn(turn));
+        return () => unsub();
+    }, [roomId]);
+
 
     // useEffect(() => {
     //     const currentScoreList = localStorage.getItem("scoreList");
@@ -180,7 +185,7 @@ function HostAnswer() {
             setPlayerColors(colors || {});
         });
         return () => unsubscribePlayerColors();
-    }, [roomId, listenToPlayerColors]);
+    }, []);
 
     const storedPlayers = localStorage.getItem("playerList");
 
@@ -247,11 +252,20 @@ function HostAnswer() {
                     // const playerScore = playerScores.find((score: Score) => score.stt === spotNumber.toString());
                     // const answer = answerList?.find((a: Answer) => parseInt(a.stt) === spotNumber);
                     const isCurrent = currentTurn !== null && Number(currentTurn) === spotNumber;
+                    const color = playerColors[player?.stt || ""];
+                    console.log("playerColors", playerColors)
+                    console.log("color", color)
+                    console.log("isCurrent", isCurrent)
                     return player ? (
                         <div
                             key={spotNumber}
                             onClick={() => setSelectedPlayer(player)}
-                            className={`relative flex items-center w-full min-h-[180px] bg-slate-800/80 rounded-xl p-4 shadow-md border border-slate-700/50 transition-all duration-200 ${isCurrent ? "ring-4 ring-yellow-400 border-yellow-400" : ""}`}
+                            className={`relative flex items-center w-full min-h-[180px] bg-slate-800/80 rounded-xl p-4 shadow-md border border-slate-700/50 transition-all duration-200 ${isCurrent ? "ring-4 ring-yellow-400 border-yellow-400" : ""}`
+
+                            }
+                            style={{
+                                borderColor: color || "rgba(148,163,184,0.4)"
+                            }}
                         >
                             {/* Kick Player Button */}
                             <button

@@ -66,7 +66,11 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
 
 
   return (
-    <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 mb-4 w-full max-w-3xl mx-auto">
+    <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 mb-4 w-full max-w-3xl mx-auto"
+      style={{
+        zoom: 0.9
+      }}
+    >
 
       {/* CNV Display for Host */}
       {isHost && obstacleWord && (

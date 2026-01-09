@@ -36,6 +36,7 @@ const Player: React.FC<PlayerInterfaceProps> = ({ questionComponent, isSpectator
       PlayerScore={<RoomModeLeaderboard/>}
       // PlayerAnswer={<PlayerAnswer/>}
       isHost={false}
+      isSpectator={isSpectator}
     />
   )
 }

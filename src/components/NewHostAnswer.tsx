@@ -76,6 +76,28 @@ function HostAnswer() {
         );
     };
 
+    const initializeTurnAssignments = () => {
+        const assignments: { [spot: number]: number | null } = {};
+        for (let i = 1; i <= Math.min(maxPlayers, 8); i++) {
+            assignments[i] = null;
+        }
+        return assignments;
+    };
+    const [turnAssignments, setTurnAssignments] = useState<{ [spot: number]: number | null }>(initializeTurnAssignments());
+    const handleAssignTurn = (spot: number, turnNumber: number) => {
+        setTurnAssignments((prev) => {
+            // Remove this turnNumber from any other spot
+            const updated = { ...prev };
+            Object.keys(updated).forEach((key) => {
+                if (updated[Number(key)] === turnNumber) {
+                    updated[Number(key)] = null;
+                }
+            });
+            updated[spot] = turnNumber;
+            return updated;
+        });
+    };
+
     const handleKickPlayerClick = (player: PlayerData) => {
         setPlayerToKick(player);
         setKickModalOpen(true);
@@ -118,9 +140,17 @@ function HostAnswer() {
                 const player = players?.find(p => parseInt(p.stt || "") === spotNumber);
                 const score = localPlayersScore?.find(p => parseInt(p?.stt || "") === spotNumber);
                 if (!player) return <div key={spotNumber} className="bg-slate-800/80 rounded-xl h-28 opacity-50" />;
-
+                const isCurrent = currentTurn !== null && Number(currentTurn) === spotNumber;
+                const color = playerColors[player?.stt || ""];
+                console.log("playerColors", playerColors)
+                console.log("color", color)
+                console.log("isCurrent", isCurrent)
                 return (
-                    <div key={spotNumber} className="bg-slate-800/80 rounded-xl p-3 flex flex-col gap-2 shadow-md border border-slate-700/50 text-sm">
+                    <div key={spotNumber} className={`bg-slate-800/80 rounded-xl p-3 flex flex-col gap-2 shadow-md border border-slate-700/50 text-sm ${isCurrent ? "ring-4 ring-yellow-400" : ""}`}
+                        style={{
+                            borderColor: color || "rgba(148,163,184,0.4)", // fallback slate
+                        }}
+                    >
                         {/* Header: avatar + name + score + time + kick */}
                         <div className="flex items-center gap-3">
                             <div className="relative w-12 h-12">
@@ -130,15 +160,21 @@ function HostAnswer() {
                                     className="absolute top-0 right-0 w-4 h-4 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-xs"
                                 >×</button>
                                 {round === "4" && (
-                                    <div className="absolute -bottom-1 -right-1">
-                                        <SimpleColorPicker
-                                            playerStt={player.stt}
-                                            isHost
-                                            currentColor={playerColors[player.stt || 0]}
-                                            onColorChange={handleColorChange}
-                                            usedColors={usedColors}
-                                        />
-                                    </div>
+                                    <>
+                                        <div className="absolute -bottom-1 -right-1">
+                                            <SimpleColorPicker
+                                                playerStt={player.stt}
+                                                isHost
+                                                currentColor={playerColors[player.stt || 0]}
+                                                onColorChange={handleColorChange}
+                                                usedColors={usedColors}
+                                            />
+
+
+                                        </div>
+
+
+                                    </>
                                 )}
                             </div>
                             <div className="flex-1">
@@ -171,6 +207,45 @@ function HostAnswer() {
                         >
                             {currentTurn === parseInt(player.stt || "") ? 'Đang thi' : 'Cập nhật lượt thi'}
                         </Button>
+                        {
+                            (round === "3" || round === "4") && (
+                                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                                    <span className="text-blue-300 text-xs font-semibold">Lượt:</span>
+
+                                    {[1, 2, 3, 4].map((turnNum) => (
+                                        <button
+                                            key={turnNum}
+                                            type="button"
+                                            className={`px-2 py-1 rounded text-xs font-semibold border transition
+        ${turnAssignments[spotNumber] === turnNum
+                                                    ? "bg-blue-500 text-white border-blue-600"
+                                                    : "bg-slate-700 text-blue-200 border-slate-600 hover:bg-blue-600 hover:text-white"
+                                                }`}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleAssignTurn(spotNumber, turnNum);
+                                            }}
+                                        >
+                                            {turnNum}
+                                        </button>
+                                    ))}
+
+                                    {turnAssignments[spotNumber] && (
+                                        <button
+                                            type="button"
+                                            className="px-2 py-1 rounded text-xs bg-gray-600 text-white border border-gray-700 hover:bg-gray-700"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleAssignTurn(spotNumber, null as any);
+                                            }}
+                                        >
+                                            X
+                                        </button>
+                                    )}
+                                </div>
+                            )
+                        }
+
 
                         {/* Round 2/4 special buttons */}
                         {round === "2" && (

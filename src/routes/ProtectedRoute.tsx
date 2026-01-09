@@ -83,6 +83,7 @@ const ProtectedRoute = ({
                     const requiredRole = routeRoleMap[`/${location.pathname.split('/')[1]}`];
                     console.log("payload room Id", payload.roomId);
                     console.log("roomId", roomId);
+                    console.log("returned payload", payload)
                     
                     
 

@@ -12,13 +12,24 @@ const QuestionAndAnswer: React.FC<QuestionAndAnswerProps> = ({
 }) => {
     return (
         <>
-            <h2 className="text-2xl font-bold text-white mb-2 text-center drop-shadow">
+            <h2 className="text-xl font-bold text-white mb-2 text-center drop-shadow">
                 {currentQuestion?.question || ""}
             </h2>
 
-            <h2 className="text-xl font-semibold text-white mb-4 text-center drop-shadow">
-                {currentCorrectAnswer ? currentCorrectAnswer : ""}
-            </h2>
+            {currentCorrectAnswer && (
+                <h3 className="
+    text-base 
+    font-light 
+    italic 
+    text-white-300/80 
+    mb-4 
+    text-center 
+    tracking-wide
+  ">
+                    Đáp án: {currentCorrectAnswer}
+                </h3>
+            )}
+
 
         </>
 

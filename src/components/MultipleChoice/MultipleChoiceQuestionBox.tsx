@@ -200,7 +200,11 @@ const MultipleChoiceQuestionBox: React.FC<Round1Props> = ({ isHost, questionInde
                 </div>
 
                 {/* Media Area (if any) */}
-                <div className="aspect-video flex items-center justify-center bg-slate-900/50 border-b border-white/10">
+                <div className="flex items-center justify-center
+  bg-slate-900/50 border-b border-white/10
+  max-h-[100vh]
+  min-h-[65vh]
+  overflow-hidden">
                     {(() => {
                         const url = currentQuestion?.imgUrl;
                         if (!url) return <p className="text-white">No media</p>;
@@ -230,7 +234,7 @@ const MultipleChoiceQuestionBox: React.FC<Round1Props> = ({ isHost, questionInde
                 </div>
 
                 {/* Answer Options */}
-                <div className="p-6 flex-1 gap-4">
+                <div className="p-4 flex-1 gap-4">
                     {
                         currentQuestion?.type === "TRAC_NGHIEM" && (
                             <MultipleChoice
@@ -243,6 +247,7 @@ const MultipleChoiceQuestionBox: React.FC<Round1Props> = ({ isHost, questionInde
                                 }
                                 phase={phase}
                                 onChoiceClick={handleChoiceClick}
+                                isHorizontal={!isHost}
                             />
                         )
                     }

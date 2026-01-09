@@ -132,7 +132,8 @@ const InformationForm = () => {
     if (username && playerNumber && roomId && avatar) {
       try {
         const uid = currentPlayer?.uid;
-
+        console.log("current player from joining room", currentPlayer)
+        console.log("current uid from joining room", uid)
         const userJoinRoomInfo = {
           uid: uid,
           userName: username,

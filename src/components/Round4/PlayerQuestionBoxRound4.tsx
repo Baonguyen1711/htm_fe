@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTimeStart } from '../../context/timeListenerContext';
-import { useSounds } from '../../context/soundContext';
 import GameGrid from '../../components/ui/GameGrid';
 import { gameApi } from '../../shared/services';
 import useGameApi from '../../shared/hooks/api/useGameApi';
@@ -12,6 +11,8 @@ import { useAppSelector, useAppDispatch } from '../../app/store'
 import GameGridRound4 from './GameGridRound4';
 import QuestionAndAnswer from '../../components/ui/QuestionAndAnswer/QuestionAndAnswer';
 import QuestionTimerBar from '../ui/QuestionTimeBar';
+import { useSounds } from '../../context/soundContext';
+
 
 interface QuestionComponentProps {
     initialGrid: string[][]; // 5x5 grid (can be passed from parent or generated)
@@ -36,13 +37,35 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     isSpectator,
     isHost = false,
 }) => {
+    const baseBtn =
+        "w-full px-4 py-2 rounded-xl border border-white/10 bg-slate-800/60 text-slate-100 \
+   hover:bg-slate-700/60 hover:border-white/20 transition-all duration-200 \
+   disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || "4"
-
+    const round = searchParams.get("round") || "1"
     //firebase listener
-    const { listenToRound4Grid, listenToCellColor, listenToSelectedCell } = useFirebaseListener()
+    const { listenToRound4Grid, listenToCellColor, listenToSelectedCell, listenToOpenBuzz } = useFirebaseListener()
     //global state
-    const { currentCorrectAnswer, currentQuestion } = useAppSelector((state) => state.game);
+    const { currentCorrectAnswer, currentQuestion, currentPlayer } = useAppSelector((state) => state.game);
+    const { openBuzz, closeBuzz, resetBuzz, buzzing, setStar, setPlayerColor } = useGameApi()
+    const [isTakeTurnButtonEnabled, setIsTakeTurnButtonEnabled] = useState(false)
+    const [isStarButtonEnabled, setIsStarButtonEnabled] = useState(true)
+
+    const handleBuzz = async () => {
+        console.log("currentPlayerName", currentPlayer?.userName);
+        if (currentPlayer?.userName) {
+            await buzzing(roomId, currentPlayer?.userName)
+        }
+    }
+
+    const handleSetStar = async () => {
+
+        setIsStarButtonEnabled(false)
+        if (currentPlayer?.userName) {
+            await setStar(roomId, currentPlayer?.userName)
+        }
+    }
 
     const colorMap: Record<string, string> = {
         red: '#FF0000',
@@ -67,6 +90,34 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
     const [staredPlayer, setStaredPlayer] = useState<string>("");
     const [showModal, setShowModal] = useState(false); // State for modal visibility
+    const sounds = useSounds()
+
+    useEffect(() => {
+        const unsubscribeOpenBuzz = listenToOpenBuzz(
+            () => {
+                if (round === "4") {
+                    const audio = sounds['5seconds_remain'];
+                    if (audio) {
+                        audio.play();
+                    }
+                    setIsTakeTurnButtonEnabled(true)
+                    const timeoutId = setTimeout(() => {
+                        setIsTakeTurnButtonEnabled(false)
+                        // closeBuzz(roomId)
+                    }, 5000)
+
+                    return () => {
+
+                        clearTimeout(timeoutId)
+                    }
+                }
+            }
+        )
+
+        return () => {
+            unsubscribeOpenBuzz();
+        };
+    }, [roomId, round]);
 
     useEffect(() => {
         const unsubscribeGrid = listenToRound4Grid((grid) => {
@@ -249,7 +300,7 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full max-w-3xl mx-auto min-h-[470px]">
             {/* Display selected question */}
 
-            <QuestionTimerBar isHost={false}/>
+            <QuestionTimerBar isHost={false} />
             <QuestionAndAnswer
                 currentQuestion={currentQuestion}
                 currentCorrectAnswer={currentCorrectAnswer}
@@ -269,6 +320,18 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                 onMenuAction={handleMenuAction}
                 onCloseModal={handleCloseModal}
             />
+
+            <div className="flex gap-2 mt-4 w-full">
+
+                <button className={baseBtn} onClick={handleBuzz} disabled={!isTakeTurnButtonEnabled}>
+                    Giành quyền trả lời
+                </button>
+
+                <button className={baseBtn} onClick={handleSetStar}>
+                    Chọn ngôi sao hy vọng
+                </button>
+
+            </div>
 
             {showMediaModal && currentQuestion?.imgUrl && (
                 <MediaModal isOpen={showMediaModal} onClose={() => setShowMediaModal(false)}>

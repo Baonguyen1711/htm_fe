@@ -10,7 +10,7 @@ interface UserRound2Props {
   isSpectator?: boolean;
 }
 
-function UserRound2({ isSpectator }: UserRound2Props) {
+function UserRound2({ isSpectator = false }: UserRound2Props) {
   const [loading, setLoading] = useState(true);
   const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
   const [showModal, setShowModal] = useState(false); // State for modal visibility

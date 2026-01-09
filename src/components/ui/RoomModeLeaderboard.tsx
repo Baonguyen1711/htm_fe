@@ -1,6 +1,6 @@
 import { ExternalLink, Trophy, Medal, Award } from "lucide-react";
 import { useAppSelector } from "../../app/store";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useFirebaseListener from "../../shared/hooks/firebase/useFirebaseListener";
 import { useSearchParams } from "react-router-dom";
 
@@ -26,7 +26,19 @@ const RoomModeLeaderboard = ({ isHost = false, currentQuestion = 0, onOpenNewTab
     const roomMode = params.get("roomMode") || "manual";
     const playMode = params.get("playMode") || "manual";
     const { scoresRanking } = useAppSelector(state => state.game);
-    const { listenToScoresRanking } = useFirebaseListener()
+    const { listenToScoresRanking, listenToPlayerColors, listenToCurrentTurn } = useFirebaseListener()
+    const [playerColors, setPlayerColors] = useState<any>()
+    const [currentTurn, setCurrentTurn] = useState<Number>(0)
+
+    useEffect(() => {
+        const unsubscribePlayerColors = listenToPlayerColors(colors => setPlayerColors(colors || {}));
+        return () => unsubscribePlayerColors();
+    }, [roomId]);
+
+    useEffect(() => {
+        const unsubscribePlayerTurn = listenToCurrentTurn(turn => setCurrentTurn(turn || 0));
+        return () => unsubscribePlayerTurn();
+    }, [roomId]);
 
     useEffect(() => {
         const unsubscribeScores = listenToScoresRanking(() => { });
@@ -80,50 +92,62 @@ const RoomModeLeaderboard = ({ isHost = false, currentQuestion = 0, onOpenNewTab
             <div className="flex-1 overflow-hidden p-4 pt-2">
                 <div className="space-y-3">
                     {/* Luôn lấy tối đa 4 người chơi đầu tiên */}
-                    {sortedScoresRanking.slice(0, 4).map((player, idx) => (
-                        <div
-                            key={player.uid}
-                            className={`rounded-xl p-4 transition-all duration-300 shadow-md ${idx === 0
-                                    ? "bg-amber-500/20 border-2 border-amber-500/50"
+                    {sortedScoresRanking.slice(0, 4).map((player, idx) => {
+                        const isCurrent = currentTurn !== null && Number(currentTurn) - 1 === idx;
+                        const color = playerColors && playerColors[player?.stt || ""];
+                        console.log("playerColors", playerColors)
+                        console.log("color", color)
+                        console.log("isCurrent", isCurrent)
+                        return (
+
+                            <div
+                                key={player.uid}
+                                className={`rounded-xl p-4 transition-all duration-300 shadow-md ${idx === 0
+                                    ? " border-2 border-amber-500/50"
                                     : idx === 1
-                                        ? "bg-slate-400/15 border border-slate-400/40"
+                                        ? "5 border border-slate-400/40"
                                         : idx === 2
-                                            ? "bg-amber-700/20 border border-amber-700/50"
-                                            : "bg-slate-700/40 border border-white/20"
-                                }`}
-                        >
-                            <div className="flex items-center gap-4">
-                                {/* Rank */}
-                                {/* <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center shadow-inner">
+                                            ? " border border-amber-700/50"
+                                            : " border border-white/20"
+
+                                    } ${isCurrent ? "ring-4 ring-yellow-400" : ""}`}
+                                style={{
+                                    borderColor: color || "rgba(148,163,184,0.4)", // fallback slate
+                                }}
+                            >
+                                <div className="flex items-center gap-4">
+                                    {/* Rank */}
+                                    {/* <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center shadow-inner">
                                     {getRankIcon(idx)}
                                 </div> */}
 
-                                {/* Avatar */}
-                                <div className="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden ring-2 ring-white/20">
-                                    {player.avatar ? (
-                                        <img src={player.avatar} alt={player.userName} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <span className="text-white font-bold text-lg">
-                                            {player.userName?.charAt(0).toUpperCase()}
-                                        </span>
-                                    )}
-                                </div>
+                                    {/* Avatar */}
+                                    <div className="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden ring-2 ring-white/20">
+                                        {player.avatar ? (
+                                            <img src={player.avatar} alt={player.userName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-white font-bold text-lg">
+                                                {player.userName?.charAt(0).toUpperCase()}
+                                            </span>
+                                        )}
+                                    </div>
 
-                                {/* Name & Score */}
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-white font-semibold truncate">
-                                        {player.userName}
-                                    </p>
-                                    <p className="text-cyan-300 text-lg font-bold">
-                                        {player.score} điểm
-                                    </p>
-                                </div>
+                                    {/* Name & Score */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-white font-semibold truncate">
+                                            {player.userName || player.playerName}
+                                        </p>
+                                        <p className="text-cyan-300 text-lg font-bold">
+                                            {player.score} điểm
+                                        </p>
+                                    </div>
 
-                                {/* Trophy cho top 1 */}
-                                {/* {idx === 0 && <Trophy className="w-6 h-6 text-amber-400 animate-pulse" />} */}
+                                    {/* Trophy cho top 1 */}
+                                    {/* {idx === 0 && <Trophy className="w-6 h-6 text-amber-400 animate-pulse" />} */}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        )
+                    })}
 
                     {/* Placeholder để đủ 4 slot nếu thiếu người */}
                     {[...Array(Math.max(0, 4 - sortedScoresRanking.length))].map((_, i) => (

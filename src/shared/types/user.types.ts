@@ -4,6 +4,7 @@ import { BaseEntity } from './common.types';
 export interface User {
   uid?: string;
   userName?: string;
+  playerName?: string
   email?: string;
   avatar?: string;
   stt?: string; // Player position/number

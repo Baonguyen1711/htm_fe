@@ -56,7 +56,7 @@ const JoinRoom = () => {
       }
 
       // Sign in anonymously and wait for auth token to be set
-      if(!isAuthenticated) {
+      if(!isAuthenticated()) {
         await signInWithoutPassword();
       }
 

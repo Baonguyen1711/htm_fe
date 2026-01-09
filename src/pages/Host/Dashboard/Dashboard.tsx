@@ -38,7 +38,7 @@ const HostDashboard = () => {
     const { title, icon: Icon } = getTabTitle();
 
     return (
-        <div className="h-screen bg-slate-800/60 relative overflow-hidden flex">
+        <div className="h-screen bg-slate-800/60 relative flex">
             {/* Ocean background */}
             <div className="absolute inset-0 opacity-20">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1708864163871-311332fb9d5e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080')] bg-cover bg-center" />

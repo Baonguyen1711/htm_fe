@@ -58,22 +58,22 @@ function PlayComponent(roundMapping: any) {
   const [searchParams] = useSearchParams();
 
   console.log("roundMapping inside host component", roundMapping)
-  const round = searchParams.get("round") || "1";
-  const currentRound = roundMapping && roundMapping[parseInt(round) - 1]
-    ? roundMapping[parseInt(round) - 1]
-    : round;
+  const round = searchParams.get("round");
+  // const currentRound = roundMapping && roundMapping[parseInt(round) - 1]
+  //   ? roundMapping[parseInt(round) - 1]
+  //   : round;
 
-  // Hoặc tốt hơn: hiển thị loading khi chưa có mapping (vì mapping rất quan trọng cho game)
-  if (roundMapping === undefined) {
-    return <div>Loading round configuration...</div>; // hoặc spinner
-  }
+  // // Hoặc tốt hơn: hiển thị loading khi chưa có mapping (vì mapping rất quan trọng cho game)
+  // if (roundMapping === undefined) {
+  //   return <div>Loading round configuration...</div>; // hoặc spinner
+  // }
   const roomMode = searchParams.get("roomMode") || "room";
 
   // MIGRATED: Using Redux-based components with new hooks
-  if (currentRound === "1") return <UserRound1 />;
-  if (currentRound === "2") return <UserRound2 />;
-  if (currentRound === "3") return <UserRound3 />;
-  if (currentRound === "4") return <UserRound4 />;
+  if (round === "1") return <UserRound1 />;
+  if (round === "2") return <UserRound2 />;
+  if (round === "3") return <UserRound3 />;
+  if (round === "4") return <UserRound4 />;
   if (round === "turn") return <UserRoundTurn />;
   if (round === "final") return <FinalRanking isHost={false} />;
   if (roomMode === "multiplayer" || roomMode === "practice") return <HostMultipleChoice isHost={false} />;
@@ -85,22 +85,22 @@ function PlayComponent(roundMapping: any) {
 function HostComponent(roundMapping: any) {
   const [searchParams] = useSearchParams();
   console.log("roundMapping inside host component", roundMapping)
-  const round = searchParams.get("round") || "1";
-  const currentRound = roundMapping && roundMapping[parseInt(round) - 1]
-    ? roundMapping[parseInt(round) - 1]
-    : round;
+  const round = searchParams.get("round");
+  // const currentRound = roundMapping && roundMapping[parseInt(round) - 1]
+  //   ? roundMapping[parseInt(round) - 1]
+  //   : round;
 
-  // Hoặc tốt hơn: hiển thị loading khi chưa có mapping (vì mapping rất quan trọng cho game)
-  if (roundMapping === undefined) {
-    return <div>Loading round configuration...</div>; // hoặc spinner
-  }
+  // // Hoặc tốt hơn: hiển thị loading khi chưa có mapping (vì mapping rất quan trọng cho game)
+  // if (roundMapping === undefined) {
+  //   return <div>Loading round configuration...</div>; // hoặc spinner
+  // }
   const roomMode = searchParams.get("roomMode") || "room";
   console.log("room mode", roomMode);
-  console.log("mappedRound", currentRound)
-  if (currentRound === "1") return <HostRound1 />;
-  if (currentRound === "2") return <HostRound2 />;
-  if (currentRound === "3") return <HostRound3 />;
-  if (currentRound === "4") return <HostRound4 />;
+  // console.log("mappedRound", currentRound)
+  if (round === "1") return <HostRound1 />;
+  if (round === "2") return <HostRound2 />;
+  if (round === "3") return <HostRound3 />;
+  if (round === "4") return <HostRound4 />;
   if (round === "turn") return <HostRoundTurn />;
   if (round === "final") return <FinalRanking isHost={true} />;
   if (roomMode === "multiplayer") return <HostMultipleChoice isHost={true} />;
@@ -108,7 +108,7 @@ function HostComponent(roundMapping: any) {
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
 }
 
-function SpectatorComponent(roundMapping: any) {
+function SpectatorComponent() {
   const [searchParams] = useSearchParams();
   const round = searchParams.get("round") || "1";
 
@@ -270,7 +270,7 @@ function App() {
                         <Routes>
                           <Route path="" element={
                             <ErrorBoundary onRetry={() => window.location.reload()}>
-                              <SpectatorComponent roundMapping={roundMapping} />
+                              <SpectatorComponent />
                             </ErrorBoundary>
                           } />
                         </Routes>

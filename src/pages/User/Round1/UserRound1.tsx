@@ -6,12 +6,12 @@ interface UserRound1Props {
     isSpectator?: boolean;
 }
 
-function UserRound1({ isSpectator }: UserRound1Props) {
+function UserRound1({ isSpectator = false }: UserRound1Props) {
 
     return (
         <User
             questionComponent={<BaseQuestionBoxRound1 isHost={false} isSpectator={isSpectator} />}
-            isSpectator={false}
+            isSpectator={isSpectator}
         />
     );
 }
