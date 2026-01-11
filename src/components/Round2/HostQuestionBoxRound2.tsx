@@ -55,6 +55,7 @@ interface ObstacleQuestionBoxProps {
     isHost?: boolean;
     initialGrid?: string[][];
     isSpectator?: boolean;
+    markedCharInWord?: Record<string, number[]>
 }
 
 const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
@@ -63,6 +64,7 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     initialGrid,
     isSpectator = false,
     isHost = false,
+    markedCharInWord
 }) => {
     
     // search params
@@ -154,7 +156,7 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                 if (round2Grid?.blankGrid) {
                     console.log("round2Grid?.blankGrid", round2Grid.blankGrid);
                     dispatch(setIsRound2GridConfirmed(true));
-                    await sendGrid(round2Grid.blankGrid, roomId);
+                    await sendGrid(round2Grid.blankGrid, roomId, JSON.stringify(markedCharInWord));
                     toast.success('Đã xác nhận hàng ngang !');
                 }
             },
@@ -247,6 +249,7 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                 isOpenAll={false}
                 showModal={showModal}
                 isSpectator={isSpectator}
+                markedCharInWord={markedCharInWord}
 
 
                 onNumberClick={handleNumberClick}

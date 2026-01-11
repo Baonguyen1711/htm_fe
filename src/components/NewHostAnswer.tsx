@@ -142,9 +142,9 @@ function HostAnswer() {
                 if (!player) return <div key={spotNumber} className="bg-slate-800/80 rounded-xl h-28 opacity-50" />;
                 const isCurrent = currentTurn !== null && Number(currentTurn) === spotNumber;
                 const color = playerColors[player?.stt || ""];
-                console.log("playerColors", playerColors)
-                console.log("color", color)
-                console.log("isCurrent", isCurrent)
+                console.log("playerColors", (round === "3" || round === "4") ? playerColors : "")
+                console.log("color", (round === "3" || round === "4") ? color : "")
+                console.log("isCurrent", (round === "3" || round === "4") ? isCurrent : "")
                 return (
                     <div key={spotNumber} className={`bg-slate-800/80 rounded-xl p-3 flex flex-col gap-2 shadow-md border border-slate-700/50 text-sm ${isCurrent ? "ring-4 ring-yellow-400" : ""}`}
                         style={{
@@ -195,18 +195,23 @@ function HostAnswer() {
                         </div>
 
                         {/* Update turn */}
-                        <Button
-                            onClick={async () => {
-                                dispatch(setCurrentTurn(parseInt(player.stt || "")));
-                                await sendCurrentTurn(roomId, parseInt(player.stt || ""));
-                                toast.success(`Cập nhật lượt cho ${player.userName}`);
-                            }}
-                            variant={currentTurn === parseInt(player.stt || "") ? 'danger' : 'primary'}
-                            size="sm"
-                            fullWidth
-                        >
-                            {currentTurn === parseInt(player.stt || "") ? 'Đang thi' : 'Cập nhật lượt thi'}
-                        </Button>
+                        {
+                            (round === "3" || round === "4") && (
+                                <Button
+                                    onClick={async () => {
+                                        dispatch(setCurrentTurn(parseInt(player.stt || "")));
+                                        await sendCurrentTurn(roomId, parseInt(player.stt || ""));
+                                        toast.success(`Cập nhật lượt cho ${player.userName}`);
+                                    }}
+                                    variant={currentTurn === parseInt(player.stt || "") ? 'danger' : 'primary'}
+                                    size="sm"
+                                    fullWidth
+                                >
+                                    {currentTurn === parseInt(player.stt || "") ? 'Đang thi' : 'Cập nhật lượt thi'}
+                                </Button>
+                            )
+                        }
+
                         {
                             (round === "3" || round === "4") && (
                                 <div className="mt-2 flex items-center gap-2 flex-wrap">

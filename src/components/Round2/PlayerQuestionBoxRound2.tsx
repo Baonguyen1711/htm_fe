@@ -70,6 +70,7 @@ const PlayerQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     }>({ visible: false });
 
     const menuRef = useRef<HTMLDivElement>(null);
+    const [markedCharInWord, setMarkedCharInWord] = useState<Record<string, number[]>>()
 
     //global state
     const dispatch = useAppDispatch()
@@ -94,12 +95,14 @@ const PlayerQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     const { listenToCorrectRow, listenToIncorectRow, listenToSelectRow, listenToObstacle, listenToRound2Grid, listenToBuzzedPlayer, listenToTimeStart, listenToSound, deletePath } = useFirebaseListener()
 
     useEffect(() => {
-        const unsubscribe = listenToRound2Grid((grid) => {
-            console.log("grid in question box", grid);
-            if (grid) {
+        const unsubscribe = listenToRound2Grid((data) => {
+            console.log("grid in question box", data);
+            if (data) {
                 dispatch(setRound2Grid({
-                    grid: grid
+                    grid: data.grid
                 }))
+
+                setMarkedCharInWord(data.marked_characters_index)
 
                 setIsLoading(false)
             }
@@ -249,6 +252,7 @@ const PlayerQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                         isOpenAll={isOpenAll}
                         isSpectator={isSpectator}
                         showModal={showModal}
+                        markedCharInWord={markedCharInWord}
                         onNumberClick={handleNumberClick}
                         onMenuAction={handleMenuAction}
                         onOpenObstacle={handleOpenObstacle}

@@ -12,6 +12,13 @@ interface QuestionTimerBarProps {
 const QuestionTimerBar: React.FC<QuestionTimerBarProps> = ({
     isHost,
 }) => {
+
+    const roundTimeMapping = {
+        "1": 15,
+        "2": 10,
+        "3": 60,
+        "4": 15
+    }
     const [searchParams] = useSearchParams();
 
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PlayerAnswerInput from '../ui/Input/PlayerAnswerInput';
 import Cell from './Cell';
 import { useAppSelector } from '../../app/store';
@@ -23,6 +23,7 @@ interface HintWord {
 
 interface GameGridRound2Props {
   grid?: string[][],
+  markedCharInWord?: Record<string, number[]>
   cellStyles: Record<string, CellStyle>;
   hintWords: HintWord[];
   obstacleWord?: string;
@@ -51,6 +52,7 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
   isOpenAll,
   showModal,
   isSpectator,
+  markedCharInWord,
   onNumberClick,
   onMenuAction,
   onOpenObstacle,
@@ -63,8 +65,13 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
    disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
 
   const { round2Grid } = useAppSelector(state => state.game);
+  // const [markedCharMapping, setMarkedCharMapping] = useState<string[]>([])
 
+  // useEffect(() => {
+  //   setMarkedCharMapping([])
+  // },[])
 
+  const markedCharMapping: string[] = []
   return (
     <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 mb-4 w-full max-w-3xl mx-auto"
       style={{
@@ -88,12 +95,33 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
             className="grid [grid-template-columns:repeat(var(--cols),32px)] [grid-auto-rows:max-content] gap-1 max-h-[750px] overflow-y-auto overflow-visible"
             style={{ '--cols': round2Grid?.grid[0]?.length || 1 } as React.CSSProperties}
           >
-            {round2Grid?.grid && round2Grid.grid.map((row, rowIndex) => (
+            {
+            round2Grid?.grid && round2Grid.grid.map((row, rowIndex) => (
               <React.Fragment key={rowIndex}>
                 {row.map((cell, colIndex) => {
                   const cellKey = `${rowIndex}-${colIndex}`;
+                  let isVertical
+                  if (cell.includes('number') && markedCharInWord && cell.replace('number', '') in markedCharInWord) {
+                    console.log("markedCharInWord[cell.replace('number','')]", markedCharInWord[cell.replace('number', '')])
+                    isVertical = round2Grid?.grid?.[rowIndex][colIndex + 1] === '' || round2Grid?.grid?.[rowIndex][colIndex + 1] === ' '
+
+                    if (isVertical) {
+                      for (let num of markedCharInWord[cell.replace('number', '')]) {
+                        markedCharMapping.push(`${rowIndex + num + 1}-${colIndex}`)
+                      }
+                    }
+
+                    if (!isVertical) {
+                      for (let num of markedCharInWord[cell.replace('number', '')]) {
+                        markedCharMapping.push(`${rowIndex}-${colIndex + num + 1}`)
+                      }
+                    }
+
+                    console.log("markedCharMapping", markedCharMapping)
+                  }
+                  console.log("markedCharMapping.includes(cellKey)", markedCharMapping.includes(cellKey))
                   const cellStyle = cellStyles[cellKey] || {
-                    background: cell === '' || cell === ' ' ? 'transparent' : 'bg-white',
+                    background: markedCharMapping.includes(cellKey) ? 'bg-red-500' : cell === '' || cell === ' ' ? 'transparent' : 'bg-white',
                     textColor: typeof cell === 'string' && cell.includes('number') ? 'text-blue-400' : (isHost ? 'text-black' : isOpenAll ? 'text-black' : 'text-transparent'),
                   };
                   // console.log("cellStyle", cellStyle);

@@ -1,155 +1,103 @@
-export const generateRandomGrid = (levelConfig?: { easy: boolean; medium: boolean; hard: boolean }): ("" | "!" | "?")[][] => {
-        const size = 5;
-        const totalCells = size * size; // 25
+type CellValue = "" | "!" | "?";
 
-        // Default to all levels if no config provided
-        const config = levelConfig || { easy: true, medium: true, hard: true };
+export const generateRandomGrid = (
+  size: number,
+  levelConfig?: { easy: boolean; medium: boolean; hard: boolean }
+): CellValue[][] => {
+  const totalCells = size * size;
 
-        // Determine which symbols to use based on configuration - ONLY include selected levels
-        const workingSymbols: ("" | "!" | "?")[] = [];
-        if (config.easy) workingSymbols.push("");
-        if (config.medium) workingSymbols.push("!");
-        if (config.hard) workingSymbols.push("?");
+  const config = levelConfig || { easy: true, medium: true, hard: true };
 
-        // If no levels selected, default to all
-        if (workingSymbols.length === 0) {
-            workingSymbols.push("", "!", "?");
-        }
+  // ===== SYMBOL SET =====
+  const workingSymbols: CellValue[] = [];
+  if (config.easy) workingSymbols.push("");
+  if (config.medium) workingSymbols.push("!");
+  if (config.hard) workingSymbols.push("?");
 
-        console.log("Working symbols:", workingSymbols);
+  if (workingSymbols.length === 0) {
+    workingSymbols.push("", "!", "?");
+  }
 
-        // Distribute cells evenly among working symbols
-        const cellsPerSymbol = Math.floor(totalCells / workingSymbols.length);
-        const remainder = totalCells % workingSymbols.length;
+  // ===== DISTRIBUTE SYMBOLS =====
+  const cellsPerSymbol = Math.floor(totalCells / workingSymbols.length);
+  const remainder = totalCells % workingSymbols.length;
 
-        let symbolArray: ("" | "!" | "?")[] = [];
-        for (let i = 0; i < workingSymbols.length; i++) {
-            const count = cellsPerSymbol + (i < remainder ? 1 : 0);
-            console.log(`Symbol ${workingSymbols[i]}: ${count} cells`);
-            for (let j = 0; j < count; j++) {
-                symbolArray.push(workingSymbols[i]);
-            }
-        }
+  const symbolArray: CellValue[] = [];
+  workingSymbols.forEach((sym, i) => {
+    const count = cellsPerSymbol + (i < remainder ? 1 : 0);
+    symbolArray.push(...Array(count).fill(sym));
+  });
 
-        console.log("Symbol array:", symbolArray);
+  // ===== SHUFFLE =====
+  for (let i = symbolArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [symbolArray[i], symbolArray[j]] = [symbolArray[j], symbolArray[i]];
+  }
 
-        // Shuffle array
-        for (let i = symbolArray.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [symbolArray[i], symbolArray[j]] = [symbolArray[j], symbolArray[i]];
-        }
+  // ===== BUILD GRID =====
+  const grid: CellValue[][] = [];
+  let index = 0;
 
-        // Create 5x5 grid, replace undefined/null with ""
-        let grid: ("" | "!" | "?")[][] = [];
-        let index = 0;
-        for (let i = 0; i < size; i++) {
-            let row: ("" | "!" | "?")[] = [];
-            for (let j = 0; j < size; j++) {
-                const value = index < symbolArray.length ? symbolArray[index++] : "";
-                row.push(value);
-            }
-            grid.push(row);
-        }
-
-        // Ensure each row has at least one question (non-empty cell) if we have empty cells
-        const shouldIncludeEmpty = workingSymbols.includes("");
-        if (shouldIncludeEmpty) {
-            for (let i = 0; i < size; i++) {
-                const hasNonEmpty = grid[i].some(cell => cell === "!" || cell === "?");
-                if (!hasNonEmpty) {
-                    // Find a row with multiple "!" or "?" to swap
-                    let donorRow = -1;
-                    let donorCol = -1;
-                    for (let r = 0; r < size; r++) {
-                        if (r === i) continue;
-                        const nonEmptyCount = grid[r].filter(cell => cell === "!" || cell === "?").length;
-                        if (nonEmptyCount > 1) {
-                            for (let c = 0; c < size; c++) {
-                                if (grid[r][c] === "!" || grid[r][c] === "?") {
-                                    donorRow = r;
-                                    donorCol = c;
-                                    break;
-                                }
-                            }
-                            if (donorRow !== -1) break;
-                        }
-                    }
-
-                    if (donorRow !== -1) {
-                        // Swap with an empty cell in the target row
-                        for (let c = 0; c < size; c++) {
-                            if (grid[i][c] === "") {
-                                [grid[i][c], grid[donorRow][donorCol]] = [grid[donorRow][donorCol], grid[i][c]];
-                                break;
-                            }
-                        }
-                    } else {
-                        // Place "!" in an empty cell and adjust elsewhere
-                        for (let c = 0; c < size; c++) {
-                            if (grid[i][c] === "") {
-                                grid[i][c] = "!";
-                                // Replace a "!" elsewhere with ""
-                                for (let r = 0; r < size; r++) {
-                                    if (r === i) continue;
-                                    for (let c2 = 0; c2 < size; c2++) {
-                                        if (grid[r][c2] === "!") {
-                                            grid[r][c2] = "";
-                                            break;
-                                        }
-                                    }
-                                    if (grid[r].some(cell => cell === "")) break;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Only apply 8-8-9 rule if we have all three symbol types (including empty)
-        if (shouldIncludeEmpty && workingSymbols.length === 3) {
-            // Verify counts (8, 8, 9)
-            const finalCounts: Record<"" | "!" | "?", number> = { "": 0, "!": 0, "?": 0 };
-            for (const row of grid) {
-                for (const cell of row) {
-                    finalCounts[cell]++;
-                }
-            }
-            const countValues = Object.values(finalCounts).sort((a, b) => a - b);
-            if (countValues[0] !== 8 || countValues[1] !== 8 || countValues[2] !== 9) {
-                // Adjust counts by swapping to achieve 8, 8, 9
-                let targetCounts: Record<"" | "!" | "?", number> = { "": 8, "!": 8, "?": 9 };
-                // Randomly assign 8, 8, 9 to symbols
-                const tempCounts = [8, 8, 9];
-                const tempSymbols = [...workingSymbols];
-                for (let i = tempCounts.length - 1; i >= 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    targetCounts[tempSymbols[j]] = tempCounts[i];
-                    tempSymbols.splice(j, 1);
-                }
-
-                // Adjust grid to match target counts
-                for (let i = 0; i < size; i++) {
-                    for (let j = 0; j < size; j++) {
-                        if (finalCounts[grid[i][j]] > targetCounts[grid[i][j]]) {
-                            // Find a cell to swap with a symbol that needs more
-                            for (const sym of workingSymbols) {
-                                if (finalCounts[sym] < targetCounts[sym]) {
-                                    grid[i][j] = sym;
-                                    finalCounts[grid[i][j]]--;
-                                    finalCounts[sym]++;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return grid;
+  for (let r = 0; r < size; r++) {
+    const row: CellValue[] = [];
+    for (let c = 0; c < size; c++) {
+      row.push(symbolArray[index++] ?? "");
     }
+    grid.push(row);
+  }
+
+  // ===== ENSURE EACH ROW HAS AT LEAST ONE QUESTION =====
+  const hasEmpty = workingSymbols.includes("");
+
+  if (hasEmpty) {
+    for (let r = 0; r < size; r++) {
+      const hasQuestion = grid[r].some(cell => cell === "!" || cell === "?");
+      if (!hasQuestion) {
+        outer:
+        for (let r2 = 0; r2 < size; r2++) {
+          if (r2 === r) continue;
+          for (let c2 = 0; c2 < size; c2++) {
+            if (grid[r2][c2] === "!" || grid[r2][c2] === "?") {
+              const emptyCol = grid[r].findIndex(cell => cell === "");
+              if (emptyCol !== -1) {
+                [grid[r][emptyCol], grid[r2][c2]] = [grid[r2][c2], ""];
+                break outer;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ===== 8–8–9 RULE (ONLY FOR 5x5) =====
+  if (size === 5 && hasEmpty && workingSymbols.length === 3) {
+    const counts: Record<CellValue, number> = { "": 0, "!": 0, "?": 0 };
+    grid.flat().forEach(cell => counts[cell]++);
+
+    const sorted = Object.values(counts).sort((a, b) => a - b);
+    if (!(sorted[0] === 8 && sorted[1] === 8 && sorted[2] === 9)) {
+      const target: Record<CellValue, number> = { "": 8, "!": 8, "?": 9 };
+
+      for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+          const cell = grid[r][c];
+          if (counts[cell] > target[cell]) {
+            const need = (Object.keys(target) as CellValue[])
+              .find(k => counts[k] < target[k]);
+            if (need) {
+              grid[r][c] = need;
+              counts[cell]--;
+              counts[need]++;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return grid;
+};
 
 export const getDifficultyRanges = (round4Level: { easy: boolean; medium: boolean; hard: boolean }) => {
   const activeDifficulties: ('easy' | 'medium' | 'hard')[] = Object.entries(round4Level)

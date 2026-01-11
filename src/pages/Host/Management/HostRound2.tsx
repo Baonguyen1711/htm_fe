@@ -17,6 +17,7 @@ const HostRound2: React.FC = () => {
   const { listenToBuzzedPlayer } = useFirebaseListener();
   const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
   const [showModal, setShowModal] = useState(false); // State for modal visibility
+  const [markedCharInWord, setMarkedCharInWord] = useState<Record<string, number[]>>({})
   const sounds = useSounds();
 
   useEffect(() => {
@@ -37,6 +38,41 @@ const HostRound2: React.FC = () => {
 
       console.log("hintArrays", hintArrays);
       console.log("obstacleWord", obstacleWord);
+      let markedCharInWord: Record<string, number[]> = {}
+
+      if (hintWordArray) {
+        for (let word of hintArrays) {
+          let indexInTarget: number[] = []
+          for (let i = 0; i <= word.length + 1; i++) {
+            const char = word[i];
+            console.log("char", char)
+            console.log("obstacleWord", obstacleWord)
+            console.log("hintWordArray", hintWordArray)
+            if (obstacleWord && obstacleWord.includes(char)) {
+              console.log("match at", i)
+              console.log("indexInTarget before pushing", indexInTarget);
+              indexInTarget.push(i)
+              console.log("indexInTarget after pushing", indexInTarget);
+            }
+          }
+          markedCharInWord[(hintArrays.indexOf(word)+1).toString()] = indexInTarget
+        }
+      }
+
+      console.log("markedCharInWord", markedCharInWord)
+
+      const keys = Object.keys(markedCharInWord);
+
+      const randomTwoEntries = keys
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 2)
+        .reduce<Record<string, number[]>>((acc, key) => {
+          acc[key] = markedCharInWord[key];
+          return acc;
+        }, {});
+
+      console.log("randomTwoEntries", randomTwoEntries);
+      setMarkedCharInWord(randomTwoEntries)
 
     }
 
@@ -70,7 +106,7 @@ const HostRound2: React.FC = () => {
   return (
     <>
       <Host
-        QuestionComponent={<HostQuestionBoxRound2 hintWordArray={hintWordArray} obstacleWord={obstacleWord} isHost={true} />}
+        QuestionComponent={<HostQuestionBoxRound2 hintWordArray={hintWordArray} obstacleWord={obstacleWord} isHost={true} markedCharInWord={markedCharInWord} />}
       />
       {showModal && buzzedPlayer &&
         <Modal

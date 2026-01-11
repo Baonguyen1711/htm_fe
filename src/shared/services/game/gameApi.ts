@@ -130,9 +130,12 @@ export const gameApi = {
   /**
    * Send grid to players
    */
-  async sendGrid(roomId: string, grid: string[][]): Promise<boolean> {
+  async sendGrid(roomId: string, grid: string[][], marked_characters_index: string): Promise<boolean> {
+    const url = new URL(`${process.env.REACT_APP_BASE_URL}${API_ENDPOINTS.GAME.GRID}`);
+    url.searchParams.append("room_id", roomId)
+    if(marked_characters_index) url.searchParams.append("marked_characters_index", marked_characters_index)
     const response = await api.post(
-      `${API_ENDPOINTS.GAME.GRID}?room_id=${roomId}`,
+      url.toString(),
       { grid: grid }
     );
     return response.data;

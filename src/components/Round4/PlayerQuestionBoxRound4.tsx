@@ -120,18 +120,21 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     }, [roomId, round]);
 
     useEffect(() => {
-        const unsubscribeGrid = listenToRound4Grid((grid) => {
-            console.log("grid in question box round 4", grid);
-            if (grid) {
-                setGrid(grid);
-            } else {
-                setGrid(initialGrid)
-            }
-        })
-        return () => {
-            unsubscribeGrid();
-        };
-    }, [])
+        const unsubscribeGrid = listenToRound4Grid((data) => {
+            if (!grid) return;
+
+            setGrid(data.grid);
+
+            // 🔥 sync gridColors theo size mới
+            setGridColors(
+                Array(data.grid.length)
+                    .fill(null)
+                    .map(() => Array(data.grid.length).fill('#FFFFFF'))
+            );
+        });
+
+        return () => unsubscribeGrid();
+    }, []);
 
 
     const handleCloseModal = () => {

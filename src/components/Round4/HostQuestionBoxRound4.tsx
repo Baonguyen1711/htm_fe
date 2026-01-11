@@ -82,19 +82,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         }
     }, [currentQuestion]);
 
-    useEffect(() => {
-        const unsubscribeGrid = listenToRound4Grid((grid) => {
-            console.log("grid in question box round 4", grid);
-            if (!grid || grid.length !== 5) {
-                setGrid(initialGrid)
-            } else {
-                setGrid(grid);
-            }
-        })
-        return () => {
-            unsubscribeGrid();
-        };
-    }, [])
+
 
     useEffect(() => {
         const unsubscribe = listenToTimeStart(
@@ -128,7 +116,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         const levelConfig = JSON.parse(localStorage.getItem(`scoreRules_${roomId}`) || "").round4Levels || { easy: true, medium: true, hard: true };
         console.log("levelConfig:", levelConfig);
 
-        const newGrid = generateRandomGrid(levelConfig)
+        const newGrid = generateRandomGrid(gridSize, levelConfig)
         console.log("newGrid", newGrid);
 
         setGrid(newGrid)
@@ -155,8 +143,8 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
 
             timeId = setTimeout(async () => {
                 await closeBuzz(roomId)
-            },5000)
-        } catch(e: any) {
+            }, 5000)
+        } catch (e: any) {
             toast.error("lỗi khi mở bấm chuông")
         }
 
@@ -165,6 +153,8 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         }
     }
 
+
+
     const colorMap: Record<string, string> = {
         red: '#FF0000',
         green: '#00FF00',
@@ -172,13 +162,18 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         yellow: '#FFFF00',
     };
     const [showMediaModal, setShowMediaModal] = useState(false);
-    const [grid, setGrid] = useState<string[][]>([[]])
+    const [gridSize, setGridSize] = useState<5 | 6 | 7>(5);
+    const createEmptyGrid = (size: number) =>
+        Array(size).fill(null).map(() => Array(size).fill(''));
+
+    const createColorGrid = (size: number) =>
+        Array(size).fill(null).map(() => Array(size).fill('#FFFFFF'));
+
+    const [grid, setGrid] = useState<string[][]>(() => createEmptyGrid(gridSize));
+    const [gridColors, setGridColors] = useState<string[][]>(() => createColorGrid(gridSize));
 
     const sounds = useSounds();
     const { startTimer, timeLeft, setTimeLeft } = useTimeStart();
-    const [gridColors, setGridColors] = useState<string[][]>(
-        Array(5).fill(null).map(() => Array(5).fill('#FFFFFF')) // Default grid colors are white
-    );
     const [menu, setMenu] = useState<{
         visible: boolean;
         rowIndex?: number;
@@ -192,6 +187,30 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     const [staredPlayer, setStaredPlayer] = useState<string>("");
     const [showModal, setShowModal] = useState(false); // State for modal visibility
     const [roomRules, setRoomRules] = useState<any>(null);
+
+    useEffect(() => {
+        setGrid(createEmptyGrid(gridSize));
+        setGridColors(createColorGrid(gridSize));
+    }, [gridSize])
+
+    useEffect(() => {
+        const unsubscribeGrid = listenToRound4Grid((data) => {
+            if (!grid) return;
+
+            setGrid(data.grid);
+
+            // 🔥 sync gridColors theo size mới
+            setGridColors(
+                Array(data.grid.length)
+                    .fill(null)
+                    .map(() => Array(data.grid.length).fill('#FFFFFF'))
+            );
+        });
+
+        return () => unsubscribeGrid();
+    }, []);
+
+
 
     const handleCloseModal = () => {
         setShowModal(false);
@@ -338,21 +357,52 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
             />
 
 
-            <div className="flex gap-2 mt-4 w-full">
+            <div className="mt-6 w-full space-y-4">
 
-                <button className={baseBtn} onClick={handleSuffleGrid}>
-                    Xáo trộn bảng
-                </button>
+                {/* Grid size selector (Host only) */}
+                {isHost && (
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-slate-300 mr-2">
+                            Kích thước bảng:
+                        </span>
 
-                <button className={baseBtn} onClick={handleConfirmGrid}>
-                    Xác nhận bảng
-                </button>
+                        <div className="flex rounded-xl overflow-hidden border border-white/10">
+                            {[5, 6, 7].map(size => (
+                                <button
+                                    key={size}
+                                    onClick={() => setGridSize(size as 5 | 6 | 7)}
+                                    className={`
+              px-4 py-2 text-sm font-medium transition-all
+              ${gridSize === size
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-slate-800/60 text-slate-300 hover:bg-slate-700/60'
+                                        }
+            `}
+                                >
+                                    {size}×{size}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
-                <button className={baseBtn} onClick={hanldeOpenBuzz}>
-                    Mở bấm chuông
-                </button>
+                {/* Action buttons */}
+                <div className="flex gap-2 w-full">
+                    <button className={baseBtn} onClick={handleSuffleGrid}>
+                        Xáo trộn bảng
+                    </button>
+
+                    <button className={baseBtn} onClick={handleConfirmGrid}>
+                        Xác nhận bảng
+                    </button>
+
+                    <button className={baseBtn} onClick={hanldeOpenBuzz}>
+                        Mở bấm chuông
+                    </button>
+                </div>
 
             </div>
+
 
             {showMediaModal && currentQuestion?.imgUrl && (
                 <MediaModal isOpen={showMediaModal} onClose={() => setShowMediaModal(false)}>

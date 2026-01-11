@@ -224,10 +224,10 @@ export const useGameApi = () => {
     /**
      * update game score
      */
-    const sendGrid = useCallback(async ( grid: string[][], roomId: string ) => {
+    const sendGrid = useCallback(async ( grid: string[][], roomId: string, marked_characters_index?: string ) => {
         try {
             
-            await gameApi.sendGrid(roomId, grid);
+            await gameApi.sendGrid(roomId, grid, marked_characters_index || "");
         } catch (error) {
             throw error;
         }
