@@ -102,7 +102,7 @@ const firebaseServices = {
     return firebaseServices.listen(roomId, `group_invites/${currentPlayerUid}`, callback, true);
   },
 
-  listenToTimeStart: (roomId: string, callback?: () => void): Unsubscribe => {
+  listenToTimeStart: (roomId: string, callback?: (data: any) => void): Unsubscribe => {
     const refPath = ref(database, `rooms/${roomId}/times`);
     let isFirstCall = true;
     let lastStartTime = Number(localStorage.getItem("lastStartTime")) || 0;
@@ -113,11 +113,11 @@ const firebaseServices = {
         isFirstCall = false;
         return;
       }
-      if (time && time !== lastStartTime) {
+      if (time && time.started !== lastStartTime) {
         lastStartTime = time;
         localStorage.setItem("lastStartTime", time.toString());
         if (callback) {
-          callback();
+          callback(time);
         }
       }
     });

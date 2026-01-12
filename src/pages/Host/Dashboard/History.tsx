@@ -133,10 +133,14 @@ const ViewHistory: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-5 text-center text-white text-lg">
-                      {room.round_1.find(p => p.playerName === player.playerName)?.roundScore ?? '-'}
+                      {room.round_1
+                        ? room.round_1.find(p => p.playerName === player.playerName)?.roundScore ?? '-'
+                        : '-'}
                     </td>
                     <td className="px-6 py-5 text-center text-white text-lg">
-                      {room.round_2.find(p => p.playerName === player.playerName)?.roundScore ?? '-'}
+                      {room.round_2
+                        ? room.round_2.find(p => p.playerName === player.playerName)?.roundScore ?? '-'
+                        : '-'}
                     </td>
                     <td className="px-6 py-5 text-center text-white text-lg">
                       {room.round_3
@@ -144,7 +148,9 @@ const ViewHistory: React.FC = () => {
                         : '-'}
                     </td>
                     <td className="px-6 py-5 text-center text-white text-lg">
-                      {room.round_4.find(p => p.playerName === player.playerName)?.roundScore ?? '-'}
+                      {room.round_4
+                        ? room.round_4.find(p => p.playerName === player.playerName)?.roundScore ?? '-'
+                        : '-'}
                     </td>
                     <td className="px-6 py-5 text-center">
                       <span className="text-2xl font-bold ">

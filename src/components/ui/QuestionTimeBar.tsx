@@ -13,7 +13,7 @@ const QuestionTimerBar: React.FC<QuestionTimerBarProps> = ({
     isHost,
 }) => {
 
-    const roundTimeMapping = {
+    const roundTimeMapping: Record<string, number> = {
         "1": 15,
         "2": 10,
         "3": 60,
@@ -21,14 +21,19 @@ const QuestionTimerBar: React.FC<QuestionTimerBarProps> = ({
     }
     const [searchParams] = useSearchParams();
 
-
+    
     const currentRound = searchParams.get("round") || "1";
+    const defaultTime =
+        roundTimeMapping[currentRound] ?? 15;
     const testName = searchParams.get("testName") || "1"
     const roomId = searchParams.get("roomId") || "";
     const roomMode = searchParams.get("roomMode") || "room"
     const playMode = searchParams.get("playMode") || "manual"
     const [isTimerRunning, setIsTimerRunning] = useState(false);
+    const [customTime, setCustomTime] = useState<number>(defaultTime);
     const totalTime = 15
+
+
     console.log("total Time")
     const { timeLeft } = useTimeStart()
     const { startTimer } = useGameApi()
@@ -45,7 +50,7 @@ const QuestionTimerBar: React.FC<QuestionTimerBarProps> = ({
 
     const handleStartTimer = async () => {
         try {
-            await startTimer(roomId);
+            await startTimer(roomId, customTime === defaultTime ? defaultTime : customTime);
 
             toast.success('Đã bắt đầu đếm thời gian!', {
                 position: 'top-right',
@@ -83,6 +88,22 @@ const QuestionTimerBar: React.FC<QuestionTimerBarProps> = ({
 
                 {/* Control button – host only */}
                 {isHost && (
+                    <>
+                    {/* Time input */}
+                        <input
+                            type="number"
+                            min={1}
+                            value={customTime}
+                            onChange={(e) =>
+                                setCustomTime(Number(e.target.value))
+                            }
+                            className="
+                                w-20 px-2 py-2 text-sm rounded-lg
+                                bg-slate-700 text-white
+                                border border-white/10
+                                focus:outline-none focus:border-blue-400
+                            "
+                        />
                     <button
                         onClick={handleStartTimer}
                         className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all
@@ -98,6 +119,7 @@ const QuestionTimerBar: React.FC<QuestionTimerBarProps> = ({
                         )}
                         {isTimerRunning ? "Dừng" : "Bắt đầu"}
                     </button>
+                    </>
                 )}
             </div>
         </div>

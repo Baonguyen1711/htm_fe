@@ -20,6 +20,7 @@ import {
   MultiplayerGameState
 } from '../../types';
 import { data } from 'react-router-dom';
+import roomApi from '../room/roomApi';
 
 
 export const gameApi = {
@@ -223,9 +224,12 @@ export const gameApi = {
   /**
    * Start a new round
    */
-  async startTimer(params: { roomId: string }): Promise<void> {
+  async startTimer(params: { roomId: string, timeDuration?: number }): Promise<void> {
+    const url = new URL(`${process.env.REACT_APP_BASE_URL}${API_ENDPOINTS.GAME.TIME_START}`);
+    url.searchParams.append("room_id", params.roomId)
+    if(params.timeDuration) url.searchParams.append("time_duration", params.timeDuration.toString())
     await api.post(
-      `${API_ENDPOINTS.GAME.TIME_START}?room_id=${params.roomId}`,
+      url.toString(),
       {}
     );
   },

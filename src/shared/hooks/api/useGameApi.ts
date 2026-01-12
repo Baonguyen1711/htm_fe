@@ -284,9 +284,9 @@ export const useGameApi = () => {
     /**
      * Start a new round
      */
-    const startTimer = useCallback(async (roomId: string) => {
+    const startTimer = useCallback(async (roomId: string, timeDuration?: number) => {
         try {
-            await gameApi.startTimer({ roomId: roomId });
+            await gameApi.startTimer({ roomId: roomId, timeDuration: timeDuration });
         } catch (error) {
             throw error;
         }

@@ -1,16 +1,10 @@
 import { ExternalLink, Trophy, Medal, Award } from "lucide-react";
 import { useAppSelector } from "../../app/store";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import useFirebaseListener from "../../shared/hooks/firebase/useFirebaseListener";
 import { useSearchParams } from "react-router-dom";
-
-interface PlayerResult {
-    id: number;
-    name: string;
-    score: number;
-    avatar?: string;
-    answerHistory?: ("correct" | "wrong" | "pending")[];
-}
+// 1. Import Framer Motion
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LeaderboardProps {
     isHost?: boolean;
@@ -18,63 +12,37 @@ interface LeaderboardProps {
     onOpenNewTab?: () => void;
 }
 
-const RoomModeLeaderboard = ({ isHost = false, currentQuestion = 0, onOpenNewTab }: LeaderboardProps) => {
+const RoomModeLeaderboard = ({ onOpenNewTab }: LeaderboardProps) => {
     const [params] = useSearchParams();
-    const round = params.get("round") || "1";
     const roomId = params.get("roomId") || "1";
-    const isRoomOwner = params.get("isRoomOwner") === "true";
-    const roomMode = params.get("roomMode") || "manual";
-    const playMode = params.get("playMode") || "manual";
     const { scoresRanking } = useAppSelector(state => state.game);
-    const { listenToScoresRanking, listenToPlayerColors, listenToCurrentTurn } = useFirebaseListener()
-    const [playerColors, setPlayerColors] = useState<any>()
-    const [currentTurn, setCurrentTurn] = useState<Number>(0)
+    const { listenToScoresRanking, listenToPlayerColors, listenToCurrentTurn } = useFirebaseListener();
+    const [playerColors, setPlayerColors] = useState<any>();
+    const [currentTurn, setCurrentTurn] = useState<Number>(0);
 
     useEffect(() => {
         const unsubscribePlayerColors = listenToPlayerColors(colors => setPlayerColors(colors || {}));
-        return () => unsubscribePlayerColors();
-    }, [roomId]);
-
-    useEffect(() => {
         const unsubscribePlayerTurn = listenToCurrentTurn(turn => setCurrentTurn(turn || 0));
-        return () => unsubscribePlayerTurn();
-    }, [roomId]);
-
-    useEffect(() => {
         const unsubscribeScores = listenToScoresRanking(() => { });
+
         return () => {
+            unsubscribePlayerColors();
+            unsubscribePlayerTurn();
             unsubscribeScores();
         };
-    }, []);
-
+    }, [roomId]);
 
     const sortedScoresRanking = Array.isArray(scoresRanking)
-        ? [...scoresRanking].sort(
-            (a, b) => (b.score ?? 0) - (a.score ?? 0)
-        )
+        ? [...scoresRanking].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
         : [];
 
-    console.log("sortedScoresRanking", sortedScoresRanking)
-
-    const getRankIcon = (rank: number) => {
-        switch (rank) {
-            case 0:
-                return <Trophy className="w-5 h-5 text-amber-400" />;
-            case 1:
-                return <Medal className="w-5 h-5 text-slate-300" />;
-            case 2:
-                return <Award className="w-5 h-5 text-amber-600" />;
-            default:
-                return <span className="w-5 h-5 flex items-center justify-center text-white/50 text-sm font-medium">{rank + 1}</span>;
-        }
-    };
+    const top4Players = sortedScoresRanking.slice(0, 4);
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-slate-800/50 backdrop-blur-xl overflow-hidden h-full flex flex-col">
+        <div className="rounded-2xl border border-white/10 bg-slate-800/50 backdrop-blur-xl overflow-hidden h-fit flex flex-col">
             {/* Header */}
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <div className="p-4 border-b border-white/10 flex items-center justify-around">
                 <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                    {/* <Trophy className="w-5 h-5 text-amber-400" /> */}
                     Bảng Xếp Hạng
                 </h3>
                 {onOpenNewTab && (
@@ -88,90 +56,110 @@ const RoomModeLeaderboard = ({ isHost = false, currentQuestion = 0, onOpenNewTab
                 )}
             </div>
 
-            {/* Player List - Luôn hiển thị đúng 4 slot (thật + placeholder nếu cần) */}
+            {/* Player List */}
             <div className="flex-1 overflow-hidden p-4 pt-2">
-                <div className="space-y-3">
-                    {/* Luôn lấy tối đa 4 người chơi đầu tiên */}
-                    {sortedScoresRanking.slice(0, 4).map((player, idx) => {
-                        const isCurrent = currentTurn !== null && Number(currentTurn) - 1 === idx;
-                        const color = playerColors && playerColors[player?.stt || ""];
-                        console.log("playerColors", playerColors)
-                        console.log("color", color)
-                        console.log("isCurrent", isCurrent)
-                        return (
+                <div className="space-y-3 flex flex-col">
+                    <AnimatePresence mode="popLayout">
+                        {top4Players.map((player, idx) => {
+                            const isCurrent = currentTurn !== null && Number(currentTurn) - 1 === idx;
+                            const color = playerColors && playerColors[player?.stt || ""];
 
-                            <div
-                                key={player.uid}
-                                className={`rounded-xl p-4 transition-all duration-300 shadow-md ${idx === 0
-                                    ? " border-2 border-amber-500/50"
-                                    : idx === 1
-                                        ? "5 border border-slate-400/40"
-                                        : idx === 2
-                                            ? " border border-amber-700/50"
-                                            : " border border-white/20"
+                            return (
+                                <motion.div
+                                    // Bắt buộc key phải là duy nhất (uid) để Framer Motion nhận diện đổi chỗ
+                                    key={player.uid}
+                                    layout
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ 
+                                        opacity: 1, 
+                                        y: 0,
+                                        scale: isCurrent ? 1.02 : 1 // Nhấn nhẹ khi tới lượt
+                                    }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    transition={{
+                                        type: "spring",
+                                        stiffness: 500,
+                                        damping: 30,
+                                        mass: 1
+                                    }}
+                                    className={`rounded-xl p-4 transition-shadow duration-300 shadow-md border-2  ${isCurrent ? "ring-4 ring-yellow-400 z-10" : "z-0"}`}
+                                    style={{
+                                        // Sử dụng color từ firebase cho border nếu có
+                                        borderColor: color || undefined, 
+                                        backgroundColor: isCurrent ? 'rgba(30, 41, 59, 0.8)' : 'rgba(30, 41, 59, 0.4)'
+                                    }}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        {/* 1. Ô số thứ hạng (Rank Number) */}
+                                    <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-black text-sm
+                                        ${idx === 0 ? "bg-amber-400 text-amber-900" : 
+                                          idx === 1 ? "bg-slate-300 text-slate-800" : 
+                                          idx === 2 ? "bg-orange-500 text-orange-950" : "bg-white/10 text-white/50"}`}
+                                    >
+                                        {idx + 1}
+                                    </div>
+                                        {/* Avatar */}
+                                        <div className="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden ring-2 ring-white/20">
+                                            {player.avatar ? (
+                                                <img src={player.avatar} alt={player.userName} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-white font-bold text-lg">
+                                                    {player.userName?.charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
+                                        </div>
 
-                                    } ${isCurrent ? "ring-4 ring-yellow-400" : ""}`}
-                                style={{
-                                    borderColor: color || "rgba(148,163,184,0.4)", // fallback slate
-                                }}
+                                        {/* Name & Score */}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-white font-semibold truncate">
+                                                {player.userName || player.playerName}
+                                            </p>
+                                            <p className="text-white text-lg font-bold">
+                                                {player.score} điểm
+                                            </p>
+                                        </div>
+
+                                        {/* Hiển thị Rank Icon nếu là top 3 */}
+                                        {/* <div className="flex items-center justify-center">
+                                            {idx === 0 && <Trophy className="w-6 h-6 text-amber-400" />}
+                                            {idx === 1 && <Medal className="w-6 h-6 text-slate-300" />}
+                                            {idx === 2 && <Award className="w-6 h-6 text-amber-600" />}
+                                            {idx > 2 && <span className="text-white/40 font-bold">{idx + 1}</span>}
+                                        </div> */}
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+
+                        {/* Placeholder logic giữ nguyên style DASHED */}
+                        {[...Array(Math.max(0, 4 - top4Players.length))].map((_, i) => (
+                            <motion.div
+                                key={`placeholder-${i}`}
+                                layout
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 0.6 }}
+                                className="rounded-xl p-4 bg-slate-800/30 border border-dashed border-white/20 flex items-center gap-4"
                             >
-                                <div className="flex items-center gap-4">
-                                    {/* Rank */}
-                                    {/* <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center shadow-inner">
-                                    {getRankIcon(idx)}
-                                </div> */}
-
-                                    {/* Avatar */}
-                                    <div className="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden ring-2 ring-white/20">
-                                        {player.avatar ? (
-                                            <img src={player.avatar} alt={player.userName} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <span className="text-white font-bold text-lg">
-                                                {player.userName?.charAt(0).toUpperCase()}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Name & Score */}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-white font-semibold truncate">
-                                            {player.userName || player.playerName}
-                                        </p>
-                                        <p className="text-cyan-300 text-lg font-bold">
-                                            {player.score} điểm
-                                        </p>
-                                    </div>
-
-                                    {/* Trophy cho top 1 */}
-                                    {/* {idx === 0 && <Trophy className="w-6 h-6 text-amber-400 animate-pulse" />} */}
+                                <div className="w-10 h-10 rounded-full bg-slate-700/50" />
+                                <div className="w-12 h-12 rounded-full bg-slate-700/50" />
+                                <div className="flex-1">
+                                    <div className="h-4 bg-slate-700/50 rounded w-32 mb-2"></div>
+                                    <div className="h-5 bg-slate-700/40 rounded w-20"></div>
                                 </div>
-                            </div>
-                        )
-                    })}
-
-                    {/* Placeholder để đủ 4 slot nếu thiếu người */}
-                    {[...Array(Math.max(0, 4 - sortedScoresRanking.length))].map((_, i) => (
-                        <div
-                            key={`placeholder-${i}`}
-                            className="rounded-xl p-4 bg-slate-800/30 border border-dashed border-white/20 flex items-center gap-4 opacity-60"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-slate-700/50" />
-                            <div className="w-12 h-12 rounded-full bg-slate-700/50" />
-                            <div className="flex-1">
-                                <div className="h-4 bg-slate-700/50 rounded w-32 mb-2"></div>
-                                <div className="h-5 bg-slate-700/40 rounded w-20"></div>
-                            </div>
-                        </div>
-                    ))}
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
                 </div>
 
-                {/* Nếu có >4 người → hiển thị thông báo nhỏ bên dưới */}
                 {sortedScoresRanking.length > 4 && (
-                    <div className="mt-4 pt-3 border-t border-white/10 text-center">
+                    <motion.div 
+                        layout
+                        className="mt-4 pt-3 border-t border-white/10 text-center"
+                    >
                         <p className="text-white/60 text-sm">
                             Và {sortedScoresRanking.length - 4} người chơi khác...
                         </p>
-                    </div>
+                    </motion.div>
                 )}
             </div>
         </div>

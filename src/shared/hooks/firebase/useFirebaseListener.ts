@@ -56,14 +56,14 @@ export const useFirebaseListener = () => {
   //   });
   // }, [roomId, dispatch]);
 
-  const listenToTimeStart = useCallback((callback?: () => void) => {
+  const listenToTimeStart = useCallback((callback?: (data: any) => void) => {
     if (!roomId) return () => { };
 
 
-    return firebaseServices.listenToTimeStart(roomId, () => {
+    return firebaseServices.listenToTimeStart(roomId, (data) => {
       console.log("listenToTimeStart");
       dispatch(setIsInputDisabled(false))
-      callback?.()
+      callback?.(data)
     }
     );
   }, [roomId, dispatch]);

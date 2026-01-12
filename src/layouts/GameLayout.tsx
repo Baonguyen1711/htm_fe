@@ -547,7 +547,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
             )}
 
             {/* CSS cho animation float */}
-            <style>{`
+            {/* <style>{`
             @keyframes float {
                 0% {
                     transform: translateY(100vh) translateX(0);
@@ -567,7 +567,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
             .animate-float {
                 animation: float linear infinite;
             }
-        `}</style>
+        `}</style> */}
         </>
     );
 }
