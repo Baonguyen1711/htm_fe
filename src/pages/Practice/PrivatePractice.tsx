@@ -135,7 +135,7 @@ const PrivatePractice: React.FC = () => {
             <div className="h-full w-full flex items-center justify-center overflow-auto py-8">
                 <div
                     className="w-full h-auto min-h-full origin-center"
-                    style={{ transform: "scale(0.92)", transformOrigin: "top center" }}
+                    style={{ transform: "scale(0.92)", transformOrigin: "top center", paddingTop: "3rem" }}
                 >
                     <div className="relative z-10 flex flex-col min-h-screen">
                         {/* Header */}
@@ -154,7 +154,7 @@ const PrivatePractice: React.FC = () => {
                                       </div>
                                     </div>
                         
-                                    <div className="flex items-center gap-6">
+                                    <div className="flex items-center gap-6 mt-4">
                                       <button
                                         onClick={handleCreateNewPracticeTest}
                                         className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all"

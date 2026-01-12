@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import WaveBackground from "../../components/WaveBackground";
 
 export default function App() {
-  const images = ["/banner.jpg", "/card.jpg", "/ending.jpg"];
+  const images = ["/card.jpg", "/ending.jpg", "/images/background_mua5.jpg" ];
   const [index, setIndex] = useState(0);
 
   useEffect(() => {

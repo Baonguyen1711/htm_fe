@@ -9,6 +9,7 @@ import useRoomApi from '../../../shared/hooks/api/useRoomApi';
 import { Button } from '../../../shared/components/ui';
 import useTestApi from '../../../shared/hooks/api/useTestApi';
 import { toast } from 'react-toastify';
+import { createPortal } from 'react-dom';
 
 interface Room {
   roomId: string;
@@ -217,13 +218,13 @@ const SetupMatch: React.FC = () => {
         <div className="flex gap-3">
           <button
             onClick={() => setRoomMode("room")}
-            className={`px-6 py-3 rounded-xl font-medium transition-all ${roomMode === "room" ? "bg-slate-800/60 shadow-lg" : "bg-slate-700/50  hover:bg-slate-700"}`}
+            className={`px-6 py-3 rounded-xl font-medium transition-all ${roomMode === "room" ? "bg-slate-700/50  hover:bg-slate-700" : "bg-slate-800/60 shadow-lg hover:bg-slate-700"}`}
           >
             Phòng thi đơn
           </button>
           <button
             onClick={() => setRoomMode("multiplayer")}
-            className={`px-6 py-3 rounded-xl font-medium transition-all ${roomMode === "multiplayer" ? "bg-slate-800/60  shadow-lg" : "bg-slate-700/50  hover:bg-slate-700"}`}
+            className={`px-6 py-3 rounded-xl font-medium transition-all ${roomMode === "multiplayer" ? "bg-slate-700/50   " : "bg-slate-800/60  shadow-lg hover:bg-slate-700"}`}
           >
             Nhiều người chơi
           </button>
@@ -285,7 +286,7 @@ const SetupMatch: React.FC = () => {
                             {/* Điểm theo vòng - gọn gàng */}
                             <div className="bg-slate-700/40 rounded-xl p-5 space-y-5">
                               <div className="grid grid-cols-2 gap-6">
-                                {['Vòng 1', 'Vòng 2'].map((label, i) => (
+                                {['Vòng 1 (câu hỏi ngắn)', 'Vòng 2 (chướng ngại vật)'].map((label, i) => (
                                   <div key={i}>
                                     <p className=" font-medium mb-2">{label}</p>
                                     <div className="grid grid-cols-4 gap-2">
@@ -366,14 +367,20 @@ const SetupMatch: React.FC = () => {
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex flex-col gap-3">
-                        <Button
+                        <button
+                          onClick={() => handleStartClick(room.roomId, room.selectedTestName)}
+                          className={`px-6 py-3 rounded-xl font-medium transition-all bg-slate-700/50  shadow-lg hover:bg-slate-700`}
+                        >
+                          Bắt đầu
+                        </button>
+                        {/* <Button
                           onClick={() => handleStartClick(room.roomId, room.selectedTestName)}
                           variant="warning"
                           className="h-12 text-lg font-semibold shadow-xl"
                         >
                           Bắt đầu
-                        </Button>
-                        {roomMode === "room" && (
+                        </Button> */}
+                        {/* {roomMode === "room" && (
                           <Button
                             onClick={() => {
                               setSelectedRoomForFormat(room.roomId);
@@ -385,7 +392,7 @@ const SetupMatch: React.FC = () => {
                           >
                             ⚙️ Tùy chỉnh format
                           </Button>
-                        )}
+                        )} */}
                       </div>
                     </td>
                   </tr>
@@ -405,67 +412,7 @@ const SetupMatch: React.FC = () => {
 
       {/* ==================== MODALS ==================== */}
       {/* Tạo phòng */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-slate-800/90 backdrop-blur-xl border border-cyan-500/50 rounded-2xl shadow-2xl p-8 max-w-lg w-full">
-            <h3 className="text-2xl font-bold text-white text-center mb-6">Tạo Phòng Mới</h3>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setRoomMode("room")}
-                className={`px-6 py-3 rounded-xl font-medium transition-all ${roomMode === "room" ? "bg-cyan-500  shadow-lg" : "bg-slate-700/50  hover:bg-slate-700"}`}
-              >
-                Phòng thi đơn
-              </button>
-              <button
-                onClick={() => setRoomMode("multiplayer")}
-                className={`px-6 py-3 rounded-xl font-medium transition-all ${roomMode === "multiplayer" ? "bg-cyan-500  shadow-lg" : "bg-slate-700/50  hover:bg-slate-700"}`}
-              >
-                Nhiều người chơi
-              </button>
-            </div>
-            <div className="space-y-6">
-              <input
-                type="password"
-                placeholder="Mật khẩu phòng (tùy chọn)"
-                value={roomPassword}
-                onChange={(e) => setRoomPassword(e.target.value)}
-                className="w-full px-5 py-4 bg-slate-700/60 border border-cyan-500/50 rounded-xl text-white placeholder-cyan-400/50"
-              />
-              {roomMode === "room" && (
-                <select
-                  value={maxPlayers}
-                  onChange={(e) => setMaxPlayers(parseInt(e.target.value))}
-                  className="w-full px-5 py-4 bg-slate-700/60 border border-cyan-500/50 rounded-xl text-white"
-                >
-                  {[4, 5, 6, 7, 8].map(n => <option key={n} value={n}>{n} người chơi</option>)}
-                </select>
-              )}
-              <div className="flex gap-4">
-                <Button onClick={() => setShowCreateModal(false)} variant="secondary" fullWidth className="h-12">
-                  Hủy
-                </Button>
-                <Button onClick={handleCreateRoom} variant="success" fullWidth className="h-12 font-semibold">
-                  Tạo phòng
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Thành công */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-slate-800/90 backdrop-blur-xl border border-cyan-500/50 rounded-2xl shadow-2xl p-10 text-center max-w-md w-full">
-            <div className="text-6xl mb-6">🎉</div>
-            <h3 className="text-2xl font-bold text-white mb-4">Tạo phòng thành công!</h3>
-            <p className="text-3xl font-mono text-cyan-400 mb-8 bg-slate-700/50 py-4 px-6 rounded-xl">{createdRoomId}</p>
-            <Button onClick={() => setShowSuccessModal(false)} variant="primary" className="h-12 text-lg">
-              Đóng
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Tùy chỉnh format */}
       {showFormatModal && selectedRoomForFormat && (
@@ -583,7 +530,94 @@ const SetupMatch: React.FC = () => {
           </div>
         </div>
       )}
+
+      {showCreateModal && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] px-4 overflow-y-auto">
+
+          {/* Thêm container bọc ngoài nếu nội dung modal quá dài trên điện thoại nhỏ */}
+          <div className="min-h-full flex items-center justify-center w-full py-8">
+
+            <div className="bg-slate-800/90 backdrop-blur-xl border border-cyan-500/50 rounded-2xl shadow-2xl p-8 max-w-lg w-full relative">
+              <h3 className="text-2xl font-bold text-white text-center mb-6">Tạo Phòng Mới</h3>
+
+              {/* Phần chọn chế độ */}
+              <div className="flex gap-3 mb-6">
+                <button
+                  onClick={() => setRoomMode("room")}
+                  className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all ${roomMode === "room" ? "bg-slate-700/50  hover:bg-slate-700" : "bg-slate-800/60 shadow-lg hover:bg-slate-700"}`}
+                >
+                  Phòng thi đơn
+                </button>
+                <button
+                  onClick={() => setRoomMode("multiplayer")}
+                  className={`flex-1 px-4 py-3 rounded-xl font-medium transition-all ${roomMode === "multiplayer" ? "bg-slate-700/50   " : "bg-slate-800/60  shadow-lg hover:bg-slate-700"}`}
+                >
+                  Nhiều người chơi
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <input
+                  type="password"
+                  placeholder="Mật khẩu phòng (tùy chọn)"
+                  value={roomPassword}
+                  onChange={(e) => setRoomPassword(e.target.value)}
+                  className="w-full px-5 py-4 bg-slate-700/60 border border-cyan-500/50 rounded-xl text-white placeholder-white-400/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                />
+
+                {roomMode === "room" && (
+                  <div className="space-y-2">
+                    <label className="text-sm text-white-400/70 ml-1">Số lượng người chơi tối đa</label>
+                    <select
+                      value={maxPlayers}
+                      onChange={(e) => setMaxPlayers(parseInt(e.target.value))}
+                      className="w-full px-5 py-4 bg-slate-700/60 border border-cyan-500/50 rounded-xl text-white appearance-none focus:outline-none"
+                    >
+                      {[4, 5, 6, 7, 8].map(n => <option key={n} value={n} className="bg-slate-800">{n} người chơi</option>)}
+                    </select>
+                  </div>
+                )}
+
+                <div className="flex gap-4 pt-2">
+                  <Button onClick={() => setShowCreateModal(false)} variant="secondary" fullWidth className="h-12">
+                    Hủy
+                  </Button>
+                  <Button onClick={handleCreateRoom} variant="success" fullWidth className="h-12 font-semibold">
+                    Tạo phòng
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+      {/* Thành công */}
+      {showSuccessModal && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] px-4 overflow-hidden">
+
+          {/* Phần modal chính */}
+          <div className="bg-slate-800/90 backdrop-blur-xl border border-cyan-500/50 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] p-10 text-center max-w-md w-full animate-in fade-in zoom-in duration-300">
+            <div className="text-6xl mb-6">🎉</div>
+            <h3 className="text-2xl font-bold text-white mb-4">Tạo phòng thành công!</h3>
+
+            <p className="text-3xl font-mono text-cyan-400 mb-8 bg-slate-700/50 py-4 px-6 rounded-xl border border-white/5 shadow-inner">
+              {createdRoomId}
+            </p>
+
+            <Button
+              onClick={() => setShowSuccessModal(false)}
+              variant="primary"
+              className="h-12 text-lg w-full"
+            >
+              Đóng
+            </Button>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
+
   );
 };
 

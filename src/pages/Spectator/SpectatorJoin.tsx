@@ -60,10 +60,10 @@ const SpectatorJoin = () => {
 
       const spectatorPath = await joinAsSpectator(roomId);
       console.log("Successfully joined as spectator, path:", spectatorPath);
-      
+
       // Store the path for cleanup when leaving
       localStorage.setItem('spectatorPath', spectatorPath);
-      
+
 
       navigate(`/spectator?roomId=${roomId}&round=1`);
     } catch (error) {
@@ -71,18 +71,51 @@ const SpectatorJoin = () => {
     }
   };
 
+  const StarBackground = () => {
+    // Sinh ra khoảng 100 ngôi sao với các thuộc tính ngẫu nhiên
+    const [stars] = useState(() =>
+      [...Array(100)].map((_, i) => ({
+        id: i,
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        size: Math.random() * 2 + 1 + "px", // Kích thước từ 1px đến 3px
+        delay: Math.random() * 5 + "s",     // Độ trễ hiệu ứng lấp lánh
+        duration: Math.random() * 3 + 2 + "s", // Thời gian một chu kỳ lấp lánh
+        opacity: Math.random() * 0.7 + 0.3,
+      }))
+    );
+
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {stars.map((star) => (
+          <div
+            key={star.id}
+            className="absolute rounded-full bg-white animate-twinkle"
+            style={{
+              top: star.top,
+              left: star.left,
+              width: star.size,
+              height: star.size,
+              opacity: star.opacity,
+              animationDelay: star.delay,
+              animationDuration: star.duration,
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Ocean/Starry Night Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-blue-900 to-blue-600">
-        {/* Stars overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.3)_1px,transparent_1px),radial-gradient(circle_at_75%_75%,rgba(255,255,255,0.2)_1px,transparent_1px)] bg-[length:100px_100px]"></div>
-        {/* Ocean waves effect */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-blue-500/50 to-transparent"></div>
-        {/* Animated waves */}
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent animate-pulse"></div>
-      </div>
+      {/* 1. Lớp nền gradient tối */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(15,23,42,1)_0%,rgba(2,6,23,1)_100%)]" />
 
+      {/* 2. Lớp sao ngẫu nhiên (Thay cho pattern cũ) */}
+      <StarBackground />
+
+      {/* 3. Lớp ánh sáng xanh mờ tạo chiều sâu */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(22,78,99,0.3)_0%,transparent_70%)]" />
       {/* Content overlay */}
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
         <div className="w-full max-w-md">
@@ -122,8 +155,13 @@ const SpectatorJoin = () => {
                   Nhập mã phòng gồm 6 chữ số
                 </p>
               </div>
-
-              <Button
+              <button
+                onClick={handleJoinRoom}
+                className={`w-full px-6 py-3 rounded-xl font-medium transition-all bg-slate-700/50  shadow-lg hover:bg-slate-700`}
+              >
+                Tham gia phòng
+              </button>
+              {/* <Button
                 type="button"
                 onClick={handleJoinRoom}
                 variant="primary"
@@ -132,7 +170,7 @@ const SpectatorJoin = () => {
                 className="font-medium shadow-lg"
               >
                 Tham gia phòng
-              </Button>
+              </Button> */}
             </form>
 
           </div>
@@ -148,6 +186,18 @@ const SpectatorJoin = () => {
           </div>
         </div>
       </div>
+
+      <style>
+        {
+          `@keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+  .animate-twinkle {
+    animation: twinkle linear infinite;
+  }`
+        }
+      </style>
     </div>
   );
 };
