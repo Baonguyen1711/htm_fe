@@ -189,6 +189,21 @@ export const useGameApi = () => {
     /**
      * Start a new round
      */
+    const sendPacketsName = useCallback(async (roomId: string, packetNames: string[]) => {
+        try {
+            
+            await gameApi.sendPacketsName({
+                roomId: roomId,
+                packetNames: packetNames
+            });
+        } catch (error) {
+            throw error;
+        }
+    }, []);
+
+    /**
+     * Start a new round
+     */
     const sendRowAction = useCallback(async ( roomId: string, rowNumber: string, action: 'SELECT' | 'CORRECT' | 'INCORRECT', wordLength: number, selectedRowIndex: number, selectedColIndex: number, correctAnswer?: string, markedCharactersIndex?: string, isRow?: boolean ) => {
         try {
             const rowActionParams = {
@@ -617,6 +632,7 @@ export const useGameApi = () => {
         //     getPrefetchQuestion,
         //     getPacketNames,
         //     sendGrid,
+        sendPacketsName,
         addRoundMapping,
         startRound,
         startTimer,

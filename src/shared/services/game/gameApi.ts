@@ -64,9 +64,9 @@ export const gameApi = {
     return response.data;
   },
 
-   /**
-   * Auto get next question
-   */
+  /**
+  * Auto get next question
+  */
   async updateGameState(roomId: string, state: Partial<MultiplayerGameState>): Promise<Question> {
     const response = await api.post(
       `${API_ENDPOINTS.STATE.UPDATE}?room_id=${roomId}`,
@@ -134,7 +134,7 @@ export const gameApi = {
   async sendGrid(roomId: string, grid: string[][], marked_characters_index: string): Promise<boolean> {
     const url = new URL(`${process.env.REACT_APP_BASE_URL}${API_ENDPOINTS.GAME.GRID}`);
     url.searchParams.append("room_id", roomId)
-    if(marked_characters_index) url.searchParams.append("marked_characters_index", marked_characters_index)
+    if (marked_characters_index) url.searchParams.append("marked_characters_index", marked_characters_index)
     const response = await api.post(
       url.toString(),
       { grid: grid }
@@ -148,7 +148,7 @@ export const gameApi = {
   async openObstacle(roomId: string, grid: string[][], obstacle: string) {
     const response = await api.post(
       `${API_ENDPOINTS.GAME.OPEN_OBSTACLE}?room_id=${roomId}`,
-      { 
+      {
         grid: grid,
         obstacle: obstacle
       }
@@ -184,6 +184,16 @@ export const gameApi = {
     await api.post(
       `${API_ENDPOINTS.GAME.ROUND_START}?room_id=${params.roomId}&round=${params.round}`,
       { grid: params.grid }
+    );
+  },
+
+  /**
+   * send packet name to player
+   */
+  async sendPacketsName(params: { roomId: string; packetNames: string[] }): Promise<void> {
+    await api.post(
+      `${API_ENDPOINTS.GAME.PACKETS_NAME}?room_id=${params.roomId}`,
+      params.packetNames
     );
   },
 
@@ -227,7 +237,7 @@ export const gameApi = {
   async startTimer(params: { roomId: string, timeDuration?: number }): Promise<void> {
     const url = new URL(`${process.env.REACT_APP_BASE_URL}${API_ENDPOINTS.GAME.TIME_START}`);
     url.searchParams.append("room_id", params.roomId)
-    if(params.timeDuration) url.searchParams.append("time_duration", params.timeDuration.toString())
+    if (params.timeDuration) url.searchParams.append("time_duration", params.timeDuration.toString())
     await api.post(
       url.toString(),
       {}
@@ -248,7 +258,7 @@ export const gameApi = {
     return response.data;
   },
 
-  
+
 
   /**
    * Broadcast player answers

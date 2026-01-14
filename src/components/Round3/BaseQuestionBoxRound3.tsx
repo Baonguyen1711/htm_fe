@@ -1,33 +1,35 @@
 import React, { useEffect, useState } from 'react'
-import { Question } from '../../shared/types';
-import Modal from '../ui/Modal/Modal';
-import useConfirmModal from '../../shared/hooks/ui/useConfirmModal';
-import { useFirebaseListener } from '../../shared/hooks';
-import { useTimeStart } from '../../context/timeListenerContext';
-import { useSounds } from '../../context/soundContext';
-import QuestionAndAnswer from '../ui/QuestionAndAnswer/QuestionAndAnswer';
-import { Button } from '../../shared/components/ui';
-import QuestionTimerBar from '../ui/QuestionTimeBar';
-import useGameApi from '../../shared/hooks/api/useGameApi';
-import { useSearchParams } from 'react-router-dom';
-import { useAppDispatch } from '../../app/store';
-import { setCurrentTurn } from '../../app/store/slices/gameSlice';
+import { Question } from '../../shared/types'
+import Modal from '../ui/Modal/Modal'
+import useConfirmModal from '../../shared/hooks/ui/useConfirmModal'
+import { useFirebaseListener } from '../../shared/hooks'
+import { useTimeStart } from '../../context/timeListenerContext'
+import { useSounds } from '../../context/soundContext'
+import QuestionAndAnswer from '../ui/QuestionAndAnswer/QuestionAndAnswer'
+import QuestionTimerBar from '../ui/QuestionTimeBar'
+import useGameApi from '../../shared/hooks/api/useGameApi'
+import { useSearchParams } from 'react-router-dom'
+import { useAppDispatch } from '../../app/store'
+import { setCurrentTurn } from '../../app/store/slices/gameSlice'
+import { toast } from "react-toastify"
 
 interface BaseQuestionBoxRound3Props {
-    isHost: boolean,
-    isSpectator?: boolean,
-    selectedPacketName: string | null,
-    packetNames: string[],
-    shouldReturnToPacketSelection: boolean,
-    currentQuestion: Question | null,
-    currentCorrectAnswer: string,
+    isHost: boolean
+    isSpectator?: boolean
+    selectedPacketName: string | null
+    packetNames: string[]
+    shouldReturnToPacketSelection: boolean
+    currentQuestion: Question | null
+    currentCorrectAnswer: string
 
-    handleTopicSelect: (topic: string) => void,
-    handleToggleUsedTopic: (packet: string) => void,
-    handleCorrectClick: () => void,
-    handleIncorrectClick: () => void,
-    handleReturnToTopicSelection: () => void,
+    handleTopicSelect: (topic: string) => void
+    handleToggleUsedTopic: (packet: string) => void
+    handleCorrectClick: () => void
+    handleIncorrectClick: () => void
+    handleReturnToTopicSelection: () => void
 }
+
+const MYSTERY_INDEX = 4
 
 const BaseQuestionBoxRound3: React.FC<BaseQuestionBoxRound3Props> = ({
     isHost,
@@ -36,144 +38,207 @@ const BaseQuestionBoxRound3: React.FC<BaseQuestionBoxRound3Props> = ({
     shouldReturnToPacketSelection,
     currentQuestion,
     currentCorrectAnswer,
-
     handleTopicSelect,
     handleToggleUsedTopic,
     handleCorrectClick,
     handleIncorrectClick,
     handleReturnToTopicSelection,
 }) => {
-
     const baseBtn =
-        "w-full px-4 py-2 rounded-xl border border-white/10 bg-slate-800/60 text-slate-100 \
-   hover:bg-slate-700/60 hover:border-white/20 transition-all duration-200 \
-   disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
-    const { modalState, closeModal } = useConfirmModal();
+        'w-full px-4 py-2 rounded-xl border border-white/10 bg-slate-800/60 text-slate-100 \
+        hover:bg-slate-700/60 hover:border-white/20 transition-all duration-200 \
+        disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium'
+
+    const { modalState, closeModal } = useConfirmModal()
     const [usedPacketNames, setUsedPacketNames] = useState<string[]>([])
+    const [packetList, setPacketList] = useState<string[]>([])
 
-    const { listenToUsedPackets, listenToTimeStart, listenToSound, deletePath } = useFirebaseListener()
-
-    const { startTimer } = useTimeStart();
-    const sounds = useSounds();
-    const { sendCurrentTurn } = useGameApi()
+    const { listenToUsedPackets, listenToTimeStart } = useFirebaseListener()
+    const { startTimer } = useTimeStart()
+    const sounds = useSounds()
+    const { sendCurrentTurn, sendPacketsName } = useGameApi()
     const dispatch = useAppDispatch()
 
     const [searchParams] = useSearchParams()
-    const roomId = searchParams.get("roomId") || "1"
+    const roomId = searchParams.get('roomId') || '1'
 
+    const handleConfirmPacket = async () => {
+        const packetsToSend = packetList.map((packet, index) =>
+            index === MYSTERY_INDEX ? "?" : packet
+        )
+
+        await sendPacketsName(roomId, packetsToSend)
+        toast.success("Đã xác nhận tên gói")
+    }
+
+    /* ================= INIT ================= */
 
     useEffect(() => {
-        const unsubscribe = listenToTimeStart(
-            () => {
-                const audio = sounds['timer_3'];
-                if (audio) {
-                    audio.play();
-                }
-                startTimer(60)
-            }
-        )
-        return () => {
-            unsubscribe();
-        };
+        if (Array.isArray(packetNames)) {
+            setPacketList(packetNames)
+        }
+    }, [packetNames])
 
+    useEffect(() => {
+        const unsubscribe = listenToTimeStart(() => {
+            const audio = sounds['timer_3']
+            audio?.play()
+            startTimer(60)
+        })
+        return unsubscribe
     }, [])
 
     useEffect(() => {
-
         return () => {
-            const resetCurrentTurn = async () => {
-                dispatch(setCurrentTurn(0))
-                await sendCurrentTurn(roomId, 0);
-            }
-
-            resetCurrentTurn()
+            dispatch(setCurrentTurn(0))
+            sendCurrentTurn(roomId, 0)
         }
     }, [])
-    // Listen to used topics
+
     useEffect(() => {
-        const unsubscribeUsedTopics = listenToUsedPackets(
-            (usedPacketsName) => {
-                console.log("usedPacketsName fetching", usedPacketsName)
-                setUsedPacketNames(Array.isArray(usedPacketsName) ? usedPacketsName : []);
-            }
-        )
+        const unsubscribe = listenToUsedPackets((usedPacketsName) => {
+            setUsedPacketNames(Array.isArray(usedPacketsName) ? usedPacketsName : [])
+        })
+        return unsubscribe
+    }, [])
 
+    /* ================= MYSTERY LOGIC ================= */
 
-        return () => {
-            unsubscribeUsedTopics();
-        };
-    }, []);
+    const handleSetMysteryPacket = (packet: string) => {
+        if (!isHost) return
+
+        setPacketList(prev => {
+            const fromIndex = prev.indexOf(packet)
+            if (fromIndex === -1 || fromIndex === MYSTERY_INDEX) return prev
+
+            const newList = [...prev]
+            const temp = newList[MYSTERY_INDEX]
+            newList[MYSTERY_INDEX] = packet
+            newList[fromIndex] = temp
+
+            return newList
+        })
+    }
+
+    /* ================= RENDER ================= */
+
     return (
         <div className="w-full bg-slate-900/40 backdrop-blur-md border border-blue-400/20 rounded-xl shadow-xl px-5 py-4 flex flex-col gap-4">
             <QuestionTimerBar isHost={isHost} />
+
             {shouldReturnToPacketSelection ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-3xl mx-auto">
-                    {Array.isArray(packetNames) && packetNames.length > 0
-                        ? packetNames.slice(0, 8).map((packet) => (
+                    {packetList.slice(0, 9).map((packet, index) => {
+                        const isMystery =
+                            packetList.length === 9 && index === MYSTERY_INDEX
+                        const isUsed =
+                            usedPacketNames.includes(packet) ||
+                            (packet === "?" && usedPacketNames.length > 0)
+
+                        return (
                             <div key={packet} className="relative">
                                 <button
-                                    className={`w-full h-24 sm:h-28 bg-slate-800/40 text-blue-100 text-lg font-semibold rounded-xl border border-blue-400/20 shadow-md hover:bg-blue-500/20 transition-all duration-200 flex items-center justify-center ${!isHost ? "cursor-not-allowed" : ""
-                                        } ${usedPacketNames.includes(packet) ? "opacity-60 bg-gray-700/40" : ""}`}
+                                    className={`w-full h-24 sm:h-28 rounded-xl border shadow-md
+                                    flex flex-col items-center justify-center gap-1 transition-all
+                                    ${isUsed
+                                            ? 'opacity-60 bg-gray-700/40'
+                                            : 'bg-slate-800/40'}
+                                    ${isMystery && isHost
+                                            ? 'border-yellow-400/60 bg-yellow-500/10'
+                                            : 'border-blue-400/20'}
+                                    ${!isHost ? 'cursor-not-allowed' : ''}
+                                `}
                                     onClick={() => handleTopicSelect(packet)}
                                 >
-                                    {packet}
+                                    <span className="text-blue-100 text-lg font-semibold">
+                                        {packet}
+                                        {isMystery && isHost && ' ?'}
+                                    </span>
+
+                                    {isMystery && isHost && (
+                                        <span className="text-xs text-yellow-300 font-semibold uppercase">
+                                            Gói bí ẩn
+                                        </span>
+                                    )}
                                 </button>
 
-                                {isHost && Array.isArray(usedPacketNames) && (
-                                    <div className="absolute top-2 right-2 flex items-center">
+                                {/* Used checkbox */}
+                                {isHost && (
+                                    <div className="absolute top-2 right-2">
                                         <input
                                             type="checkbox"
                                             checked={usedPacketNames.includes(packet)}
                                             onChange={() => handleToggleUsedTopic(packet)}
-                                            className="w-4 h-4 text-green-400 bg-gray-100 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                            className="w-4 h-4 cursor-pointer"
                                         />
-                                        <label className="ml-1 text-xs text-white font-semibold">
-                                            {usedPacketNames.includes(packet) ? "✓" : ""}
-                                        </label>
                                     </div>
                                 )}
+
+                                {/* Set mystery */}
+                                {isHost &&
+                                    packetList.length === 9 &&
+                                    !isMystery && (
+                                        <button
+                                            onClick={() => handleSetMysteryPacket(packet)}
+                                            className="absolute bottom-2 left-1/2 -translate-x-1/2
+                                            text-xs px-2 py-1 rounded-md bg-yellow-500/20
+                                            text-yellow-300 hover:bg-yellow-500/30 transition"
+                                        >
+                                            Chọn làm gói ẩn
+                                        </button>
+                                    )}
                             </div>
-                        ))
-                        : null}
+                        )
+                    })}
                 </div>
             ) : (
                 <div className="w-full flex flex-col items-center gap-4">
-                    <h2 className="text-xl font-bold text-blue-100">{selectedPacketName ?? ""}</h2>
+                    <h2 className="text-xl font-bold text-blue-100">
+                        {selectedPacketName ?? ''}
+                    </h2>
 
                     <QuestionAndAnswer
                         currentQuestion={currentQuestion}
                         currentCorrectAnswer={currentCorrectAnswer}
                     />
 
-                    {/* Host controls */}
-                    {!shouldReturnToPacketSelection && isHost && (
-                        <div className="flex flex-row items-center gap-4 w-full mt-4">
-
+                    {isHost && (
+                        <div className="flex gap-4 w-full mt-4">
                             <button className={baseBtn} onClick={handleCorrectClick}>
                                 Đúng
                             </button>
-
                             <button className={baseBtn} onClick={handleIncorrectClick}>
                                 Sai
                             </button>
-
-                            <button className={baseBtn} onClick={handleReturnToTopicSelection}>
+                            <button
+                                className={baseBtn}
+                                onClick={handleReturnToTopicSelection}
+                            >
                                 Quay về màn hình chọn gói
                             </button>
-
                         </div>
                     )}
                 </div>
             )}
 
-            {/* Confirmation Modal */}
             {modalState.isOpen && (
-                <Modal text={modalState.text} buttons={modalState.buttons} onClose={closeModal} />
+                <Modal
+                    text={modalState.text}
+                    buttons={modalState.buttons}
+                    onClose={closeModal}
+                />
+            )}
+
+            {isHost && (
+                <div className="flex gap-2 mt-4 w-full">
+                    <button className={baseBtn} onClick={handleConfirmPacket}>
+                        Xác nhận gói
+                    </button>
+
+                </div>
             )}
         </div>
-    );
-
-
+    )
 }
 
 export default BaseQuestionBoxRound3

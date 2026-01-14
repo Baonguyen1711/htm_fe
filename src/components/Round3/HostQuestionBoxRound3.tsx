@@ -33,7 +33,10 @@ const HostQuestionBoxRound3: React.FC<HostQuestionBoxRound3Props> = ({ isHost })
 
     //api
     const { sendSelectedPacketName, sendUsedPacketName, sendShouldReturnToPacketSelection, updateScoring, sendCorrectAnswer } = gameApi
-
+    const baseBtn =
+    "w-full px-4 py-2 rounded-xl border border-white/10 bg-slate-800/60 text-slate-100 \
+   hover:bg-slate-700/60 hover:border-white/20 transition-all duration-200 \
+   disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
     useEffect(() => {
         const getInitialPacketsName = async () => {
             await dispatch(getPacketsName({

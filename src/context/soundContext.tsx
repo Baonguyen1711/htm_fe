@@ -30,7 +30,7 @@ const soundFiles = [
 
     { key: '5seconds_remain', src: '/sounds/round4/VeDich5sConLai.mp3' },
     { key: 'nshv', src: '/sounds/round4/VeDichNSHV.mp3' },
-    { key: 'leaderboard', src: '/sounds/Show_player_answer.mp3' },
+    { key: 'leaderboard', src: '/sounds/AnswersShowing.mp3' },
     { key: 'star', src: '/sounds/StarChoose.mp3' },
 
     { key: 'final', src: '/sounds/score/CongBoDiemSo.mp3' }

@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
     CORRECT_ANSWER: '/game/answer',
     PREFETCH: '/game/question/prefetch',
     PACKETS: '/game/question/round/packet',
+    PACKETS_NAME: '/game/packet/send',
     SELECTED_PACKETS: '/game/packet/set',
     SELECTED_CELL: '/game/grid/cell',
     OPEN_OBSTACLE: '/game/obstacle',
