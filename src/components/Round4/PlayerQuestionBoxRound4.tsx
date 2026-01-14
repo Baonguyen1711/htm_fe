@@ -121,7 +121,7 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
 
     useEffect(() => {
         const unsubscribeGrid = listenToRound4Grid((data) => {
-            if (!grid) return;
+            if (!data) return;
 
             setGrid(data.grid);
 

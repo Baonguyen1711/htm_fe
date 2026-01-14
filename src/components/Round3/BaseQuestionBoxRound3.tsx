@@ -91,7 +91,9 @@ const BaseQuestionBoxRound3: React.FC<BaseQuestionBoxRound3Props> = ({
     useEffect(() => {
         return () => {
             dispatch(setCurrentTurn(0))
-            sendCurrentTurn(roomId, 0)
+            if(isHost) {
+                sendCurrentTurn(roomId, 0)
+            }
         }
     }, [])
 

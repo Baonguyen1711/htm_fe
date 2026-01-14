@@ -16,8 +16,7 @@ import app from "../../../shared/services/firebase/config";
 import { useAppDispatch } from "../../../app/store";
 import { authApi } from "../../../shared/services/auth/authApi"
 import { setCurrentPlayer } from "../../../app/store/slices/gameSlice";
-
-
+import { jwtDecode } from "jwt-decode";
 
 
 const useAuth = () => {
@@ -176,13 +175,34 @@ const useAuth = () => {
     return null;
   };
 
+  const getUserRole = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      console.log("user", user);
+      try {
+        const token = await user.getIdToken();
+        const decoded = jwtDecode(token) as any
+        console.log("decoded", decoded)
+        return decoded["role"];
+      } catch (err: any) {
+        console.error("Error fetching token:", err.message);
+        setError(err.message);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    }
+    return null;
+  };
+
   const isAuthenticated = () => {
     const auth = getAuth();
     console.log("auth after logout", auth)
     return !!auth.currentUser;
   };
 
-  return { user, verifyAdmin, login, register, logout, getToken, loading, error, signInWithoutPassword, authenticateUserManually, isAuthenticated };
+  return { user, getUserRole, verifyAdmin, login, register, logout, getToken, loading, error, signInWithoutPassword, authenticateUserManually, isAuthenticated };
 };
 
 export default useAuth;

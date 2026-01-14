@@ -13,7 +13,7 @@ const Login = () => {
   const [password, setPassword] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const { login, verifyAdmin } = useAuth();
+  const { login, getUserRole, verifyAdmin } = useAuth();
 
   const handleLogin = async () => {
     if (isLoading) return; // Prevent multiple login attempts
@@ -38,21 +38,19 @@ const Login = () => {
           autoClose: 2000,
         });
         // Wait for the success toast to be visible and for the auth cookie
-        const isAdmin = await verifyAdmin()
-        console.log("isAdmin", isAdmin)
+        
+        const role = await getUserRole()
         await new Promise(resolve => setTimeout(resolve, 2000)); // Match autoClose duration
-        if (isAdmin) {
+        if (role === "admin") {
           navigate('/admin/dashboard');
           return
         } 
-        const isHost = await authApi.isHost()
-        console.log("is host", isHost)
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Match autoClose duration
-        if (isHost) {
+        if (role === "host") {
           navigate('/host/dashboard');
         } else {
           navigate('/user/dashboard')
         }
+        
       } else {
         toast.dismiss(toastId); // Dismiss the loading toast
         toast.error('Email hoặc mật khẩu không đúng!', {

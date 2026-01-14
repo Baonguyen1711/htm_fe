@@ -65,7 +65,9 @@ const GameGridRound4: React.FC<GameGridProps> = ({
         return () => {
             const resetCurrentTurn = async () => {
                 dispatch(setCurrentTurn(0))
-                await sendCurrentTurn(roomId, 0);
+                if(isHost) {
+                    await sendCurrentTurn(roomId, 0);
+                }
             }
 
             resetCurrentTurn()
