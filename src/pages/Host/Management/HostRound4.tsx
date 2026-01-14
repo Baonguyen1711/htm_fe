@@ -20,7 +20,7 @@ const HostRound4: React.FC = () => {
     const [showModal, setShowModal] = useState(false); // State for modal visibility
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || ""
-    const { listenToBuzzedPlayer, listenToStar } = useFirebaseListener();
+    const { listenToBuzzedPlayer, listenToStar, deletePath } = useFirebaseListener();
     const { resetBuzz, resetStar } = useGameApi()
     const sounds = useSounds();
     useEffect(() => {
@@ -43,6 +43,11 @@ const HostRound4: React.FC = () => {
     useEffect(() => {
         const unsubscribeStaredPlayer = listenToStar(
             (playerName) => {
+                const audio = sounds["star"];
+                if (audio) {
+                    audio.play();
+                }
+                deletePath("sound")
                 setShowModal(true)
                 setStaredPlayer(playerName)
             }

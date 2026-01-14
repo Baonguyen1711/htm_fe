@@ -25,6 +25,7 @@ const useAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const authenticateUser = authApi.authenticateUser;
+  const verifyIsAdmin = authApi.isAdmin
   const dispatch = useAppDispatch();
 
   // const { setAuthToken } = useAxiosAuth()
@@ -142,6 +143,20 @@ const useAuth = () => {
     }
   }
 
+  const verifyAdmin = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      const token = await user.getIdToken();
+      const isAdmin = await verifyIsAdmin(token);
+      console.log("admin authentication completed");
+      return isAdmin
+    }
+
+    return false
+  }
+
+
   const getToken = async () => {
     setLoading(true);
     setError(null); // Clear any previous errors
@@ -167,7 +182,7 @@ const useAuth = () => {
     return !!auth.currentUser;
   };
 
-  return { user, login, register, logout, getToken, loading, error, signInWithoutPassword, authenticateUserManually, isAuthenticated };
+  return { user, verifyAdmin, login, register, logout, getToken, loading, error, signInWithoutPassword, authenticateUserManually, isAuthenticated };
 };
 
 export default useAuth;

@@ -281,7 +281,7 @@ const FinalResultPage: React.FC<FinalRankingProps> = ({ isHost }) => {
           </div>
         ) : (
           <div className="w-full max-w-3xl h-full animate-fade-in py-4">
-            <RoomModeLeaderboard isHost={isHost} />
+            <RoomModeLeaderboard isHost={isHost} isRanking={true} />
           </div>
         )}
       </main>

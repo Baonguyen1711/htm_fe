@@ -3,6 +3,10 @@ import { useFirebaseListener } from '../../shared/hooks';
 import { useTimeStart } from '../../context/timeListenerContext';
 import { useSounds } from '../../context/soundContext';
 import { Button } from '../../shared/components/ui';
+import useGameApi from '../../shared/hooks/api/useGameApi';
+import { useSearchParams } from 'react-router-dom';
+import { useAppDispatch } from '../../app/store';
+import { setCurrentTurn } from '../../app/store/slices/gameSlice';
 
 interface GameGridProps {
     initialGrid: string[][];
@@ -40,6 +44,10 @@ const GameGridRound4: React.FC<GameGridProps> = ({
     const { listenToTimeStart } = useFirebaseListener();
     const { startTimer } = useTimeStart();
     const sounds = useSounds();
+    const {sendCurrentTurn} = useGameApi()
+    const [searchParams] = useSearchParams()
+    const roomId = searchParams.get("roomId") || "1"
+    const dispatch = useAppDispatch()
 
     const gridSize = initialGrid?.length || 0;
 
@@ -51,6 +59,18 @@ const GameGridRound4: React.FC<GameGridProps> = ({
         });
         return () => unsubscribe();
     }, []);
+
+    useEffect(() => {
+        
+        return () => {
+            const resetCurrentTurn = async () => {
+                dispatch(setCurrentTurn(0))
+                await sendCurrentTurn(roomId, 0);
+            }
+
+            resetCurrentTurn()
+        }
+    },[])
 
     // ===== VALIDATION =====
     const isValidGrid =

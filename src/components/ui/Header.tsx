@@ -38,6 +38,7 @@ const Header: React.FC<HeaderProps> = ({ isHost = false, spectatorCount = 0, isM
     { key: "2", label: "VƯỢT SÓNG" },
     { key: "3", label: "BỨT PHÁ" },
     { key: "4", label: "CHINH PHỤC" },
+    { key: "summary", label: "TỔNG KẾT SAU VÒNG" },
     { key: "final", label: "TỔNG KẾT" },
     { key: "turn", label: "PHÂN LƯỢT" },
   ];

@@ -272,6 +272,40 @@ function HostAnswer() {
                                 <Button onClick={async () => { await openBuzz(roomId); setTimeout(() => closeBuzz(roomId), 5000); }} variant="danger" size="xs">Sai</Button>
                                 <Button onClick={() => updateScoring({ roomId, mode: "auto", round: "4", sttTakeTurn: player.stt, sttTaken: currentTurn.toString(), isTakeTurnCorrect: true, round4Mode: "take_turn", difficulty: selectedDifficulty })} variant="success" size="xs">Giành lượt Đúng</Button>
                                 <Button onClick={() => updateScoring({ roomId, mode: "auto", round: "4", sttTakeTurn: player.stt, sttTaken: currentTurn.toString(), isTakeTurnCorrect: false, round4Mode: "take_turn", difficulty: selectedDifficulty })} variant="danger" size="xs">Giành lượt Sai</Button>
+                                <Button onClick={
+                                    async () => {
+                                        await updateScoring({
+                                            roomId: roomId,
+                                            mode: "auto",
+                                            round: "4",
+                                            stt: currentTurn.toString(),
+                                            isCorrect: true,
+                                            round4Mode: "nshv",
+                                            difficulty: selectedDifficulty,
+                                        });
+                                    }} variant="success" size="xs">NSHV đúng</Button>
+                                <Button
+                                    onClick={async () => {
+                                        await updateScoring({
+                                            roomId: roomId,
+                                            mode: "auto",
+                                            round: "4",
+                                            stt: currentTurn.toString(),
+                                            isCorrect: false,
+                                            round4Mode: "nshv",
+                                            difficulty: selectedDifficulty,
+                                        });
+                                        await openBuzz(roomId)
+                                        toast.success(`Đã mở bấm chuông`);
+                                        const timeoutId = setTimeout(() => {
+                                            closeBuzz(roomId)
+                                        }, 5000)
+
+                                        return () => {
+
+                                            clearTimeout(timeoutId)
+                                        }
+                                    }} variant="danger" size="xs">NSHV sai</Button>
                             </div>
                         )}
                     </div>

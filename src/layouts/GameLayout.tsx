@@ -143,9 +143,33 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
 
     const handleShowLeaderboardTimed = () => {
         console.log("showing leaderboard")
+        const audio = sounds["leaderboard"];
+        if (audio) {
+            audio.play();
+        }
+        deletePath("sound")
         setShowLeaderboard(true);
     };
 
+
+    useEffect(() => {
+        const unsubscribeRules = listenToRules((data: any) => {
+            console.log("Rules data received:", data);
+            setRoomRules(data)
+
+            // Show modal when host triggers it, regardless of round matching
+            if (data && data.show) {
+                setRulesRound(data.round);
+                setShowRulesModal(true);
+            } else {
+                setShowRulesModal(false);
+            }
+        })
+
+        return () => {
+            unsubscribeRules()
+        }
+    }, [])
 
     useEffect(() => {
         const unsubscribePlayers = listenToRoundStart(
@@ -498,7 +522,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
             {/* Layer 2: Nội dung chính, có thể scroll nếu cần */}
             <div className="relative z-10 min-h-screen flex flex-col">
                 {/* Header */}
-                <Header isHost={isHost} isMultiplayer={isMultiplayerMode} spectatorCount={spectatorsCount}/>
+                <Header isHost={isHost} isMultiplayer={isMultiplayerMode} spectatorCount={spectatorsCount} />
 
                 {/* Main Content */}
                 <div className="container mx-auto px-4 py-4 flex-1"
@@ -568,6 +592,16 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                 animation: float linear infinite;
             }
         `}</style> */}
+
+            <RulesModal
+                isOpen={showRulesModal}
+                onClose={() => {
+                    setShowRulesModal(false);
+                }}
+                round={rulesRound}
+                mode={mode}
+                roomRules={scoreRules}
+            />
         </>
     );
 }

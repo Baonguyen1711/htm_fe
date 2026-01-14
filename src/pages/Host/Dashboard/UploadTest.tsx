@@ -2,6 +2,7 @@ import { useState } from "react";
 import useTestApi from "../../../shared/hooks/api/useTestApi";
 import { toast } from 'react-toastify';
 import { Button } from '../../../shared/components/ui';
+import axios from "axios";
 
 const UploadTest: React.FC = () => {
   const { uploadTestToServer, uploadMultiplayerTestToServer } = useTestApi();
@@ -47,6 +48,21 @@ const UploadTest: React.FC = () => {
     }
   };
 
+
+
+  const downloadTemplates = async () => {
+    const res = await axios.get("https://d1fc7d6en42vzg.cloudfront.net/uploads/Test_templates.xlsx", {
+      responseType: "blob",
+    });
+
+    const url = window.URL.createObjectURL(res.data);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Test_templates.xlsx";
+    a.click();
+  };
+
+
   return (
     <div className="space-y-6">
       {/* ===== CARD 1: TYPE / MODE ===== */}
@@ -60,8 +76,8 @@ const UploadTest: React.FC = () => {
             type="button"
             onClick={() => setType("single")}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${type === "single"
-                ? "bg-white text-slate-900"
-                : "bg-slate-700/50  hover:bg-slate-700"
+              ? "bg-white text-slate-900"
+              : "bg-slate-700/50  hover:bg-slate-700"
               }`}
           >
             Phòng thi đơn
@@ -71,8 +87,8 @@ const UploadTest: React.FC = () => {
             type="button"
             onClick={() => setType("multi")}
             className={`px-6 py-3 rounded-lg font-medium transition-all ${type === "multi"
-                ? "bg-white text-slate-900"
-                : "bg-slate-700/50  hover:bg-slate-700"
+              ? "bg-white text-slate-900"
+              : "bg-slate-700/50  hover:bg-slate-700"
               }`}
           >
             Nhiều người chơi
@@ -85,8 +101,8 @@ const UploadTest: React.FC = () => {
               type="button"
               onClick={() => setIsPublic(false)}
               className={`px-5 py-2 rounded-lg ${!isPublic
-                  ? "bg-white text-slate-900"
-                  : "bg-slate-700/50 "
+                ? "bg-white text-slate-900"
+                : "bg-slate-700/50 "
                 }`}
             >
               Riêng tư
@@ -96,8 +112,8 @@ const UploadTest: React.FC = () => {
               type="button"
               onClick={() => setIsPublic(true)}
               className={`px-5 py-2 rounded-lg ${isPublic
-                  ? "bg-white text-slate-900"
-                  : "bg-slate-700/50 "
+                ? "bg-white text-slate-900"
+                : "bg-slate-700/50 "
                 }`}
             >
               Công khai
@@ -151,13 +167,12 @@ const UploadTest: React.FC = () => {
           <li>• Đề nhiều người chơi có thể chọn công khai</li>
         </ul>
 
-        <a
-          href="/templates/mau-de-thi.xlsx"
-          download
+        <button
+          onClick={downloadTemplates}
           className="inline-block mt-4 hover:underline"
         >
           📄 Tải file mẫu Excel
-        </a>
+        </button>
       </div>
     </div>
   );

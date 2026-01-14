@@ -9,10 +9,11 @@ import { motion, AnimatePresence } from "framer-motion";
 interface LeaderboardProps {
     isHost?: boolean;
     currentQuestion?: number;
+    isRanking?: boolean
     onOpenNewTab?: () => void;
 }
 
-const RoomModeLeaderboard = ({ onOpenNewTab }: LeaderboardProps) => {
+const RoomModeLeaderboard = ({ onOpenNewTab, isRanking = false }: LeaderboardProps) => {
     const [params] = useSearchParams();
     const roomId = params.get("roomId") || "1";
     const { scoresRanking } = useAppSelector(state => state.game);
@@ -21,6 +22,11 @@ const RoomModeLeaderboard = ({ onOpenNewTab }: LeaderboardProps) => {
     const [currentTurn, setCurrentTurn] = useState<Number>(0);
 
     useEffect(() => {
+        if(isRanking) {
+            setPlayerColors({})
+            setCurrentTurn(0)
+            return
+        }
         const unsubscribePlayerColors = listenToPlayerColors(colors => setPlayerColors(colors || {}));
         const unsubscribePlayerTurn = listenToCurrentTurn(turn => setCurrentTurn(turn || 0));
         const unsubscribeScores = listenToScoresRanking(() => { });

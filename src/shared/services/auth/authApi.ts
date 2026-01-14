@@ -76,6 +76,20 @@ export const authApi = {
       return false;
     }
   },
+
+  /**
+   * Check if user is admin (legacy compatibility)
+   */
+  async isAdmin(token: string): Promise<any> {
+    try {
+
+      const response = await api.post(API_ENDPOINTS.AUTH.IS_ADMIN, {token: token});
+      console.log("response", response);
+      return response.data;
+    } catch (error) {
+      return false;
+    }
+  },
 };
 
 export default authApi;

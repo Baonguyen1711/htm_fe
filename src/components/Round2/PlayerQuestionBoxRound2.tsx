@@ -119,7 +119,7 @@ const PlayerQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
                 if (audio) {
                     audio.play();
                 }
-                startTimer(15)
+                startTimer(10)
             }
         )
         return () => {

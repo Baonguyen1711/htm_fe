@@ -330,7 +330,7 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                     Giành quyền trả lời
                 </button>
 
-                <button className={baseBtn} onClick={handleSetStar}>
+                <button className={baseBtn} onClick={handleSetStar} disabled={!isStarButtonEnabled}>
                     Chọn ngôi sao hy vọng
                 </button>
 

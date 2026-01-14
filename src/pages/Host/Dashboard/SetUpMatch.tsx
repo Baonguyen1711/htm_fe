@@ -155,7 +155,9 @@ const SetupMatch: React.FC = () => {
       const scoreRules = { ...room.roundScores, round4Levels: room.round4Levels };
       localStorage.setItem(`scoreRules_${roomId}`, JSON.stringify(scoreRules));
       dispatch(setScoreRules(scoreRules));
-      await setGameScoreRules(scoreRules, roomId);
+      if (roomMode === "multiplayer" ) {
+        await setGameScoreRules(scoreRules, roomId);
+      }
       await addTestNameToRoom(roomId, finalTestName);
 
       if (room.roomMode === "multiplayer") {

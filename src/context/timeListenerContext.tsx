@@ -47,6 +47,7 @@ export const TimeStartProvider: React.FC<{ roomId: string; children: React.React
     console.log("Time is up!");
     if(pathname.includes("host")) return
     dispatch(setIsInputDisabled(true))
+    if(round === "3" || round === "4") return 
 
     const submittedAnswer = {
       answer: currentPlayer?.answer || "",

@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import authService from '../services/auth.service';
 import { authApi } from '../shared/services/auth/authApi';
 import axios from 'axios';
+import useAuth from '../shared/hooks/auth/useAuth';
 
 interface VerifyResponse {
 
@@ -40,8 +41,8 @@ const AccessDeniedModal: React.FC<{ onClose: () => void; message: string }> = ({
 );
 
 const ProtectedRoute = ({
-    element, requireAccessToken = false, requireHost = false
-}: { element: ReactNode, requireAccessToken?: boolean, requireHost?: boolean }) => {
+    element, requireAccessToken = false, requireHost = false, requireAdmin =false
+}: { element: ReactNode, requireAccessToken?: boolean, requireHost?: boolean, requireAdmin?: boolean }) => {
     const [showModal, setShowModal] = useState(false);
     const [modalMessage, setModalMessage] = useState("You don't have permission to access this route.");
     const [isVerified, setIsVerified] = useState(false);
@@ -51,6 +52,7 @@ const ProtectedRoute = ({
     const roomId = params.get("roomId") || ""
     const testName = params.get("testName") || ""
     const roomMode = params.get("roomMode") || ""
+    const {verifyAdmin} = useAuth()
     useEffect(() => {
         const verify = async () => {
             if (requireAccessToken) {
@@ -140,7 +142,20 @@ const ProtectedRoute = ({
                 setIsVerified(true);
 
 
-            } else {
+            } else if (requireAdmin) {
+                const response = await verifyAdmin()
+                console.log("response.data", response);
+                
+                if(!response) {
+                    setModalMessage("You don't have the right role to access this route.");
+                    setShowModal(true);
+                    return;
+                }
+
+                setIsVerified(true);
+
+
+            }else {
                 // No protection required (optional)
                 setIsVerified(true);
             }

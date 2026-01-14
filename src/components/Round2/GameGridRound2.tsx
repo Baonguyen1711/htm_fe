@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import PlayerAnswerInput from '../ui/Input/PlayerAnswerInput';
 import Cell from './Cell';
 import { useAppSelector } from '../../app/store';
+import useGameApi from '../../shared/hooks/api/useGameApi';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '../../shared/components/ui';
 
 
@@ -63,8 +65,30 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
     "w-full px-4 py-2 rounded-xl border border-white/10 bg-slate-800/60 text-slate-100 \
    hover:bg-slate-700/60 hover:border-white/20 transition-all duration-200 \
    disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+  const [searchParams] = useSearchParams()
+  const roomId = searchParams.get("roomId") || "1"
 
-  const { round2Grid } = useAppSelector(state => state.game);
+  const { round2Grid, currentPlayer } = useAppSelector(state => state.game);
+  const { buzzing, sendGrid } = useGameApi()
+
+  const handleBuzz = async () => {
+    console.log("currentPlayerName", currentPlayer?.userName);
+    if (currentPlayer?.userName) {
+      await buzzing(roomId, currentPlayer?.userName)
+    }
+  }
+
+  useEffect(() => {
+
+    return () => {
+      const resetGrid = async () => {
+        await sendGrid([[]], roomId);
+        console.log("grid reset!")
+      }
+
+      resetGrid()
+    }
+  }, [])
   // const [markedCharMapping, setMarkedCharMapping] = useState<string[]>([])
 
   // useEffect(() => {
@@ -96,54 +120,54 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
             style={{ '--cols': round2Grid?.grid[0]?.length || 1 } as React.CSSProperties}
           >
             {
-            round2Grid?.grid && round2Grid.grid.map((row, rowIndex) => (
-              <React.Fragment key={rowIndex}>
-                {row.map((cell, colIndex) => {
-                  const cellKey = `${rowIndex}-${colIndex}`;
-                  let isVertical
-                  if (cell.includes('number') && markedCharInWord && cell.replace('number', '') in markedCharInWord) {
-                    console.log("markedCharInWord[cell.replace('number','')]", markedCharInWord[cell.replace('number', '')])
-                    isVertical = round2Grid?.grid?.[rowIndex][colIndex + 1] === '' || round2Grid?.grid?.[rowIndex][colIndex + 1] === ' '
+              round2Grid?.grid && round2Grid.grid.map((row, rowIndex) => (
+                <React.Fragment key={rowIndex}>
+                  {row.map((cell, colIndex) => {
+                    const cellKey = `${rowIndex}-${colIndex}`;
+                    let isVertical
+                    if (cell.includes('number') && markedCharInWord && cell.replace('number', '') in markedCharInWord) {
+                      console.log("markedCharInWord[cell.replace('number','')]", markedCharInWord[cell.replace('number', '')])
+                      isVertical = round2Grid?.grid?.[rowIndex][colIndex + 1] === '' || round2Grid?.grid?.[rowIndex][colIndex + 1] === ' '
 
-                    if (isVertical) {
-                      for (let num of markedCharInWord[cell.replace('number', '')]) {
-                        markedCharMapping.push(`${rowIndex + num + 1}-${colIndex}`)
+                      if (isVertical) {
+                        for (let num of markedCharInWord[cell.replace('number', '')]) {
+                          markedCharMapping.push(`${rowIndex + num + 1}-${colIndex}`)
+                        }
                       }
-                    }
 
-                    if (!isVertical) {
-                      for (let num of markedCharInWord[cell.replace('number', '')]) {
-                        markedCharMapping.push(`${rowIndex}-${colIndex + num + 1}`)
+                      if (!isVertical) {
+                        for (let num of markedCharInWord[cell.replace('number', '')]) {
+                          markedCharMapping.push(`${rowIndex}-${colIndex + num + 1}`)
+                        }
                       }
+
+                      console.log("markedCharMapping", markedCharMapping)
                     }
+                    console.log("markedCharMapping.includes(cellKey)", markedCharMapping.includes(cellKey))
+                    const cellStyle = cellStyles[cellKey] || {
+                      background: markedCharMapping.includes(cellKey) ? 'bg-red-500' : cell === '' || cell === ' ' ? 'transparent' : 'bg-white',
+                      textColor: typeof cell === 'string' && cell.includes('number') ? 'text-blue-400' : (isHost ? 'text-black' : isOpenAll ? 'text-black' : 'text-transparent'),
+                    };
+                    // console.log("cellStyle", cellStyle);
 
-                    console.log("markedCharMapping", markedCharMapping)
-                  }
-                  console.log("markedCharMapping.includes(cellKey)", markedCharMapping.includes(cellKey))
-                  const cellStyle = cellStyles[cellKey] || {
-                    background: markedCharMapping.includes(cellKey) ? 'bg-red-500' : cell === '' || cell === ' ' ? 'transparent' : 'bg-white',
-                    textColor: typeof cell === 'string' && cell.includes('number') ? 'text-blue-400' : (isHost ? 'text-black' : isOpenAll ? 'text-black' : 'text-transparent'),
-                  };
-                  // console.log("cellStyle", cellStyle);
-
-                  return (
-                    <Cell
-                      key={cellKey}
-                      cell={cell}
-                      cellStyle={cellStyle}
-                      hintWords={hintWords}
-                      menu={menu}
-                      menuRef={menuRef as React.RefObject<HTMLDivElement>}
-                      isHost={isHost}
-                      colIndex={colIndex}
-                      rowIndex={rowIndex}
-                      onNumberClick={onNumberClick}
-                      onMenuAction={onMenuAction}
-                    />
-                  );
-                })}
-              </React.Fragment>
-            ))}
+                    return (
+                      <Cell
+                        key={cellKey}
+                        cell={cell}
+                        cellStyle={cellStyle}
+                        hintWords={hintWords}
+                        menu={menu}
+                        menuRef={menuRef as React.RefObject<HTMLDivElement>}
+                        isHost={isHost}
+                        colIndex={colIndex}
+                        rowIndex={rowIndex}
+                        onNumberClick={onNumberClick}
+                        onMenuAction={onMenuAction}
+                      />
+                    );
+                  })}
+                </React.Fragment>
+              ))}
           </div>
         )
       }
@@ -167,7 +191,13 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
         </div>
       )}
 
-
+      {!isHost && (
+        <div className="flex gap-2 mt-4 w-full">
+          <button className={baseBtn} onClick={handleBuzz}>
+            Trả lời CNV
+          </button>
+        </div>
+      )}
     </div>
   );
 };

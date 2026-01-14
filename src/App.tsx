@@ -35,6 +35,8 @@ const HostRound3 = React.lazy(() => import('./pages/Host/Management/HostRound3')
 const HostRound4 = React.lazy(() => import('./pages/Host/Management/HostRound4'));
 const HostRoundTurn = React.lazy(() => import('./pages/Host/Management/HostRound1'));
 const HostMultipleChoice = React.lazy(() => import('./pages/Host/Management/NewHostMultipleChoice'));
+const AfterRoundRanking = React.lazy(() => import('./components/ui/AfterRoundRanking'))
+const SummaryAfterRound = React.lazy(() => import('./components/ui/SummaryAfterRound'))
 const FinalRanking = React.lazy(() => import('./components/NewFinalRanking'))
 const HostRanking = React.lazy(() => import('./components/HostRanking'));
 const HostLobby = React.lazy(() => import('./pages/Host/Management/HostLobby'));
@@ -75,6 +77,7 @@ function PlayComponent(roundMapping: any) {
   if (round === "3") return <UserRound3 />;
   if (round === "4") return <UserRound4 />;
   if (round === "turn") return <UserRoundTurn />;
+  if (round === "summary") return <SummaryAfterRound isHost={false} />;
   if (round === "final") return <FinalRanking isHost={false} />;
   if (roomMode === "multiplayer" || roomMode === "practice") return <HostMultipleChoice isHost={false} />;
 
@@ -102,6 +105,7 @@ function HostComponent(roundMapping: any) {
   if (round === "3") return <HostRound3 />;
   if (round === "4") return <HostRound4 />;
   if (round === "turn") return <HostRoundTurn />;
+  if (round === "summary") return <SummaryAfterRound isHost={true} />;
   if (round === "final") return <FinalRanking isHost={true} />;
   if (roomMode === "multiplayer") return <HostMultipleChoice isHost={true} />;
 
@@ -117,6 +121,7 @@ function SpectatorComponent() {
   if (round === "2") return <UserRound2 isSpectator={true} />;
   if (round === "3") return <UserRound3 isSpectator={true} />;
   if (round === "4") return <UserRound4 isSpectator={true} />;
+  if (round === "summary") return <SummaryAfterRound isHost={false} />;
   if (round === "turn") return <UserRoundTurn isSpectator={true} />;
   if (round === "final") return <FinalRanking isHost={false} />;
 
@@ -258,6 +263,15 @@ function App() {
 
                       </SoundProvider>
                     </TimeStartProvider>
+                  }
+                />
+
+                <Route
+                  path="/admin/*"
+                  element={
+                        <Routes>
+                          <Route path="dashboard" element={<ProtectedRoute element={<HostDashboard />} requireAccessToken={false} requireAdmin={true} />} />                          
+                        </Routes>
                   }
                 />
 

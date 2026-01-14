@@ -8,6 +8,10 @@ import { useSounds } from '../../context/soundContext';
 import QuestionAndAnswer from '../ui/QuestionAndAnswer/QuestionAndAnswer';
 import { Button } from '../../shared/components/ui';
 import QuestionTimerBar from '../ui/QuestionTimeBar';
+import useGameApi from '../../shared/hooks/api/useGameApi';
+import { useSearchParams } from 'react-router-dom';
+import { useAppDispatch } from '../../app/store';
+import { setCurrentTurn } from '../../app/store/slices/gameSlice';
 
 interface BaseQuestionBoxRound3Props {
     isHost: boolean,
@@ -51,6 +55,11 @@ const BaseQuestionBoxRound3: React.FC<BaseQuestionBoxRound3Props> = ({
 
     const { startTimer } = useTimeStart();
     const sounds = useSounds();
+    const { sendCurrentTurn } = useGameApi()
+    const dispatch = useAppDispatch()
+
+    const [searchParams] = useSearchParams()
+    const roomId = searchParams.get("roomId") || "1"
 
 
     useEffect(() => {
@@ -68,6 +77,18 @@ const BaseQuestionBoxRound3: React.FC<BaseQuestionBoxRound3Props> = ({
         };
 
     }, [])
+
+    useEffect(() => {
+
+        return () => {
+            const resetCurrentTurn = async () => {
+                dispatch(setCurrentTurn(0))
+                await sendCurrentTurn(roomId, 0);
+            }
+
+            resetCurrentTurn()
+        }
+    }, [])
     // Listen to used topics
     useEffect(() => {
         const unsubscribeUsedTopics = listenToUsedPackets(
@@ -84,14 +105,14 @@ const BaseQuestionBoxRound3: React.FC<BaseQuestionBoxRound3Props> = ({
     }, []);
     return (
         <div className="w-full bg-slate-900/40 backdrop-blur-md border border-blue-400/20 rounded-xl shadow-xl px-5 py-4 flex flex-col gap-4">
-            <QuestionTimerBar isHost={isHost}/>
+            <QuestionTimerBar isHost={isHost} />
             {shouldReturnToPacketSelection ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-3xl mx-auto">
                     {Array.isArray(packetNames) && packetNames.length > 0
                         ? packetNames.slice(0, 8).map((packet) => (
                             <div key={packet} className="relative">
                                 <button
-                                    className={`w-full h-24 sm:h-28 bg-slate-800/40 text-blue-100 text-lg font-semibold rounded-xl border border-blue-400/20 shadow-md hover:bg-blue-500/20 transition-all duration-200 flex items-center justify-center ${!isHost ? "cursor-not-allowed opacity-50" : ""
+                                    className={`w-full h-24 sm:h-28 bg-slate-800/40 text-blue-100 text-lg font-semibold rounded-xl border border-blue-400/20 shadow-md hover:bg-blue-500/20 transition-all duration-200 flex items-center justify-center ${!isHost ? "cursor-not-allowed" : ""
                                         } ${usedPacketNames.includes(packet) ? "opacity-60 bg-gray-700/40" : ""}`}
                                     onClick={() => handleTopicSelect(packet)}
                                 >
