@@ -215,63 +215,57 @@ function App() {
                 <Route
                   path="/host/*"
                   element={
-                    <TimeStartProvider roomId={roomId}>
-                      <SoundProvider>
 
-                        <Routes
 
-                        >
-                          <Route
-                            path="lobby"
-                            element={
-                              // <motion.div
-                              //   variants={lobbyVariants}
-                              //   initial="initial"
-                              //   animate="initial"
-                              //   exit="exit"
-                              //   transition={{ type: "spring", stiffness: 120, damping: 20 }}
-                              //   className="h-full w-full"
-                              // >
-                              // <HostLobby />
-                              <Lobby isHost={true} />
-                              // </motion.div>
-                            }
-                          />
-                          <Route path="/login" element={<Login />} />
-                          <Route path="dashboard" element={<ProtectedRoute element={<HostDashboard />} requireAccessToken={false} requireHost={true} />} />
-                          <Route path="create_room" element={<ProtectedRoute element={<CreateRoom />} requireAccessToken={false} requireHost={true} />} />
-                          <Route
-                            path=""
-                            element={
+
+                    <Routes
+
+                    >
+                      <Route
+                        path="lobby"
+                        element={
+                          // <motion.div
+                          //   variants={lobbyVariants}
+                          //   initial="initial"
+                          //   animate="initial"
+                          //   exit="exit"
+                          //   transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                          //   className="h-full w-full"
+                          // >
+                          // <HostLobby />
+                          <Lobby isHost={true} />
+                          // </motion.div>
+                        }
+                      />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="dashboard" element={<ProtectedRoute element={<HostDashboard />} requireAccessToken={false} requireHost={true} />} />
+                      <Route path="create_room" element={<ProtectedRoute element={<CreateRoom />} requireAccessToken={false} requireHost={true} />} />
+                      <Route
+                        path=""
+                        element={
+                          <TimeStartProvider roomId={roomId}>
+
+                            <SoundProvider>
+
                               <ProtectedRoute
                                 element={<HostComponent roundMapping={roundMapping} />}
                                 requireAccessToken={true}
                               />
-                              // <motion.div
-                              //   variants={pageVariants}
-                              //   initial="initial"
-                              //   animate="in"
-                              //   exit="out"
-                              //   transition={pageTransition}
-                              //   className="h-full w-full"
-                              // >
+                            </SoundProvider>
+                          </TimeStartProvider>
+                        }
+                      />
 
-                              // </motion.div>
-                            }
-                          />
-                        </Routes>
-
-                      </SoundProvider>
-                    </TimeStartProvider>
+                    </Routes>
                   }
                 />
 
                 <Route
                   path="/admin/*"
                   element={
-                        <Routes>
-                          <Route path="dashboard" element={<ProtectedRoute element={<HostDashboard />} requireAccessToken={false} requireAdmin={true} />} />                          
-                        </Routes>
+                    <Routes>
+                      <Route path="dashboard" element={<ProtectedRoute element={<HostDashboard />} requireAccessToken={false} requireAdmin={true} />} />
+                    </Routes>
                   }
                 />
 
