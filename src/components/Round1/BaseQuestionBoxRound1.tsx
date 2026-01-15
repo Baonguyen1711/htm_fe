@@ -30,6 +30,9 @@ const BaseQuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = fa
   const [searchParams] = useSearchParams()
   const roomId = searchParams.get("roomId") || ""
   const currentQuestionRef = useRef(currentQuestion);
+  const [audioUnlocked, setAudioUnlocked] = useState(
+    localStorage.getItem("audioUnlocked") === "true"
+  );
 
   useEffect(() => {
     console.log("current question", currentQuestion)
@@ -67,10 +70,17 @@ const BaseQuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = fa
           console.log("diff", diff)
           console.log("extension", extension)
           console.log("video ref", videoRef.current)
+          console.log("audio ref", audioRef.current)
           if (diff > 0) {
             setTimeout(() => {
               if (["m4a", "mp3", "wav", "ogg"].includes(extension)) {
-                audioRef.current?.play();
+                console.log("audio ref inside", audioRef.current)
+                
+                const audio = audioRef.current;
+                if (audio) {
+                  audio.load();
+                  audio.play().catch(err => console.log(err));
+                }
               }
 
               if (["mp4", "webm", "ogg"].includes(extension)) {
@@ -165,7 +175,7 @@ const BaseQuestionBoxRound1: React.FC<Round1Props> = ({ isHost, isSpectator = fa
           if (["m4a", "mp3", "wav", "ogg"].includes(extension)) {
             return (
               <audio ref={audioRef}>
-                <source src={url} type={`audio/${extension}`} />
+                <source src={url}/>
               </audio>
             )
           }
