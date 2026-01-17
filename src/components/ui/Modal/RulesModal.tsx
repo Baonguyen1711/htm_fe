@@ -11,6 +11,7 @@ import { ScoreRule } from '../../../shared/types';
 
 interface RulesModalProps {
   isOpen: boolean;
+  isHost?: boolean
   onClose: () => void;
   round: string;
   mode?: 'manual' | 'auto' | 'adaptive';
@@ -96,7 +97,7 @@ const generateRulesContent = (mode: 'manual' | 'auto' | 'adaptive' = 'manual', r
   };
 };
 
-const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, round, mode = 'manual', roomRules }) => {
+const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, round, mode = 'manual', roomRules, isHost }) => {
   if (!isOpen) return null;
 
   const rulesContent = generateRulesContent(mode, roomRules || null);
@@ -121,12 +122,12 @@ const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, round, mode = 
           <h2 className="text-xl font-bold text-white">
             {rules.title}
           </h2>
-          <button
+          {/* <button
             onClick={onClose}
             className="text-white hover:text-gray-300 transition-colors p-1 rounded-lg hover:bg-white/10"
           >
             <XMarkIcon className="w-6 h-6" />
-          </button>
+          </button> */}
         </div>
 
         {/* Content */}
@@ -150,17 +151,20 @@ const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, round, mode = 
         </div>
 
         {/* Footer */}
-        <div className="bg-slate-800/80 px-6 py-4 border-t border-slate-600/50">
-          <div className="flex justify-center">
-            <button
-              onClick={onClose}
-              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
-            >
-              Đã hiểu
-              
-            </button>
+        {isHost && (
+          <div className="bg-slate-800/80 px-6 py-4 border-t border-slate-600/50">
+            <div className="flex justify-center">
+              <button
+                onClick={onClose}
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
+              >
+                Đã hiểu
+
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+
       </div>
     </div>
   );

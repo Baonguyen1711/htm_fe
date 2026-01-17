@@ -50,6 +50,7 @@ function UserRound4({ isSpectator = false }: UserRound4Props) {
     useEffect(() => {
         const unsubscribeBuzzedPlayer = listenToBuzzedPlayer(
             (playerName) => {
+                if(!playerName) return 
                 const audio = sounds["buzz"];
                 if (audio) {
                     audio.play();
@@ -67,6 +68,7 @@ function UserRound4({ isSpectator = false }: UserRound4Props) {
     useEffect(() => {
         const unsubscribeStaredPlayer = listenToStar(
             (playerName) => {
+                if(!playerName) return 
                 const audio = sounds["star"];
                 if (audio) {
                     audio.play();

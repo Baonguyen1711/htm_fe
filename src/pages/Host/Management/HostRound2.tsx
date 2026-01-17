@@ -82,6 +82,7 @@ const HostRound2: React.FC = () => {
   useEffect(() => {
     const unsubscribeBuzzedPlayer = listenToBuzzedPlayer(
       (playerName) => {
+        if(!playerName) return 
         const audio = sounds["buzz"];
         if (audio) {
           audio.play();

@@ -14,9 +14,10 @@ import Header from "./Header";
 
 interface FinalRankingProps {
     isHost: boolean;
+    isSpectator?: boolean
 }
 
-const SummaryAfterRound: React.FC<FinalRankingProps> = ({ isHost }) => {
+const SummaryAfterRound: React.FC<FinalRankingProps> = ({ isHost, isSpectator = false }) => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const roomId = searchParams.get("roomId") || "";
@@ -45,6 +46,11 @@ const SummaryAfterRound: React.FC<FinalRankingProps> = ({ isHost }) => {
                         audio.play();
                     }
                     deletePath("sound")
+                    return
+                }
+
+                if (isSpectator) {
+                    navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
                     return
                 }
 

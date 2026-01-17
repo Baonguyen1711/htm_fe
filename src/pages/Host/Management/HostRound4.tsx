@@ -26,6 +26,7 @@ const HostRound4: React.FC = () => {
     useEffect(() => {
         const unsubscribeBuzzedPlayer = listenToBuzzedPlayer(
             (playerName) => {
+                if(!playerName) return 
                 const audio = sounds["buzz"];
                 if (audio) {
                     audio.play();
@@ -43,6 +44,7 @@ const HostRound4: React.FC = () => {
     useEffect(() => {
         const unsubscribeStaredPlayer = listenToStar(
             (playerName) => {
+                if(!playerName) return 
                 const audio = sounds["star"];
                 if (audio) {
                     audio.play();

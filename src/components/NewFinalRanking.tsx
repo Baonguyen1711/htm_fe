@@ -29,26 +29,26 @@ const FinalResultPage: React.FC<FinalRankingProps> = ({ isHost }) => {
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [podiumRevealed, setPodiumRevealed] = useState([false, false, true, true]);
+  const [podiumRevealed, setPodiumRevealed] = useState([false, false, false, false]);
   const { scoresRanking } = useAppSelector((state) => state.game);
   const { listenToSound, deletePath } = useFirebaseListener()
 
   useEffect(() => {
-  let timer: NodeJS.Timeout;
+    let timer: NodeJS.Timeout;
 
-  if (showCountdown && countdown > 0) {
-    // Cứ sau 1 giây thì giảm countdown đi 1
-    timer = setTimeout(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
-  } else if (showCountdown && countdown === 0) {
-    // Khi về 0 thì chuyển trang
-    navigate('/host/dashboard');
-  }
+    if (showCountdown && countdown > 0) {
+      // Cứ sau 1 giây thì giảm countdown đi 1
+      timer = setTimeout(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (showCountdown && countdown === 0) {
+      // Khi về 0 thì chuyển trang
+      navigate('/host/dashboard');
+    }
 
-  // Cleanup function để tránh rò rỉ bộ nhớ hoặc chạy sai lệch
-  return () => clearTimeout(timer);
-}, [showCountdown, countdown, navigate]);
+    // Cleanup function để tránh rò rỉ bộ nhớ hoặc chạy sai lệch
+    return () => clearTimeout(timer);
+  }, [showCountdown, countdown, navigate]);
 
   const handleEndGameclick = () => {
     let timeId: NodeJS.Timeout
@@ -73,15 +73,20 @@ const FinalResultPage: React.FC<FinalRankingProps> = ({ isHost }) => {
     .slice(0, 4);
 
   useEffect(() => {
-    const timer1 = setTimeout(() => setPodiumRevealed([false, false, true, true]), 600);
-    const timer2 = setTimeout(() => setPodiumRevealed([false, true, true, true]), 1400);
-    const timer3 = setTimeout(() => setPodiumRevealed([true, true, true, true]), 2200);
-    const timer4 = setTimeout(() => setShowLeaderboard(true), 5500);
+    const timer1 = setTimeout(() => setPodiumRevealed([false, false, true, true]), 1000);
+    const timer2 = setTimeout(() => setPodiumRevealed([false, true, true, true]), 3000);
+    const timer3 = setTimeout(() => setPodiumRevealed([true, true, true, true]), 6600);
+
+    // Sau khi reveal xong (2.2s) → đợi thêm 7s
+    const timer4 = setTimeout(() => {
+      setShowLeaderboard(true);
+    }, 6600 + 7000); // = 9200ms
 
     return () => {
       [timer1, timer2, timer3, timer4].forEach(clearTimeout);
     };
   }, []);
+
 
   const StarBackground = () => {
     // Sinh ra khoảng 100 ngôi sao với các thuộc tính ngẫu nhiên

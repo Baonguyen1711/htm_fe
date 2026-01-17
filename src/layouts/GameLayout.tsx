@@ -115,7 +115,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
         listenToPlayerAnswerList
     } = useFirebaseListener();
 
-    const { startTimer } = useGameApi()
+    const { startTimer, hideRules } = useGameApi()
     const dispatch = useAppDispatch();
     const { mode, scoreRules, currentPlayer, currentQuestionNumber } = useAppSelector(state => state.game)
     const currentQuestionNumberRef = useRef(currentQuestionNumber)
@@ -418,7 +418,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
         const unsubscribeAnswer = listenToCorrectAnswer(
             () => {
                 const audio = sounds['correct'];
-                if (audio && roomMode !== "multiplayer") {
+                if (audio && roomMode !== "multiplayer" && currentRound !== "3") {
                     audio.play();
                 }
 
@@ -427,7 +427,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                 if (currentRound === "3" && !isHost) {
                     timeout = setTimeout(() => {
                         dispatch(setCurrentCorrectAnswer(""))
-                    }, 2000)
+                    }, 2500)
                 }
             }
         );
@@ -595,8 +595,13 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
 
             <RulesModal
                 isOpen={showRulesModal}
-                onClose={() => {
-                    setShowRulesModal(false);
+                isHost={isHost}
+                onClose={async () => {
+                    if(isHost) {
+                        await hideRules(roomId);
+                        setShowRulesModal(false);
+                    }
+                    
                 }}
                 round={rulesRound}
                 mode={mode}

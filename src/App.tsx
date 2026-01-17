@@ -121,7 +121,7 @@ function SpectatorComponent() {
   if (round === "2") return <UserRound2 isSpectator={true} />;
   if (round === "3") return <UserRound3 isSpectator={true} />;
   if (round === "4") return <UserRound4 isSpectator={true} />;
-  if (round === "summary") return <SummaryAfterRound isHost={false} />;
+  if (round === "summary") return <SummaryAfterRound isHost={false} isSpectator={true} />;
   if (round === "turn") return <UserRoundTurn isSpectator={true} />;
   if (round === "final") return <FinalRanking isHost={false} />;
 

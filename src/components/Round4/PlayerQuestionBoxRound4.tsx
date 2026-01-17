@@ -313,7 +313,7 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                 initialGrid={grid}
                 gridColors={gridColors}
                 menu={menu}
-                isHost={true}
+                isHost={false}
                 isSpectator={isSpectator}
                 showModal={showModal}
                 buzzedPlayer={buzzedPlayer}
@@ -324,17 +324,22 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                 onCloseModal={handleCloseModal}
             />
 
-            <div className="flex gap-2 mt-4 w-full">
+            {
+                !isSpectator && (
+                    <div className="flex gap-2 mt-4 w-full">
 
-                <button className={baseBtn} onClick={handleBuzz} disabled={!isTakeTurnButtonEnabled}>
-                    Giành quyền trả lời
-                </button>
+                        <button className={baseBtn} onClick={handleBuzz} disabled={!isTakeTurnButtonEnabled}>
+                            Giành quyền trả lời
+                        </button>
 
-                <button className={baseBtn} onClick={handleSetStar} disabled={!isStarButtonEnabled}>
-                    Chọn ngôi sao hy vọng
-                </button>
+                        <button className={baseBtn} onClick={handleSetStar} disabled={!isStarButtonEnabled}>
+                            Chọn ngôi sao hy vọng
+                        </button>
 
-            </div>
+                    </div>
+                )
+            }
+
 
             {showMediaModal && currentQuestion?.imgUrl && (
                 <MediaModal isOpen={showMediaModal} onClose={() => setShowMediaModal(false)}>

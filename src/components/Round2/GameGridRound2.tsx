@@ -191,7 +191,7 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
         </div>
       )}
 
-      {!isHost && (
+      {!isHost && !isSpectator && (
         <div className="flex gap-2 mt-4 w-full">
           <button className={baseBtn} onClick={handleBuzz}>
             Trả lời CNV
