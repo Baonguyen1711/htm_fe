@@ -29,6 +29,7 @@ import useRoomApi from '../shared/hooks/api/useRoomApi';
 import { useFirebaseListener } from '../shared/hooks';
 import { useSounds } from '../context/soundContext';
 import AnswerCountChart from './ui/AnswerCountChart';
+import { ListOrdered } from 'lucide-react';
 
 const Card: React.FC<{ title?: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="bg-slate-900/50 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-xl">
@@ -142,12 +143,23 @@ const HostManagement = () => {
     const handleShowingSummary = async () => {
         try {
             await startRound(roomId, "summary");
-            toast.success("Đã bắt đầu đếm giờ!")
+            toast.success("Đã hiển thị tổng kết sau vòng")
         } catch (error) {
             console.error('Error starting round:', error);
-            toast.error('Lỗi khi bắt đầu đếm giờ');
+            toast.error('Lỗi khi hiển thị tổng kết sau vòng');
         }
     }
+
+    const handleShowingFinal = async () => {
+        try {
+            await startRound(roomId, "final");
+            toast.success("Đã hiển thị điểm tổng kết")
+        } catch (error) {
+            console.error('Error starting round:', error);
+            toast.error('Lỗi khi hiển thị điểm tổng kết');
+        }
+    }
+
 
     const handlePauseTimeClick = async () => {
         try {
@@ -383,6 +395,14 @@ const HostManagement = () => {
           >
             <EyeIcon className="w-4 h-4 inline mr-1" />
             Hiển thị tổng kết sau vòng
+          </button>
+
+          <button
+            className={baseBtn}
+            onClick={handleShowingFinal}
+          >
+            <ListOrdered className="w-4 h-4 inline mr-1" />
+            Hiển thị kết quả chung cuộc
           </button>
         </Card>
       )}

@@ -34,6 +34,15 @@ const FinalResultPage: React.FC<FinalRankingProps> = ({ isHost }) => {
   const { listenToSound, deletePath } = useFirebaseListener()
 
   useEffect(() => {
+    const audio = sounds["final"];
+    if (audio) {
+      audio.play();
+    }
+    deletePath("sound")
+
+  }, [])
+
+  useEffect(() => {
     let timer: NodeJS.Timeout;
 
     if (showCountdown && countdown > 0) {
@@ -307,7 +316,7 @@ const FinalResultPage: React.FC<FinalRankingProps> = ({ isHost }) => {
           {/* CHỈ HIỆN NẾU LÀ HOST */}
           {isHost && (
             <>
-              <button
+              {/* <button
                 onClick={() => startRound(roomId)}
                 className="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-lg shadow-indigo-500/20"
               >
@@ -321,6 +330,14 @@ const FinalResultPage: React.FC<FinalRankingProps> = ({ isHost }) => {
               >
                 <Music className="w-5 h-5" />
                 PHÁT NHẠC
+              </button> */}
+
+              <button
+                onClick={() => startRound(roomId)}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-lg shadow-indigo-500/20"
+              >
+                <BarChart3 className="w-5 h-5" />
+                Trở về màn hình thi đấu
               </button>
 
               <button

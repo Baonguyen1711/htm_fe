@@ -21,6 +21,7 @@ import useGameApi from "../shared/hooks/api/useGameApi";
 import Leaderboard from "../components/ui/LeaderBoard";
 import RoomModePlayerAnswer from "../components/ui/RoomModePlayerAnswer";
 import SummaryAfterRound from "../components/ui/SummaryAfterRound";
+import FinalResultPage from "../components/NewFinalRanking";
 import { scale } from "framer-motion";
 
 
@@ -124,6 +125,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
     const [showLeaderboard, setShowLeaderboard] = useState(false);
     const [leaderboardTimer, setLeaderboardTimer] = useState(0);
     const [isShowingSummary, setIsShowingSummary] = useState<boolean>(false)
+    const [isShowingFinal, setIsShowingFinal] = useState<boolean>(false)
     const isInitialMount = useRef(true);
     const styles = `
       @keyframes shrink {
@@ -181,7 +183,13 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                     return
                 }
 
+                if (round === "final") {
+                    setIsShowingFinal(true)
+                    return
+                }
+
                 setIsShowingSummary(false)
+                setIsShowingFinal(false)
 
                 if (isSpectator) {
                     navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
@@ -588,6 +596,15 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                     />
                 </div>
             )}
+
+            {isShowingFinal && (
+                <div className="fixed inset-0 z-[999]">
+                    <FinalResultPage
+                        isHost={isHost}
+                    />
+                </div>
+            )}
+
 
             {/* CSS cho animation float */}
             {/* <style>{`
