@@ -139,6 +139,16 @@ const HostManagement = () => {
         }
     }
 
+    const handleShowingSummary = async () => {
+        try {
+            await startRound(roomId, "summary");
+            toast.success("Đã bắt đầu đếm giờ!")
+        } catch (error) {
+            console.error('Error starting round:', error);
+            toast.error('Lỗi khi bắt đầu đếm giờ');
+        }
+    }
+
     const handlePauseTimeClick = async () => {
         try {
             const lobby = sounds["lobby_game"];
@@ -360,6 +370,19 @@ const HostManagement = () => {
           <button className={baseBtn} onClick={handleEndGameClick}>
             <StopIcon className="w-4 h-4 inline mr-1" />
             Kết thúc
+          </button>
+        </Card>
+      )}
+
+      {/* ĐIỀU KHIỂN TRẬN */}
+      { (
+        <Card title="Điều khiển trận đấu">
+          <button
+            className={baseBtn}
+            onClick={handleShowingSummary}
+          >
+            <EyeIcon className="w-4 h-4 inline mr-1" />
+            Hiển thị tổng kết sau vòng
           </button>
         </Card>
       )}

@@ -171,11 +171,11 @@ export const useGameApi = () => {
     /**
      * Start a new round
      */
-    const startRound = useCallback(async (roomId: string) => {
+    const startRound = useCallback(async (roomId: string, round?: string) => {
         try {
             const startRoundParams = {
                 roomId: roomId,
-                round: currentRound,
+                round: round? round: currentRound,
                 grid: currentRound === "2" || currentRound === "4" ?
                     currentRound == "2" ? round2Grid?.grid : round4Grid?.grid
                     : undefined

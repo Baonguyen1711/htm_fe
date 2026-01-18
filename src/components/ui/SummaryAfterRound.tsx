@@ -35,35 +35,43 @@ const SummaryAfterRound: React.FC<FinalRankingProps> = ({ isHost, isSpectator = 
     const [isShowLeaderboard, setIsShowLeaderboard] = useState<boolean>(false)
     const { scoresRanking } = useAppSelector((state) => state.game);
     const { listenToSound, deletePath, listenToRoundStart } = useFirebaseListener()
-
     useEffect(() => {
-        const unsubscribeRoundStart = listenToRoundStart(
-            (round) => {
-                if (round === "summary") {
-                    setIsShowLeaderboard(true)
-                    const audio = sounds["final"];
-                    if (audio) {
-                        audio.play();
-                    }
-                    deletePath("sound")
-                    return
-                }
+        const audio = sounds["final"];
+        if (audio) {
+            audio.play();
+        }
+        deletePath("sound")
+        setIsShowLeaderboard(true)
 
-                if (isSpectator) {
-                    navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
-                    return
-                }
+    }, [])
+    // useEffect(() => {
+    //     const unsubscribeRoundStart = listenToRoundStart(
+    //         (round) => {
+    //             if (round === "summary") {
+    //                 setIsShowLeaderboard(true)
+    //                 const audio = sounds["final"];
+    //                 if (audio) {
+    //                     audio.play();
+    //                 }
+    //                 deletePath("sound")
+    //                 return
+    //             }
 
-                if (!isHost) {
-                    navigate(`/play?round=${round}&roomId=${roomId}`, { replace: true });
-                }
-            }
-        )
+    //             if (isSpectator) {
+    //                 navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
+    //                 return
+    //             }
 
-        return () => {
-            unsubscribeRoundStart();
-        };
-    }, []);
+    //             if (!isHost) {
+    //                 navigate(`/play?round=${round}&roomId=${roomId}`, { replace: true });
+    //             }
+    //         }
+    //     )
+
+    //     return () => {
+    //         unsubscribeRoundStart();
+    //     };
+    // }, []);
 
     const handleEndGameclick = () => {
         let timeId: NodeJS.Timeout
@@ -176,17 +184,27 @@ const SummaryAfterRound: React.FC<FinalRankingProps> = ({ isHost, isSpectator = 
                     {/* CHỈ HIỆN NẾU LÀ HOST */}
                     {isHost && (
                         <>
-                            <button
+                            {/* <button
                                 onClick={() => startRound(roomId)}
                                 className="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-lg shadow-indigo-500/20"
                             >
                                 <BarChart3 className="w-5 h-5" />
                                 HIỂN THỊ ĐIỂM TỔNG KẾT SAU VÒNG THI
+                            </button> */}
+
+                            <button
+                                onClick={() => startRound(roomId)}
+                                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-lg shadow-indigo-500/20"
+                            >
+                                <BarChart3 className="w-5 h-5" />
+                                Trở về màn hình thi đấu
                             </button>
                         </>
                     )}
                 </div>
             </footer>
+
+
 
 
             <style>{`

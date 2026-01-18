@@ -20,7 +20,7 @@ import { toast } from "react-toastify";
 import useGameApi from "../shared/hooks/api/useGameApi";
 import Leaderboard from "../components/ui/LeaderBoard";
 import RoomModePlayerAnswer from "../components/ui/RoomModePlayerAnswer";
-
+import SummaryAfterRound from "../components/ui/SummaryAfterRound";
 import { scale } from "framer-motion";
 
 
@@ -112,7 +112,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
         connectOnRejoin,
         deletePath,
         listenToMultiplayerGameState,
-        listenToPlayerAnswerList
+        listenToPlayerAnswerList,
     } = useFirebaseListener();
 
     const { startTimer, hideRules } = useGameApi()
@@ -123,6 +123,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
     const [currentState, setCurrentState] = useState<MultiplayerGameState>()
     const [showLeaderboard, setShowLeaderboard] = useState(false);
     const [leaderboardTimer, setLeaderboardTimer] = useState(0);
+    const [isShowingSummary, setIsShowingSummary] = useState<boolean>(false)
     const isInitialMount = useRef(true);
     const styles = `
       @keyframes shrink {
@@ -175,6 +176,12 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
         const unsubscribePlayers = listenToRoundStart(
             (round) => {
                 console.log("round", round)
+                if (round === "summary") {
+                    setIsShowingSummary(true)
+                    return
+                }
+
+                setIsShowingSummary(false)
 
                 if (isSpectator) {
                     navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
@@ -573,6 +580,15 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                 </div>
             )}
 
+            {isShowingSummary && (
+                <div className="fixed inset-0 z-[999]">
+                    <SummaryAfterRound
+                        isHost={isHost}
+                        isSpectator={isSpectator}
+                    />
+                </div>
+            )}
+
             {/* CSS cho animation float */}
             {/* <style>{`
             @keyframes float {
@@ -600,11 +616,11 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                 isOpen={showRulesModal}
                 isHost={isHost}
                 onClose={async () => {
-                    if(isHost) {
+                    if (isHost) {
                         await hideRules(roomId);
                         setShowRulesModal(false);
                     }
-                    
+
                 }}
                 round={rulesRound}
                 // mode={mode}
