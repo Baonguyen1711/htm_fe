@@ -67,7 +67,7 @@ const RoomModeLeaderboard = ({ onOpenNewTab, isRanking = false }: LeaderboardPro
                 <div className="space-y-3 flex flex-col">
                     <AnimatePresence mode="popLayout">
                         {top4Players.map((player, idx) => {
-                            const isCurrent = currentTurn !== null && Number(currentTurn) - 1 === idx;
+                            const isCurrent = currentTurn !== null && currentTurn.toString() === player.stt
                             const color = playerColors && playerColors[player?.stt || ""];
 
                             return (

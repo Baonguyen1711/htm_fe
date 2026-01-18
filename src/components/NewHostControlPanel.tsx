@@ -378,6 +378,9 @@ const HostManagement = () => {
 
       {/* ÂM THANH & LUẬT */}
       <Card title="Âm thanh & luật">
+        <button className={baseBtn} onClick={() => playSound(roomId, "opening")}>
+          Phát âm thanh bắt đầu cuộc thi
+        </button>
         <button className={baseBtn} onClick={() => playSound(roomId, currentRound)}>
           Phát âm thanh vòng
         </button>

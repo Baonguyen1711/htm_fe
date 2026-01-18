@@ -234,7 +234,7 @@ const PlayerQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
             {/* Question */}
             <QuestionAndAnswer
                 currentQuestion={currentQuestion}
-                // currentCorrectAnswer={currentCorrectAnswer}
+                currentCorrectAnswer={currentCorrectAnswer}
             />
 
             {/* Grid replaces media */}

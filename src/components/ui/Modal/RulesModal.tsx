@@ -19,7 +19,7 @@ interface RulesModalProps {
 }
 
 // Generate dynamic rules content based on room settings
-const generateRulesContent = (mode: 'manual' | 'auto' | 'adaptive' = 'manual', roomRules?: ScoreRule | null) => {
+const generateRulesContent = (mode: 'manual' | 'auto' | 'adaptive' = 'adaptive', roomRules?: ScoreRule | null) => {
   const defaultRules = {
     round1: [15, 10, 10, 10],
     round2: [15, 10, 10, 10],
@@ -97,7 +97,7 @@ const generateRulesContent = (mode: 'manual' | 'auto' | 'adaptive' = 'manual', r
   };
 };
 
-const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, round, mode = 'manual', roomRules, isHost }) => {
+const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, round, mode = 'adaptive', roomRules, isHost }) => {
   if (!isOpen) return null;
 
   const rulesContent = generateRulesContent(mode, roomRules || null);
@@ -108,66 +108,52 @@ const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, round, mode = 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
+  <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+    {/* Backdrop */}
+    <div
+      className="absolute inset-0 bg-black/40"
+      onClick={onClose}
+    />
 
-      {/* Modal */}
-      <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-blue-400/30 max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">
-            {rules.title}
-          </h2>
-          {/* <button
-            onClick={onClose}
-            className="text-white hover:text-gray-300 transition-colors p-1 rounded-lg hover:bg-white/10"
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button> */}
-        </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
-          <div className="space-y-4">
-            {rules.content.map((rule: string, index: number) => (
-              <div
-                key={index}
-                className="flex items-start space-x-3 p-3 bg-slate-700/50 rounded-lg border border-slate-600/50"
-              >
-                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                  {index + 1}
-                </div>
-                <p
-                  className="text-gray-200 text-base leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: rule }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Footer */}
-        {isHost && (
-          <div className="bg-slate-800/80 px-6 py-4 border-t border-slate-600/50">
-            <div className="flex justify-center">
-              <button
-                onClick={onClose}
-                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105"
-              >
-                Đã hiểu
-
-              </button>
-            </div>
-          </div>
-        )}
-
+    {/* Modal */}
+    <div className="relative w-full max-w-3xl bg-white rounded-lg shadow-lg border border-gray-200">
+      
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900">
+          {rules.title}
+        </h2>
       </div>
+
+      {/* Content */}
+      <div className="px-6 py-5 space-y-4">
+        {rules.content.map((rule: string, index: number) => (
+          <div key={index} className="flex gap-3">
+            <div className="text-gray-400 font-medium min-w-[24px]">
+              {index + 1}.
+            </div>
+            <div
+              className="text-gray-700 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: rule }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      {isHost && (
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-md transition"
+          >
+            Đã hiểu
+          </button>
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 };
 
 export default RulesModal;

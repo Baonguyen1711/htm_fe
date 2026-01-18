@@ -520,7 +520,10 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
             </div>
 
             {/* Layer 2: Nội dung chính, có thể scroll nếu cần */}
-            <div className="relative z-10 min-h-screen flex flex-col">
+            <div className="relative z-10 min-h-screen flex flex-col"
+                onCopy={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
+            >
                 {/* Header */}
                 <Header isHost={isHost} isMultiplayer={isMultiplayerMode} spectatorCount={spectatorsCount} />
 
@@ -604,7 +607,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                     
                 }}
                 round={rulesRound}
-                mode={mode}
+                // mode={mode}
                 roomRules={scoreRules}
             />
         </>

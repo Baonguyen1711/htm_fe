@@ -82,8 +82,10 @@ const GameGridRound2: React.FC<GameGridRound2Props> = ({
 
     return () => {
       const resetGrid = async () => {
-        await sendGrid([[]], roomId);
-        console.log("grid reset!")
+        if(isHost) {
+          await sendGrid([[]], roomId);
+          console.log("grid reset!")
+        }
       }
 
       resetGrid()
