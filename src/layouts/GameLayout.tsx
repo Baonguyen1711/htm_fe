@@ -601,6 +601,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                 <div className="fixed inset-0 z-[999]">
                     <FinalResultPage
                         isHost={isHost}
+                        
                     />
                 </div>
             )}

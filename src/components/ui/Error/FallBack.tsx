@@ -52,9 +52,17 @@ const FallBack = () => {
     const unsubscribeRoundStart = listenToRoundStart(
       (round) => {
         if (isSpectator) {
+          if(round === "final") {
+            navigate(`/spectator?round=4&roomId=${roomId}`, { replace: true });
+            return
+          }
           navigate(`/spectator?round=${round}&roomId=${roomId}`, { replace: true });
         } 
         if(isPlayer) {
+          if(round === "final") {
+            navigate(`/play?round=4&roomId=${roomId}`, { replace: true });
+            return
+          }
           navigate(`/play?round=${round}&roomId=${roomId}`, { replace: true });
         }
       }
