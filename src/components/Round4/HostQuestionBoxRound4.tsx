@@ -64,7 +64,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     const { sendGrid, sendSelectedCell, sendSelectedCellColor, resetBuzz, openBuzz, closeBuzz } = useGameApi()
 
     //firebase listener
-    const { listenToTimeStart, listenToRound4Grid } = useFirebaseListener()
+    const { listenToTimeStart, listenToRound4Grid, listenToOpenBuzz } = useFirebaseListener()
 
 
     const dispatch = useAppDispatch()
@@ -134,6 +134,21 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
             confirmVariant: 'primary'
         });
     }
+
+    useEffect(() => {
+        const unsubscribeOpenBuzz = listenToOpenBuzz(
+            () => {
+                const audio = sounds['5seconds_remain'];
+                if (audio) {
+                    audio.play();
+                }
+            }
+        )
+
+        return () => {
+            unsubscribeOpenBuzz();
+        };
+    }, []);
 
     const hanldeOpenBuzz = async () => {
         let timeId: any
