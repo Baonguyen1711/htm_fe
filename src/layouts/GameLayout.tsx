@@ -22,6 +22,7 @@ import Leaderboard from "../components/ui/LeaderBoard";
 import RoomModePlayerAnswer from "../components/ui/RoomModePlayerAnswer";
 import SummaryAfterRound from "../components/ui/SummaryAfterRound";
 import FinalResultPage from "../components/NewFinalRanking";
+import { increaseNumberOfCorrectAnswer, resetNumberOfCorrectAnswer } from "../app/store/slices/gameSlice";
 import { scale } from "framer-motion";
 
 
@@ -114,11 +115,12 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
         deletePath,
         listenToMultiplayerGameState,
         listenToPlayerAnswerList,
+        listenToCurrentTurn
     } = useFirebaseListener();
 
     const { startTimer, hideRules } = useGameApi()
     const dispatch = useAppDispatch();
-    const { mode, scoreRules, currentPlayer, currentQuestionNumber } = useAppSelector(state => state.game)
+    const { mode, scoreRules, currentPlayer, currentQuestionNumber, currentTurn } = useAppSelector(state => state.game)
     const currentQuestionNumberRef = useRef(currentQuestionNumber)
     const { spectatorsCount } = useAppSelector(state => state.room)
     const [currentState, setCurrentState] = useState<MultiplayerGameState>()
@@ -247,13 +249,32 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                 answers: Array.isArray(raw.answers) ? raw.answers : []
             }));
 
+            if (round === "3") {
+                console.log("current turn in round 3", currentTurn)
+                const currentPlayer = mappedScores.find(score => score.stt === currentTurn.toString())
+                console.log("currentPlayer in round 3", currentPlayer)
+                if (currentPlayer && currentPlayer.isCorrect) {
+                    dispatch(increaseNumberOfCorrectAnswer())
+                }
+            }
+
             console.log("mappedScores", mappedScores);
             dispatch(setScoresRanking(mappedScores))
         });
         return () => {
             unsubscribePlayerAnswerList();
         };
-    }, [])
+    }, [currentTurn])
+
+    useEffect(() => {
+        const unsub = listenToCurrentTurn((turn) => {
+            dispatch(resetNumberOfCorrectAnswer())
+        });
+        return () => {
+            unsub()
+        };
+    }, []);
+
 
     const formatSeconds = (seconds: number) =>
         Math.max(0, Math.ceil(seconds));
@@ -601,7 +622,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                 <div className="fixed inset-0 z-[999]">
                     <FinalResultPage
                         isHost={isHost}
-                        
+
                     />
                 </div>
             )}

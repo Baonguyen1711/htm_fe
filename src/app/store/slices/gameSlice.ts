@@ -30,6 +30,8 @@ const initialState: GameState = {
   round2Grid: null,
   numberOfSelectedRow: 0,
 
+  numberOfCorrectAnswer: 0,
+
   round4Grid: null,
   round4Level: { easy: true, medium: true, hard: true },
   difficultyRanges: { easy: 0, medium: 0, hard: 0 },
@@ -325,7 +327,7 @@ const gameSlice = createSlice({
     addPlayer: (state, action: PayloadAction<Partial<PlayerData[]>>) => {
       console.log("action.payload", action.payload);
       // if (!action.payload) return;
-      const cleanPayload = Array.isArray(action.payload)? action.payload.filter(Boolean) as PlayerData[]: []
+      const cleanPayload = Array.isArray(action.payload) ? action.payload.filter(Boolean) as PlayerData[] : []
       console.log("clean payload", cleanPayload)
       //new player joins room
       if (cleanPayload.length > state.players.length) {
@@ -341,7 +343,7 @@ const gameSlice = createSlice({
 
       //player leaves room
       if (cleanPayload.length < state.players.length || !action.payload) {
-        const updatedPlayers = new Set(Array.isArray(cleanPayload)? cleanPayload.map(player => player?.uid): [])
+        const updatedPlayers = new Set(Array.isArray(cleanPayload) ? cleanPayload.map(player => player?.uid) : [])
         console.log("updated players", updatedPlayers)
         console.log("current players", [...state.players])
         console.log("filter", state.players.filter(
@@ -373,6 +375,14 @@ const gameSlice = createSlice({
       }
 
       console.log("state.currentPlayer after setting answer", state.currentPlayer);
+    },
+
+    increaseNumberOfCorrectAnswer: (state) => {
+      state.numberOfCorrectAnswer += 1
+    },
+
+    resetNumberOfCorrectAnswer: (state) => {
+      state.numberOfCorrectAnswer = 0
     },
 
     // Scoring
@@ -462,7 +472,7 @@ const gameSlice = createSlice({
     setAnswersCount: (state, action: PayloadAction<string[]>) => {
       state.answersCount = action.payload;
     },
-    
+
 
     // UI state
     setPhase: (state, action: PayloadAction<Phase>) => {
@@ -605,6 +615,8 @@ export const {
   setCurrentCorrectAnswer,
   nextQuestion,
   setCurrentQuestionNumber,
+  increaseNumberOfCorrectAnswer,
+  resetNumberOfCorrectAnswer,
   setPlayers,
   setCurrentPlayer,
   setPlayerAnswer,

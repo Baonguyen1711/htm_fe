@@ -132,6 +132,9 @@ export interface GameState {
   round2Grid: Round2Grid | null;
   numberOfSelectedRow: number
 
+  //round 3
+  numberOfCorrectAnswer: number
+
   round4Grid: Round4Grid | null;
   round4Level: { easy: boolean; medium: boolean; hard: boolean };
   difficultyRanges: { easy: number; medium: number; hard: number }

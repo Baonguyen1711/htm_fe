@@ -36,9 +36,9 @@ function HostAnswer() {
     const roomId = searchParams.get("roomId") || "1";
 
     const dispatch = useAppDispatch();
-    const { mode, players, selectedDifficulty, numberOfSelectedRow, currentTurn } = useAppSelector(state => state.game);
+    const { mode, players, selectedDifficulty, numberOfSelectedRow, currentTurn, numberOfCorrectAnswer } = useAppSelector(state => state.game);
 
-    const { listenToScores, listenToPlayerColors } = useFirebaseListener();
+    const { listenToScores, listenToPlayerColors, listenToCurrentTurn } = useFirebaseListener();
     const { sendCurrentTurn, updateScoring, setPlayerColor, openBuzz, closeBuzz } = useGameApi();
 
     const [localPlayersScore, setLocalPlayersScore] = useState<Partial<PlayerData[]>>([]);
@@ -52,6 +52,7 @@ function HostAnswer() {
     const roomSettings = JSON.parse(localStorage.getItem(`scoreRules_${roomId}`) || '{}');
     const maxPlayers = roomSettings.maxPlayers || 4;
     const spots = Array.from({ length: maxPlayers }, (_, i) => i + 1);
+
 
     useEffect(() => {
         const storedMode = localStorage.getItem(`mode_${roomId}`);
@@ -146,7 +147,7 @@ function HostAnswer() {
                 console.log("color", (round === "3" || round === "4") ? color : "")
                 console.log("isCurrent", (round === "3" || round === "4") ? isCurrent : "")
                 return (
-                    <div key={spotNumber} className={`bg-slate-800/80 rounded-xl p-3 flex flex-col gap-2 shadow-md border border-slate-700/50 text-sm ${isCurrent ? "ring-4 ring-yellow-400" : ""}`}
+                    <div key={spotNumber} className={`relative bg-slate-800/80 rounded-xl p-3 flex flex-col gap-2 shadow-md border border-slate-700/50 text-sm ${isCurrent ? "ring-4 ring-yellow-400" : ""}`}
                         style={{
                             borderColor: color || "rgba(148,163,184,0.4)", // fallback slate
                         }}
@@ -180,6 +181,12 @@ function HostAnswer() {
                             <div className="flex-1">
                                 <p className="text-white font-semibold">{player.userName}</p>
                                 <p className="text-white font-bold">{score?.score ?? 0}</p>
+                                {isCurrent && (
+                                    <div className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-green-600 text-white text-xs font-semibold shadow">
+                                        {numberOfCorrectAnswer} câu đúng
+                                    </div>
+                                )}
+
                                 <p className="text-gray-400">{player.time ? `${player.time}s` : ""}</p>
                             </div>
                         </div>

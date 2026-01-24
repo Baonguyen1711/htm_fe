@@ -16,13 +16,13 @@ interface LeaderboardProps {
 const RoomModeLeaderboard = ({ onOpenNewTab, isRanking = false }: LeaderboardProps) => {
     const [params] = useSearchParams();
     const roomId = params.get("roomId") || "1";
-    const { scoresRanking } = useAppSelector(state => state.game);
+    const { scoresRanking, numberOfCorrectAnswer } = useAppSelector(state => state.game);
     const { listenToScoresRanking, listenToPlayerColors, listenToCurrentTurn } = useFirebaseListener();
     const [playerColors, setPlayerColors] = useState<any>();
     const [currentTurn, setCurrentTurn] = useState<Number>(0);
 
     useEffect(() => {
-        if(isRanking) {
+        if (isRanking) {
             setPlayerColors({})
             setCurrentTurn(0)
             return
@@ -76,8 +76,8 @@ const RoomModeLeaderboard = ({ onOpenNewTab, isRanking = false }: LeaderboardPro
                                     key={player.uid}
                                     layout
                                     initial={{ opacity: 0, y: 20 }}
-                                    animate={{ 
-                                        opacity: 1, 
+                                    animate={{
+                                        opacity: 1,
                                         y: 0,
                                         scale: isCurrent ? 1.02 : 1 // Nhấn nhẹ khi tới lượt
                                     }}
@@ -91,19 +91,19 @@ const RoomModeLeaderboard = ({ onOpenNewTab, isRanking = false }: LeaderboardPro
                                     className={`rounded-xl p-4 transition-shadow duration-300 shadow-md border-2  ${isCurrent ? "ring-4 ring-yellow-400 z-10" : "z-0"}`}
                                     style={{
                                         // Sử dụng color từ firebase cho border nếu có
-                                        borderColor: color || undefined, 
+                                        borderColor: color || undefined,
                                         backgroundColor: isCurrent ? 'rgba(30, 41, 59, 0.8)' : 'rgba(30, 41, 59, 0.4)'
                                     }}
                                 >
                                     <div className="flex items-center gap-4">
                                         {/* 1. Ô số thứ hạng (Rank Number) */}
-                                    <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-black text-sm
-                                        ${idx === 0 ? "bg-amber-400 text-amber-900" : 
-                                          idx === 1 ? "bg-slate-300 text-slate-800" : 
-                                          idx === 2 ? "bg-orange-500 text-orange-950" : "bg-white/10 text-white/50"}`}
-                                    >
-                                        {idx + 1}
-                                    </div>
+                                        <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-black text-sm
+                                        ${idx === 0 ? "bg-amber-400 text-amber-900" :
+                                                idx === 1 ? "bg-slate-300 text-slate-800" :
+                                                    idx === 2 ? "bg-orange-500 text-orange-950" : "bg-white/10 text-white/50"}`}
+                                        >
+                                            {idx + 1}
+                                        </div>
                                         {/* Avatar */}
                                         <div className="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden ring-2 ring-white/20">
                                             {player.avatar ? (
@@ -123,6 +123,16 @@ const RoomModeLeaderboard = ({ onOpenNewTab, isRanking = false }: LeaderboardPro
                                             <p className="text-white text-lg font-bold">
                                                 {player.score} điểm
                                             </p>
+
+                                            {isCurrent && !isRanking && (
+                                                <motion.p
+                                                    initial={{ opacity: 0, y: -4 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="text-green-400 text-xs font-semibold mt-0.5"
+                                                >
+                                                    {numberOfCorrectAnswer} câu đúng
+                                                </motion.p>
+                                            )}
                                         </div>
 
                                         {/* Hiển thị Rank Icon nếu là top 3 */}
@@ -158,7 +168,7 @@ const RoomModeLeaderboard = ({ onOpenNewTab, isRanking = false }: LeaderboardPro
                 </div>
 
                 {sortedScoresRanking.length > 4 && (
-                    <motion.div 
+                    <motion.div
                         layout
                         className="mt-4 pt-3 border-t border-white/10 text-center"
                     >

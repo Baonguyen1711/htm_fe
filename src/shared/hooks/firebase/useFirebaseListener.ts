@@ -141,6 +141,7 @@ export const useFirebaseListener = () => {
     if (!roomId) return () => { };
 
     return firebaseServices.listenToCurrentTurn(roomId, (turn) => {
+      console.log("setting current turn", turn)
       dispatch(setCurrentTurn(turn))
 
       callback?.(turn)
