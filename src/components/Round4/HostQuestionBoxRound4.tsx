@@ -59,9 +59,11 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
    hover:bg-slate-700/60 hover:border-white/20 transition-all duration-200 \
    disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
     const [searchParams] = useSearchParams()
-    const roomId = searchParams.get("roomId") || "4"
+    const roomId = searchParams.get("roomId") || ""
+    const round = searchParams.get("round") || "4"
+    
     //api
-    const { sendGrid, sendSelectedCell, sendSelectedCellColor, resetBuzz, openBuzz, closeBuzz } = useGameApi()
+    const { sendGrid, sendSelectedCell, sendSelectedCellColor, resetBuzz, openBuzz, closeBuzz, showRules } = useGameApi()
 
     //firebase listener
     const { listenToTimeStart, listenToRound4Grid, listenToOpenBuzz } = useFirebaseListener()
@@ -73,15 +75,6 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
 
     // Confirmation modal hook
     const { modalState, showConfirmModal, closeModal } = useConfirmModal();
-
-    useEffect(() => {
-        if (currentQuestion?.imgUrl) {
-            setShowMediaModal(true);
-        } else {
-            setShowMediaModal(false);
-        }
-    }, [currentQuestion]);
-
 
 
     useEffect(() => {
@@ -133,6 +126,16 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
             confirmText: 'Xác nhận bảng',
             confirmVariant: 'primary'
         });
+    }
+
+    const handleShowMedia = async () => {
+        try {
+            await showRules(roomId, "media");
+            toast.success("Đã mở media")
+        } catch (e) {
+            console.log("error", e)
+            toast.error("Lỗi khi mở media")
+        }
     }
 
     useEffect(() => {
@@ -202,6 +205,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     const [staredPlayer, setStaredPlayer] = useState<string>("");
     const [showModal, setShowModal] = useState(false); // State for modal visibility
     const [roomRules, setRoomRules] = useState<any>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
 
     useEffect(() => {
         setGrid(createEmptyGrid(gridSize));
@@ -304,7 +308,6 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         setMenu({ visible: false }); // Close the menu
     };
 
-
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -315,36 +318,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const renderMediaContent = () => {
-        const url = currentQuestion?.imgUrl;
-        if (!url) return <p className="text-white">No media</p>;
 
-        const extension = url.split('.').pop()?.toLowerCase() || '';
-
-        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
-            return <img src={url} alt="Question Visual" className="max-w-full max-h-[80vh] object-contain rounded-lg" />;
-        }
-
-        if (['mp3', 'wav', 'ogg'].includes(extension)) {
-            return (
-                <audio controls className="w-full">
-                    <source src={url} type={`audio/${extension}`} />
-                    Your browser does not support the audio element.
-                </audio>
-            );
-        }
-
-        if (['mp4', 'webm', 'ogg'].includes(extension)) {
-            return (
-                <video controls autoPlay className="max-w-full max-h-[80vh] object-contain rounded-lg">
-                    <source src={url} type={`video/${extension}`} />
-                    Your browser does not support the video tag.
-                </video>
-            );
-        }
-
-        return <p className="text-white">Unsupported media type</p>;
-    };
 
     return (
         <div className="flex flex-col items-center bg-slate-800/80 backdrop-blur-sm rounded-2xl border border-blue-400/30 shadow-2xl p-6 mb-4 w-full max-w-3xl mx-auto min-h-[470px]">
@@ -355,6 +329,17 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                 currentQuestion={currentQuestion}
                 currentCorrectAnswer={currentCorrectAnswer}
             />
+
+            {
+                currentQuestion?.imgUrl && (
+                    <div className="flex gap-2 w-full">
+                        <p>Câu hỏi có media</p>
+                        <button className={baseBtn} onClick={handleShowMedia}>
+                            Mở modal media
+                        </button>
+                    </div>
+                )
+            }
 
             <GameGridRound4
                 initialGrid={grid}
@@ -414,16 +399,12 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
                     <button className={baseBtn} onClick={hanldeOpenBuzz}>
                         Mở bấm chuông
                     </button>
+
+
                 </div>
 
             </div>
 
-
-            {showMediaModal && currentQuestion?.imgUrl && (
-                <MediaModal isOpen={showMediaModal} onClose={() => setShowMediaModal(false)}>
-                    {renderMediaContent()}
-                </MediaModal>
-            )}
 
             {/* Confirmation Modal */}
             {modalState.isOpen && (

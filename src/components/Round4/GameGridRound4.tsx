@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useFirebaseListener } from '../../shared/hooks';
 import { useTimeStart } from '../../context/timeListenerContext';
 import { useSounds } from '../../context/soundContext';
@@ -7,6 +7,9 @@ import useGameApi from '../../shared/hooks/api/useGameApi';
 import { useSearchParams } from 'react-router-dom';
 import { useAppDispatch } from '../../app/store';
 import { setCurrentTurn } from '../../app/store/slices/gameSlice';
+import { useAppSelector } from '../../app/store';
+import MediaModal from '../ui/Modal/MediaModal';
+import { toast } from "react-toastify"
 
 interface GameGridProps {
     initialGrid: string[][];
@@ -41,15 +44,143 @@ const GameGridRound4: React.FC<GameGridProps> = ({
     onCloseModal,
     menuRef
 }) => {
-    const { listenToTimeStart } = useFirebaseListener();
+    const { listenToTimeStart, listenToMedia, listenToRules } = useFirebaseListener();
     const { startTimer } = useTimeStart();
+    const { currentQuestion } = useAppSelector(state => state.game)
     const sounds = useSounds();
-    const {sendCurrentTurn} = useGameApi()
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const audioRef = useRef<HTMLAudioElement>(null);
+    const { sendCurrentTurn, startMedia, stopMedia, hideRules, showRules } = useGameApi()
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || "1"
     const dispatch = useAppDispatch()
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [showMediaModal, setShowMediaModal] = useState(false);
+    const currentQuestionRef = useRef(currentQuestion);
+    const baseBtn =
+        "w-full px-4 py-2 rounded-xl border border-white/10 bg-slate-800/60 text-slate-100 \
+   hover:bg-slate-700/60 hover:border-white/20 transition-all duration-200 \
+   disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+    const handleClickPlayMedia = () => {
+        if (!isPlaying) {
+            startMedia(roomId)
+            setIsPlaying(true)
+        } else {
+            stopMedia(roomId)
+            setIsPlaying(false)
+        }
+
+    }
+
+    useEffect(() => {
+        const unsubscribeRules = listenToRules((data: any) => {
+            console.log("Rules data received:", data);
+
+            // Show modal when host triggers it, regardless of round matching
+            if (data && data.show && data.round === "media") {
+                setShowMediaModal(true)
+            } else {
+                setShowMediaModal(false);
+            }
+        })
+
+        return () => {
+            unsubscribeRules()
+        }
+    }, [])
+
+    const handleHideMediaModal = async () => {
+        try {
+            await hideRules(roomId)
+            toast.success("Đã ẩn modal media")
+        } catch (e) {
+            console.log("error", e)
+            toast.error("Lỗi khi ẩn modal media")
+        }
+    }
+    useEffect(() => {
+        console.log("current question", currentQuestion)
+        currentQuestionRef.current = currentQuestion;
+    }, [currentQuestion]);
+
 
     const gridSize = initialGrid?.length || 0;
+
+    const renderMediaContent = () => {
+        const url = currentQuestion?.imgUrl;
+        if (!url) return <p className="text-white">No media</p>;
+
+        const extension = url.split('.').pop()?.toLowerCase() || '';
+
+        // IMAGE
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+            return (
+                <div className="flex flex-col items-center gap-3">
+                    <img
+                        src={url}
+                        alt="Question Visual"
+                        className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                    />
+                </div>
+            );
+        }
+
+        // AUDIO
+        if (['mp3', 'wav', 'ogg'].includes(extension)) {
+            return (
+                <div className="flex flex-col items-center gap-3 w-full">
+                    <audio className="w-full" ref={audioRef}>
+                        <source src={url} />
+                        Your browser does not support the audio element.
+                    </audio>
+
+                    {isHost && (
+                        <button
+                            className={baseBtn}
+                            onClick={handleClickPlayMedia}
+                        >
+                            {isPlaying ? "Dừng media" : "Chạy media"}
+                        </button>
+                    )}
+                </div>
+            );
+        }
+
+        // VIDEO
+        if (['mp4', 'webm', 'ogg'].includes(extension)) {
+            return (
+                <div className="flex flex-col items-center gap-3">
+                    <video
+                        ref={videoRef}
+                        className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                    >
+                        <source src={url} type={`video/${extension}`} />
+                        Your browser does not support the video tag.
+                    </video>
+
+                    {isHost && (
+                        <div className="flex gap-2 mt-4 w-full">
+                            <button
+                                className={baseBtn}
+                                onClick={handleClickPlayMedia}
+                            >
+                                {isPlaying ? "Dừng media" : "Chạy media"}
+                            </button>
+                            <button
+                                className={baseBtn}
+                                onClick={handleHideMediaModal}
+                            >
+                                Ẩn cửa sổ media
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        return <p className="text-white">Unsupported media type</p>;
+    };
+
 
     useEffect(() => {
         const unsubscribe = listenToTimeStart(() => {
@@ -61,18 +192,65 @@ const GameGridRound4: React.FC<GameGridProps> = ({
     }, []);
 
     useEffect(() => {
-        
+        const unsubscribe = listenToMedia(
+            (data) => {
+                console.log("media data", data)
+
+                if (data.action === "play") {
+                    setIsPlaying(true);
+                    console.log("current question", currentQuestionRef.current)
+                    const extension = currentQuestionRef.current?.imgUrl?.split('.').pop()?.toLowerCase() || ""
+                    const now = Date.now();
+                    const diff = data.timeToPlay - now;
+                    console.log("diff", diff)
+                    console.log("extension", extension)
+                    console.log("video ref", videoRef.current)
+                    console.log("audio ref", audioRef.current)
+                    if (diff > 0) {
+                        setTimeout(() => {
+                            if (["m4a", "mp3", "wav", "ogg"].includes(extension)) {
+                                console.log("audio ref inside", audioRef.current)
+
+                                const audio = audioRef.current;
+                                if (audio) {
+                                    audio.load();
+                                    audio.play().catch(err => console.log(err));
+                                }
+                            }
+
+                            if (["mp4", "webm", "ogg"].includes(extension)) {
+                                videoRef.current?.play();
+                            }
+                        }, diff);
+                    }
+                }
+
+                if (data.action === "stop") {
+                    setIsPlaying(false);
+                    audioRef.current?.pause();
+                    videoRef.current?.pause();
+                }
+            }
+        )
+        return () => {
+            unsubscribe();
+        };
+
+    }, [])
+
+    useEffect(() => {
+
         return () => {
             const resetCurrentTurn = async () => {
                 dispatch(setCurrentTurn(0))
-                if(isHost) {
+                if (isHost) {
                     await sendCurrentTurn(roomId, 0);
                 }
             }
 
             resetCurrentTurn()
         }
-    },[])
+    }, [])
 
     // ===== VALIDATION =====
     const isValidGrid =
@@ -212,6 +390,13 @@ const GameGridRound4: React.FC<GameGridProps> = ({
                         <Button onClick={onCloseModal}>Đóng</Button>
                     </div>
                 </div>
+            )}
+
+
+            {showMediaModal && currentQuestion?.imgUrl && (
+                <MediaModal isOpen={showMediaModal} onClose={() => setShowMediaModal(false)}>
+                    {renderMediaContent()}
+                </MediaModal>
             )}
         </>
     );
