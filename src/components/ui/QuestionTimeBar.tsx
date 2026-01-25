@@ -15,7 +15,7 @@ const QuestionTimerBar: React.FC<QuestionTimerBarProps> = ({
 
     const roundTimeMapping: Record<string, number> = {
         "1": 15,
-        "2": 10,
+        "2": 15,
         "3": 60,
         "4": 15
     }

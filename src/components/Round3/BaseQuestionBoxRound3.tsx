@@ -22,7 +22,7 @@ interface BaseQuestionBoxRound3Props {
     currentQuestion: Question | null
     currentCorrectAnswer: string
 
-    handleTopicSelect: (topic: string) => void
+    handleTopicSelect: (topic: string, isMistery: boolean) => void
     handleToggleUsedTopic: (packet: string) => void
     handleCorrectClick: () => void
     handleIncorrectClick: () => void
@@ -134,8 +134,7 @@ const BaseQuestionBoxRound3: React.FC<BaseQuestionBoxRound3Props> = ({
                         const isMystery =
                             packetList.length === 9 && index === MYSTERY_INDEX
                         const isUsed =
-                            usedPacketNames.includes(packet) ||
-                            (packet === "?" && usedPacketNames.length > 0)
+                            usedPacketNames.includes(packet) 
 
                         return (
                             <div key={packet} className="relative">
@@ -150,7 +149,7 @@ const BaseQuestionBoxRound3: React.FC<BaseQuestionBoxRound3Props> = ({
                                             : 'border-blue-400/20'}
                                     ${!isHost ? 'cursor-not-allowed' : ''}
                                 `}
-                                    onClick={() => handleTopicSelect(packet)}
+                                    onClick={() => handleTopicSelect(packet, isMystery)}
                                 >
                                     <span className="text-blue-100 text-lg font-semibold">
                                         {packet}

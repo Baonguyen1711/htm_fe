@@ -249,7 +249,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                 answers: Array.isArray(raw.answers) ? raw.answers : []
             }));
 
-            if (round === "3") {
+            if (round === "3" && currentTurn) {
                 console.log("current turn in round 3", currentTurn)
                 const currentPlayer = mappedScores.find(score => score.stt === currentTurn.toString())
                 console.log("currentPlayer in round 3", currentPlayer)

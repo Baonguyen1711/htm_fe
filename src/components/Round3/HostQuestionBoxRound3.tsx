@@ -12,6 +12,8 @@ interface HostQuestionBoxRound3Props {
     isHost: boolean,
     isSpectator?: boolean
 }
+
+const MYSTERY_INDEX = 4
 const HostQuestionBoxRound3: React.FC<HostQuestionBoxRound3Props> = ({ isHost }) => {
     const [searchParams] = useSearchParams()
     const roomId = searchParams.get("roomId") || ""
@@ -63,7 +65,7 @@ const HostQuestionBoxRound3: React.FC<HostQuestionBoxRound3Props> = ({ isHost })
         };
     }, [roomId]);
 
-    const handleTopicSelect = async (topic: string) => {
+    const handleTopicSelect = async (topic: string, isMistery: boolean) => {
         console.log("topic", topic);
         dispatch(setCurrentQuestionNumber(0))
         dispatch(setCurrentQuestion(null))
@@ -76,7 +78,11 @@ const HostQuestionBoxRound3: React.FC<HostQuestionBoxRound3Props> = ({ isHost })
 
         await sendSelectedPacketName(roomId, topic)
         await sendShouldReturnToPacketSelection(roomId, false)
-        await sendUsedPacketName(roomId, [...usedPacketNames, topic])
+        if(isMistery) {
+            await sendUsedPacketName(roomId, [...usedPacketNames, "?"])
+        } else {
+            await sendUsedPacketName(roomId, [...usedPacketNames, topic])
+        }
     };
 
     const handleReturnToTopicSelection = async () => {
