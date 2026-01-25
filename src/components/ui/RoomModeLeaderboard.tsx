@@ -124,7 +124,7 @@ const RoomModeLeaderboard = ({ onOpenNewTab, isRanking = false }: LeaderboardPro
                                                 {player.score} điểm
                                             </p>
 
-                                            {isCurrent && !isRanking && (
+                                            {/* {isCurrent && !isRanking && (
                                                 <motion.p
                                                     initial={{ opacity: 0, y: -4 }}
                                                     animate={{ opacity: 1, y: 0 }}
@@ -132,7 +132,7 @@ const RoomModeLeaderboard = ({ onOpenNewTab, isRanking = false }: LeaderboardPro
                                                 >
                                                     {numberOfCorrectAnswer} câu đúng
                                                 </motion.p>
-                                            )}
+                                            )} */}
                                         </div>
 
                                         {/* Hiển thị Rank Icon nếu là top 3 */}
