@@ -4,14 +4,16 @@ import GameLayout from '../../../layouts/GameLayout';
 
 interface UserRound1Props {
     isSpectator?: boolean;
+    isMC?: boolean;
 }
 
-function UserRound1({ isSpectator = false }: UserRound1Props) {
+function UserRound1({ isSpectator = false, isMC = false }: UserRound1Props) {
 
     return (
         <User
             questionComponent={<BaseQuestionBoxRound1 isHost={false} isSpectator={isSpectator} />}
             isSpectator={isSpectator}
+            isMC={isMC}
         />
     );
 }

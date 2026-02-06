@@ -10,7 +10,7 @@ import {
   browserSessionPersistence,
   setPersistence,
   createUserWithEmailAndPassword,
-  
+
 } from "firebase/auth";
 import app from "../../../shared/services/firebase/config";
 import { useAppDispatch } from "../../../app/store";
@@ -32,6 +32,13 @@ const useAuth = () => {
     const auth = getAuth(app);
     console.log("Current persistence:", auth)
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+
+      if (!user) {
+        // 🔑 CHỈ login anonymous khi Firebase nói là KHÔNG CÓ USER
+        await setPersistence(auth, browserLocalPersistence);
+        await signInAnonymously(auth);
+        return;
+      }
       if (user) {
         const uid = user.uid;
         console.log("uid", uid)
@@ -196,13 +203,34 @@ const useAuth = () => {
     return null;
   };
 
+  const getUserInfo = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      console.log("user", user);
+      try {
+        const token = await user.getIdToken(true);
+        const decoded = jwtDecode(token) as any
+        console.log("decoded", decoded)
+        return decoded;
+      } catch (err: any) {
+        console.error("Error fetching token:", err.message);
+        setError(err.message);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    }
+    return null;
+  };
+
   const isAuthenticated = () => {
     const auth = getAuth();
     console.log("auth after logout", auth)
     return !!auth.currentUser;
   };
 
-  return { user, getUserRole, verifyAdmin, login, register, logout, getToken, loading, error, signInWithoutPassword, authenticateUserManually, isAuthenticated };
+  return { user, getUserRole, getUserInfo, verifyAdmin, login, register, logout, getToken, loading, error, signInWithoutPassword, authenticateUserManually, isAuthenticated };
 };
 
 export default useAuth;

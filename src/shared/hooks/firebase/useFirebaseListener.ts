@@ -283,6 +283,22 @@ export const useFirebaseListener = () => {
   }, [roomId, dispatch]);
 
   /**
+   * Listen to correct answer for MC
+   */
+  const listenToCorrectAnswerForMC = useCallback((callback?: () => void) => {
+    if (!roomId) return () => { };
+
+    return firebaseServices.listenToCurrentCorrectAnswer(roomId, (answer) => {
+      if (!answer) return;
+      console.log("answer", answer);
+      dispatch(setCurrentCorrectAnswer(answer.join("/ ")));
+
+      // Call optional callback
+      callback?.();
+    });
+  }, [roomId, dispatch]);
+
+  /**
    * Listen to selected row
    */
   const listenToSelectRow = useCallback((callback?: (data: any) => void) => {
@@ -727,6 +743,7 @@ export const useFirebaseListener = () => {
     listenToRoundMapping,
     // listenToPlayerAnswers,
     listenToCorrectAnswer,
+    listenToCorrectAnswerForMC,
     listenToBroadcastedAnswer,
     listenToCurrentQuestion,
     listenToScores,

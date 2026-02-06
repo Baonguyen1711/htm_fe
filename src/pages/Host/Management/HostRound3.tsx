@@ -2,10 +2,11 @@ import HostQuestionBoxRound3 from '../../../components/Round3/HostQuestionBoxRou
 import Host from '../../../layouts/Host/Host';
 
 
-const HostRound3: React.FC = () => {
+const HostRound3: React.FC<{ isMC?: boolean }> = ({ isMC }) => {
     return (
         <Host
             QuestionComponent={<HostQuestionBoxRound3 isHost={true}/>}
+            isMC={isMC}
         />
     )
 };

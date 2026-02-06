@@ -8,9 +8,10 @@ import Modal from "../../../components/ui/Modal/Modal";
 import { useSounds } from "../../../context/soundContext";
 interface UserRound2Props {
   isSpectator?: boolean;
+  isMC?: boolean;
 }
 
-function UserRound2({ isSpectator = false }: UserRound2Props) {
+function UserRound2({ isSpectator = false, isMC = false }: UserRound2Props) {
   const [loading, setLoading] = useState(true);
   const [buzzedPlayer, setBuzzedPlayer] = useState<string>("");
   const [showModal, setShowModal] = useState(false); // State for modal visibility
@@ -83,6 +84,7 @@ function UserRound2({ isSpectator = false }: UserRound2Props) {
           <PlayerQuestionBoxRound2 isHost={false} isSpectator={isSpectator} />
         }
         isSpectator={isSpectator}
+        isMC={isMC}
       />
 
       {showModal && buzzedPlayer && 

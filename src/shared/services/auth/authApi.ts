@@ -90,6 +90,20 @@ export const authApi = {
       return false;
     }
   },
+
+  /**
+   * generate the mc token
+   */
+  async generateMcToken(params : {roomId: string, testName: string, roomMode: string}): Promise<any> {
+    try {
+
+      const response = await api.post(API_ENDPOINTS.AUTH.MC_TOKEN, params);
+      console.log("response", response);
+      return response.data;
+    } catch (error) {
+      return false;
+    }
+  },
 };
 
 export default authApi;

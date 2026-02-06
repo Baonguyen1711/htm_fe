@@ -12,6 +12,7 @@ export const API_ENDPOINTS = {
     REFRESH: '/auth/refresh',
     VERIFY: '/auth/verify',
     ACCESS_TOKEN: '/auth/access_token',
+    MC_TOKEN: '/auth/mc_token',
   },
   
   // Game

@@ -81,6 +81,10 @@ const firebaseServices = {
     return firebaseServices.listen(roomId, "answers", callback, true);
   },
 
+  listenToCurrentCorrectAnswer: (roomId: string, callback: (data: string[]) => void) => {
+    return firebaseServices.listen(roomId, "current_correct_answer", callback, true);
+  },
+
   listenToSound: (roomId: string, callback: (data: string) => void) => {
     return firebaseServices.listen(roomId, "sound", callback, true);
   },

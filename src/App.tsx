@@ -41,6 +41,7 @@ const FinalRanking = React.lazy(() => import('./components/NewFinalRanking'))
 const HostRanking = React.lazy(() => import('./components/HostRanking'));
 const HostLobby = React.lazy(() => import('./pages/Host/Management/HostLobby'));
 const Lobby = React.lazy(() => import('./pages/Lobby/NewLobby'))
+const MCLobby = React.lazy(() => import('./pages/MC/MCLobby'))
 
 const Login = React.lazy(() => import('./pages/Login/Login'))
 const Register = React.lazy(() => import('./pages/Register/Register'))
@@ -123,6 +124,32 @@ function SpectatorComponent() {
   if (round === "4") return <UserRound4 isSpectator={true} />;
   if (round === "summary") return <SummaryAfterRound isHost={false} isSpectator={true} />;
   if (round === "turn") return <UserRoundTurn isSpectator={true} />;
+  if (round === "final") return <FinalRanking isHost={false} />;
+
+  return <div className="text-center text-red-500">Round không hợp lệ!</div>;
+}
+
+function MCComponent() {
+  const [searchParams] = useSearchParams();
+
+  const round = searchParams.get("round");
+  // const currentRound = roundMapping && roundMapping[parseInt(round) - 1]
+  //   ? roundMapping[parseInt(round) - 1]
+  //   : round;
+
+  // // Hoặc tốt hơn: hiển thị loading khi chưa có mapping (vì mapping rất quan trọng cho game)
+  // if (roundMapping === undefined) {
+  //   return <div>Loading round configuration...</div>; // hoặc spinner
+  // }
+  const roomMode = searchParams.get("roomMode") || "room";
+  console.log("room mode", roomMode);
+  // console.log("mappedRound", currentRound)
+  if (round === "1") return <UserRound1 isSpectator={true} isMC={true} />;
+  if (round === "2") return <UserRound2 isSpectator={true} isMC={true}/>;
+  if (round === "3") return <UserRound3 isSpectator={true} isMC={true}/>;
+  if (round === "4") return <UserRound4 isSpectator={true} isMC={true}/>;
+  if (round === "summary") return <SummaryAfterRound isHost={false} isSpectator={true} isMC={true}  />;
+  if (round === "turn") return <UserRoundTurn isSpectator={true} isMC={true}/>;
   if (round === "final") return <FinalRanking isHost={false} />;
 
   return <div className="text-center text-red-500">Round không hợp lệ!</div>;
@@ -265,6 +292,30 @@ function App() {
                   element={
                     <Routes>
                       <Route path="dashboard" element={<ProtectedRoute element={<HostDashboard />} requireAccessToken={false} requireAdmin={true} />} />
+                    </Routes>
+                  }
+                />
+
+                <Route
+                  path="/mc/*"
+                  element={
+                    <Routes>
+                      <Route path="lobby" element={<ProtectedRoute element={<MCLobby />} requireMC={true}/>} />
+                      <Route
+                        path=""
+                        element={
+                          <TimeStartProvider roomId={roomId}>
+
+                            <SoundProvider>
+                              <MCComponent/>
+                              {/* <ProtectedRoute
+                                element={<HostComponent roundMapping={roundMapping} />}
+                                requireAccessToken={true}
+                              /> */}
+                            </SoundProvider>
+                          </TimeStartProvider>
+                        }
+                      />
                     </Routes>
                   }
                 />

@@ -14,10 +14,11 @@ import Header from "./Header";
 
 interface FinalRankingProps {
     isHost: boolean;
-    isSpectator?: boolean
+    isSpectator?: boolean,
+    isMC?: boolean
 }
 
-const SummaryAfterRound: React.FC<FinalRankingProps> = ({ isHost, isSpectator = false }) => {
+const SummaryAfterRound: React.FC<FinalRankingProps> = ({ isHost, isSpectator = false, isMC = false }) => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const roomId = searchParams.get("roomId") || "";
@@ -44,6 +45,24 @@ const SummaryAfterRound: React.FC<FinalRankingProps> = ({ isHost, isSpectator = 
         setIsShowLeaderboard(true)
 
     }, [])
+
+    useEffect(() => {
+        const unsubscribeRoundStart = listenToRoundStart(
+          (round) => {
+    
+    
+            if (isMC) {
+              navigate(`/mc?round=${round}&roomId=${roomId}`, { replace: true });
+              return
+            }
+    
+          }
+        )
+    
+        return () => {
+          unsubscribeRoundStart();
+        };
+      }, []);
     // useEffect(() => {
     //     const unsubscribeRoundStart = listenToRoundStart(
     //         (round) => {

@@ -18,22 +18,27 @@ import HostManagement from '../../components/NewHostControlPanel'
 import { ScoreRanking } from '../ScoreRanking'
 import RoomModeLeaderboard from '../../components/ui/RoomModeLeaderboard'
 import HostAnswer from '../../components/NewHostAnswer'
+import { useAppDispatch } from '../../app/store'
+import { setCurrentCorrectAnswer } from '../../app/store/slices/gameSlice'
+import { useNavigate } from 'react-router-dom'
 
 interface HostInterfaceProps {
-  QuestionComponent: React.ReactNode
+  QuestionComponent: React.ReactNode,
+  isMC?: boolean
 }
 
-const Host: React.FC<HostInterfaceProps> = ({ QuestionComponent }) => {
+const Host: React.FC<HostInterfaceProps> = ({ QuestionComponent, isMC = false }) => {
   const [params] = useSearchParams()
   const roomMode = params.get("roomMode") || "room"
-
+  const roomId = params.get("roomId") || ""
 
   return (
     <GameLayout
       questionComponent={QuestionComponent}
-      PlayerScore={<HostAnswer/>}
-      HostManagement={<HostManagement/>}
+      PlayerScore={!isMC ? <HostAnswer /> : <RoomModeLeaderboard />}
+      HostManagement={!isMC ? <HostManagement /> : null}
       isHost={true}
+      isMC={isMC}
     />
   )
 }

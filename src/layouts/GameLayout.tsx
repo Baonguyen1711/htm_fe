@@ -31,6 +31,7 @@ interface PlayProps {
     isHost?: boolean;
     isMultiplayerMode?: boolean
     isSpectator?: boolean;
+    isMC?: boolean;
     PlayerScore?: ReactNode
     HostManagement?: ReactNode
 }
@@ -57,7 +58,7 @@ interface AnswerStats {
     count: number;
 }
 
-const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerScore, HostManagement, isSpectator = false, isMultiplayerMode = false }) => {
+const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, PlayerScore, HostManagement, isSpectator = false, isMultiplayerMode = false, isMC = false }) => {
 
     const roundTabs = [
         { key: "1", label: "NHỔ NEO" },
@@ -200,7 +201,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
 
                 console.log("isHost", isHost)
 
-                if (!isHost) {
+                if (!isHost && !isMC) {
                     navigate(`/play?round=${round}&roomId=${roomId}`, { replace: true });
                 }
             }
@@ -414,7 +415,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
 
     useEffect(() => {
         const unsubscribeQuestion = listenToCurrentQuestion(() => {
-            if (!isHost) {
+            if (!isHost && !isMC) {
                 dispatch(setCurrentCorrectAnswer(""))
             }
 
@@ -460,7 +461,7 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
 
                 dispatch(setIsPausedButtonDisabled(false))
 
-                if (currentRound === "3" && !isHost) {
+                if (currentRound === "3" && !isHost && !isMC) {
                     timeout = setTimeout(() => {
                         dispatch(setCurrentCorrectAnswer(""))
                     }, 2500)
@@ -579,14 +580,14 @@ const GameLayout: React.FC<PlayProps> = ({ questionComponent, isHost = false, Pl
                         </div>
 
                         {/* Host controls */}
-                        {isHost && (
+                        {isHost && !isMC && (
                             <div className="col-span-3 flex flex-col gap-4">
                                 {HostManagement}
                             </div>
                         )}
 
                         {/* Leaderboard / PlayerScore */}
-                        <div className={isHost ? "col-span-3" : "col-span-5"}>
+                        <div className={isHost ? !isMC ? "col-span-3" : "col-span-5" : "col-span-5"}>
                             {PlayerScore}
                         </div>
                     </div>

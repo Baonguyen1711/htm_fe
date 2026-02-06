@@ -55,6 +55,18 @@ export const useAuthApi = () => {
     }
   }, [dispatch]);
 
+
+  const getMcLink = useCallback(async (params: {roomId: string, testName: string, roomMode: string}) => {
+    try {
+      const token = await authApi.generateMcToken(params);
+
+      const link = `${window.location.origin}/mc/lobby?roomHostToken=${token}`;
+      return link;
+    } catch (error) {
+      throw error;
+    }
+  }, [dispatch]);
+
   /**
    * Verify current token
    */
@@ -147,6 +159,8 @@ export const useAuthApi = () => {
     logout,
     // isHost,
     initializeAuth,
+
+    getMcLink,
   };
 };
 

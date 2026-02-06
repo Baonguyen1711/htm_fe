@@ -18,17 +18,63 @@ import { PlayerAnswers } from '../PlayerAnswers'
 
 import Leaderboard from '../../components/ui/LeaderBoard'
 import RoomModeLeaderboard from '../../components/ui/RoomModeLeaderboard'
+import { useNavigate } from 'react-router-dom'
+import { useAppDispatch } from '../../app/store'
+import { setCurrentCorrectAnswer } from '../../app/store/slices/gameSlice'
 
 
 interface PlayerInterfaceProps {
   questionComponent: React.ReactNode,
-  isSpectator?: boolean
+  isSpectator?: boolean,
+  isMC?: boolean
 }
 
-const Player: React.FC<PlayerInterfaceProps> = ({ questionComponent, isSpectator }) => {
+const Player: React.FC<PlayerInterfaceProps> = ({ questionComponent, isSpectator, isMC }) => {
   const [params] = useSearchParams()
   const roomMode = params.get("roomMode") || "room"
+  const roomId = params.get("roomId") || ""
+  const dispatch = useAppDispatch()
+  const navigate = useNavigate();
 
+  const { listenToRoundStart, listenToCorrectAnswerForMC } = useFirebaseListener();
+  useEffect(() => {
+    const unsubscribeRoundStart = listenToRoundStart(
+      (round) => {
+
+
+        if (isMC) {
+          navigate(`/mc?round=${round}&roomId=${roomId}`, { replace: true });
+          return
+        }
+
+      }
+    )
+
+    return () => {
+      unsubscribeRoundStart();
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log("Listening to correct answer for MC host before...", isMC);
+    if (!isMC) return;
+    console.log("Listening to correct answer for MC host...", isMC);
+    const unsubscribe = listenToCorrectAnswerForMC(() => {
+
+    });
+
+    return () => {
+      unsubscribe();
+    }
+
+  }, [])
+
+  // useEffect(() => {
+  //   if (!isMC) return;
+  //   return () => {
+  //     dispatch(setCurrentCorrectAnswer(""));
+  //   }
+  // }, [])
 
   return (
     <GameLayout
@@ -37,6 +83,7 @@ const Player: React.FC<PlayerInterfaceProps> = ({ questionComponent, isSpectator
       // PlayerAnswer={<PlayerAnswer/>}
       isHost={false}
       isSpectator={isSpectator}
+      isMC={isMC}
     />
   )
 }

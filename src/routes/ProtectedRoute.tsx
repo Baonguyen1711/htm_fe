@@ -16,10 +16,11 @@ interface VerifyResponse {
 
 }
 
-const routeRoleMap: { [key: string]: 'host' | 'player' | 'spectator' } = {
+const routeRoleMap: { [key: string]: 'host' | 'player' | 'spectator' | 'mc' } = {
     '/host': 'host',
     '/play': 'player',
     '/spectator': 'spectator',
+    '/mc': 'mc',
 };
 
 const AccessDeniedModal: React.FC<{ onClose: () => void; message: string }> = ({ onClose, message }) => (
@@ -41,8 +42,8 @@ const AccessDeniedModal: React.FC<{ onClose: () => void; message: string }> = ({
 );
 
 const ProtectedRoute = ({
-    element, requireAccessToken = false, requireHost = false, requireAdmin =false
-}: { element: ReactNode, requireAccessToken?: boolean, requireHost?: boolean, requireAdmin?: boolean }) => {
+    element, requireAccessToken = false, requireHost = false, requireAdmin = false, requireMC = false
+}: { element: ReactNode, requireAccessToken?: boolean, requireHost?: boolean, requireAdmin?: boolean, requireMC?: boolean }) => {
     const [showModal, setShowModal] = useState(false);
     const [modalMessage, setModalMessage] = useState("You don't have permission to access this route.");
     const [isVerified, setIsVerified] = useState(false);
@@ -52,7 +53,7 @@ const ProtectedRoute = ({
     const roomId = params.get("roomId") || ""
     const testName = params.get("testName") || ""
     const roomMode = params.get("roomMode") || ""
-    const {verifyAdmin} = useAuth()
+    const { verifyAdmin } = useAuth()
     useEffect(() => {
         const verify = async () => {
             if (requireAccessToken) {
@@ -86,10 +87,10 @@ const ProtectedRoute = ({
                     console.log("payload room Id", payload.roomId);
                     console.log("roomId", roomId);
                     console.log("returned payload", payload)
-                    
-                    
 
-                    if (!requiredRole || payload.role !== requiredRole ) {
+
+
+                    if (!requiredRole || payload.role !== requiredRole) {
                         setModalMessage("Đây là trang dành cho người điều khiển. Bạn không có quyền truy cập vào trang này");
                         setShowModal(true);
                         return;
@@ -132,12 +133,42 @@ const ProtectedRoute = ({
             } else if (requireHost) {
                 const response = await authApi.isHost()
                 console.log("response.data", response);
-                
-                if(!response) {
+
+                if (!response) {
                     setModalMessage("You don't have the right role to access this route.");
                     setShowModal(true);
                     return;
                 }
+
+                setIsVerified(true);
+
+
+            } else if (requireMC) {
+                const roomHostToken = params.get("roomHostToken") || ""
+                if (!roomHostToken) {
+                    setModalMessage("Missing room host token.");
+                    setShowModal(true);
+                    return;
+                }
+
+                try {
+                    const response = await axios.post<VerifyResponse>(
+                    `${process.env.REACT_APP_BASE_URL}/auth/verify`,
+                    {},
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${roomHostToken}`,
+                        },
+                    }
+                );
+                } catch (error) {
+                    console.error('Error verifying room host token:', error);
+                    setModalMessage('Failed to verify room host token. Please try again.');
+                    setShowModal(true);
+                    return;
+                }
+                
 
                 setIsVerified(true);
 
@@ -145,8 +176,8 @@ const ProtectedRoute = ({
             } else if (requireAdmin) {
                 const response = await verifyAdmin()
                 console.log("response.data", response);
-                
-                if(!response) {
+
+                if (!response) {
                     setModalMessage("You don't have the right role to access this route.");
                     setShowModal(true);
                     return;
@@ -155,7 +186,7 @@ const ProtectedRoute = ({
                 setIsVerified(true);
 
 
-            }else {
+            } else {
                 // No protection required (optional)
                 setIsVerified(true);
             }

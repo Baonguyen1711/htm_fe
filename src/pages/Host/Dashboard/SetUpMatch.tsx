@@ -6,10 +6,12 @@ import { useAppDispatch } from '../../../app/store';
 import { setMode, setScoreRules } from '../../../app/store/slices/gameSlice';
 import useGameApi from '../../../shared/hooks/api/useGameApi';
 import useRoomApi from '../../../shared/hooks/api/useRoomApi';
+import { useAuthApi } from '../../../shared/hooks';
 import { Button } from '../../../shared/components/ui';
 import useTestApi from '../../../shared/hooks/api/useTestApi';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
+import { set } from 'firebase/database';
 
 interface Room {
   roomId: string;
@@ -52,6 +54,7 @@ const SetupMatch: React.FC = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showMCLinkModal, setShowMCLinkModal] = useState(false);
   const [showFormatModal, setShowFormatModal] = useState(false);
   const [selectedRoomForFormat, setSelectedRoomForFormat] = useState<string | null>(null);
   const [roomPassword, setRoomPassword] = useState('');
@@ -62,6 +65,7 @@ const SetupMatch: React.FC = () => {
   const [roundCount, setRoundCount] = useState(4);
   const [roundTypes, setRoundTypes] = useState<Record<string, number[]>>({});
   const defaultMapping = Array.from({ length: roundCount }, (_, i) => i + 1);
+  const [mcLink, setMCLink] = useState<string>('');
   const mapping = roundTypes[selectedRoomForFormat || ""] || defaultMapping;
 
 
@@ -69,6 +73,7 @@ const SetupMatch: React.FC = () => {
   const { setGameScoreRules, addRoundMapping } = useGameApi();
   const { createRoom, getRoomsByUid, addTestNameToRoom } = useRoomApi();
   const { getTestsNameByUserId, getRandomQuestions } = useTestApi();
+  const { getMcLink } = useAuthApi();
 
   // ==================== LOAD DATA ====================
   useEffect(() => {
@@ -97,6 +102,22 @@ const SetupMatch: React.FC = () => {
     };
     loadData();
   }, []);
+
+  const getMcLinkForRoom = async (roomId: string) => {
+    try {
+      const params = {
+        roomId: roomId,
+        testName: rooms.find(r => r.roomId === roomId)?.selectedTestName || '',
+        roomMode: roomMode,
+      }
+      const link = await getMcLink(params);
+      setMCLink(link);
+      setShowMCLinkModal(true);
+    } catch (err) {
+      toast.error('Không thể lấy link MC');
+      return null;
+    }
+  };
 
   // ==================== HANDLERS ====================
   const handleTestChange = (roomId: string, testName: string) => {
@@ -374,6 +395,13 @@ const SetupMatch: React.FC = () => {
                         >
                           Bắt đầu
                         </button>
+
+                        <button
+                          onClick={() => getMcLinkForRoom(room.roomId)}
+                          className={`px-6 py-3 rounded-xl font-medium transition-all bg-slate-700/50  shadow-lg hover:bg-slate-700`}
+                        >
+                          Lấy link Mc
+                        </button>
                         {/* <Button
                           onClick={() => handleStartClick(room.roomId, room.selectedTestName)}
                           variant="warning"
@@ -608,6 +636,47 @@ const SetupMatch: React.FC = () => {
 
             <Button
               onClick={() => setShowSuccessModal(false)}
+              variant="primary"
+              className="h-12 text-lg w-full"
+            >
+              Đóng
+            </Button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Thành công */}
+      {showMCLinkModal && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] px-4 overflow-hidden">
+
+          {/* Phần modal chính */}
+          <div className="bg-slate-800/90 backdrop-blur-xl border border-cyan-500/50 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] p-10 text-center max-w-md w-full animate-in fade-in zoom-in duration-300">
+            <h3 className="text-2xl font-bold text-white mb-4">Lấy link MC thành công</h3>
+
+            <p
+              className="
+    text-base
+    font-mono
+    text-cyan-400
+    mb-8
+    bg-slate-700/50
+    py-4
+    px-6
+    rounded-xl
+    border border-white/5
+    shadow-inner
+
+    break-all
+    whitespace-pre-wrap
+    max-w-full
+  "
+            >
+              {mcLink}
+            </p>
+
+            <Button
+              onClick={() => setShowMCLinkModal(false)}
               variant="primary"
               className="h-12 text-lg w-full"
             >

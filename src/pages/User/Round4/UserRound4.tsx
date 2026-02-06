@@ -26,9 +26,10 @@ const exampleQuestions = [
 
 interface UserRound4Props {
     isSpectator?: boolean;
+    isMC?: boolean;
 }
 
-function UserRound4({ isSpectator = false }: UserRound4Props) {
+function UserRound4({ isSpectator = false, isMC = false }: UserRound4Props) {
 
 
     const initialGrid = [
@@ -103,6 +104,7 @@ function UserRound4({ isSpectator = false }: UserRound4Props) {
             <User
                 questionComponent={<PlayerQuestionBoxRound4 questions={exampleQuestions} initialGrid={initialGrid} isHost={false} isSpectator={isSpectator} />}
                 isSpectator={isSpectator}
+                isMC={isMC}
             />
             {showModal && buzzedPlayer &&
                 <Modal

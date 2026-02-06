@@ -4,14 +4,16 @@ import User from "../../../layouts/User/User";
 
 interface UserRound3Props {
     isSpectator?: boolean;
+    isMC?: boolean;
 }
 
-function UserRound3({ isSpectator = false }: UserRound3Props) {
+function UserRound3({ isSpectator = false, isMC = false }: UserRound3Props) {
 
     return (
         <User
             questionComponent={<PlayerQuestionBoxRound3 isHost={false} />}
             isSpectator={isSpectator}
+            isMC={isMC}
         />
     );
 }
