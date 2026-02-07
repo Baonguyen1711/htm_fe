@@ -126,7 +126,8 @@ export function useRound2({
         rowIndex: number,
         colIndex: number,
         action: "open" | "correct" | "incorrect" | "all",
-        hintWordNumber?: string
+        hintWordNumber?: string,
+        indexInTarget?: number[]
     ) => {
         console.log("isHost", isHost);
         console.log("revealCells called with action:", action, "hintWordNumber:", hintWordNumber);
@@ -152,27 +153,27 @@ export function useRound2({
         const wordLength = hintWord.string.length - 3;
         const startIndex = isRow ? colIndex + 1 : rowIndex + 1;
 
-        let indexInTarget: number[] = []
-        if (hintWordArray)
-            for (let i = 2; i <= wordLength + 1; i++) {
-                const char = hintWord.char[i];
-                console.log("char", char)
-                console.log("obstacleWord", obstacleWord)
-                console.log("hintWordArray", hintWordArray)
-                if (obstacleWord && obstacleWord.includes(char)) {
-                    console.log("match at", i - 2)
-                    console.log("indexInTarget before pushing", indexInTarget);
-                    indexInTarget.push(i - 2)
-                    console.log("indexInTarget after pushing", indexInTarget);
-                }
-            }
+        // let indexInTarget: number[] = []
+        // if (hintWordArray)
+        //     for (let i = 2; i <= wordLength + 1; i++) {
+        //         const char = hintWord.char[i];
+        //         console.log("char", char)
+        //         console.log("obstacleWord", obstacleWord)
+        //         console.log("hintWordArray", hintWordArray)
+        //         if (obstacleWord && obstacleWord.includes(char)) {
+        //             console.log("match at", i - 2)
+        //             console.log("indexInTarget before pushing", indexInTarget);
+        //             indexInTarget.push(i - 2)
+        //             console.log("indexInTarget after pushing", indexInTarget);
+        //         }
+        //     }
 
-        console.log("Debug revealCells (hook):");
-        console.log("- hintWord.string:", hintWord.string);
-        console.log("- wordLength:", wordLength);
-        console.log("- startIndex:", startIndex);
-        console.log("- isRow:", isRow);
-        console.log("- action:", action);
+        // console.log("Debug revealCells (hook):");
+        // console.log("- hintWord.string:", hintWord.string);
+        // console.log("- wordLength:", wordLength);
+        // console.log("- startIndex:", startIndex);
+        // console.log("- isRow:", isRow);
+        // console.log("- action:", action);
 
         dispatch(setRound2Grid({
             ...round2Grid,
@@ -229,17 +230,17 @@ export function useRound2({
                             // }
                         } else if (action === "correct" || action === "all") {
                             newStyles[key] = { background: "bg-yellow-200", textColor: "text-black" };
-                            if (hintWordArray)
-                                for (let i = 2; i <= wordLength + 1; i++) {
-                                    const char = hintWord.char[i];
+                            // if (hintWordArray)
+                            //     for (let i = 2; i <= wordLength + 1; i++) {
+                            //         const char = hintWord.char[i];
 
-                                    if (obstacleWord) {
-                                        if (obstacleWord.includes(char)) {
+                            //         if (obstacleWord) {
+                            //             if (obstacleWord.includes(char)) {
 
-                                            indexInTarget.push(i - 2)
-                                        }
-                                    }
-                                }
+                            //                 indexInTarget.push(i - 2)
+                            //             }
+                            //         }
+                            //     }
                             // if (hintWordArray && hintWordNumber && action === "correct")
                             //     setCorrectRow(roomId, hintWordNumber, hintWord.string.slice(2, hintWord.string.length - 1), encodeURIComponent(JSON.stringify(indexInTarget)), false, wordLength)
                         } else if (action === "incorrect") {

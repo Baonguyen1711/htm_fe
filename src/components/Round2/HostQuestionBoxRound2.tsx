@@ -66,18 +66,18 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     isHost = false,
     markedCharInWord
 }) => {
-    
+
     // search params
     const [searchParams] = useSearchParams();
     const roomId = searchParams.get("roomId") || "";
 
     //context
-    const { startTimer} = useTimeStart();
+    const { startTimer } = useTimeStart();
     const sounds = useSounds();
 
     // Confirmation modal hook
     const { modalState: confirmModalState, showConfirmModal, closeModal } = useConfirmModal();
-    
+
     //local state
     const [grid, setGrid] = useState<string[][]>([[]]);
     const [hintWords, setHintWords] = useState<WordObj[]>([]);
@@ -99,7 +99,7 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
     const { round2Grid, currentQuestion, isRound2GridConfirmed } = useAppSelector(state => state.game);
 
     //firebase listener
-    const { listenToTimeStart} = useFirebaseListener()
+    const { listenToTimeStart } = useFirebaseListener()
 
     //custom hook
     const { revealCells, generateInitialGrid } = useRound2({
@@ -200,7 +200,17 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
         hintWordNumber: string
     ) => {
         console.log("handleMenuAction", action, rowIndex, colIndex, hintWordNumber);
-        revealCells(rowIndex, colIndex, action, hintWordNumber);
+        console.log("markedCharInWord", markedCharInWord);
+        console.log("hintWordNumber", hintWordNumber);
+        console.log("hintWords", hintWords);
+        console.log("hintword array", hintWordArray);
+        const word = Array.isArray(hintWordArray) ? hintWordArray[parseInt(hintWordNumber) - 1] : "";
+        const key = parseInt(hintWordNumber); // hoặc Number(hintWordNumber)
+
+        const indexInTarget: number[] = markedCharInWord?.[key] ?? [];
+        
+        console.log("indexInTarget when correct", indexInTarget);
+        revealCells(rowIndex, colIndex, action, hintWordNumber, indexInTarget);
         setMenu({ visible: false });
     };
 
@@ -231,12 +241,12 @@ const HostQuestionBoxRound2: React.FC<ObstacleQuestionBoxProps> = ({
       shadow-xl
       px-5 py-4
       flex flex-col gap-4">
-        {/* Time bar */}
+            {/* Time bar */}
             <QuestionTimerBar isHost={isHost} />
             <QuestionAndAnswer
                 currentQuestion={currentQuestion}
             />
-            
+
             <GameGridRound2
                 grid={round2Grid?.grid}
                 obstacleWord={obstacleWord}
