@@ -23,7 +23,7 @@ interface GameGridProps {
     menuRef: React.RefObject<HTMLDivElement | null>;
     onCellClick: (row: number, col: number) => void;
     onMenuAction: (
-        action: 'select' | 'red' | 'green' | 'blue' | 'yellow',
+        action: 'select' | 'red' | 'green' | 'blue' | 'yellow' | 'orange',
         row: number,
         col: number
     ) => void;
@@ -356,7 +356,7 @@ const GameGridRound4: React.FC<GameGridProps> = ({
                                             >
                                                 SELECT
                                             </Button>
-                                            {['red', 'green', 'blue', 'yellow'].map(color => (
+                                            {['red', 'green', 'blue', 'orange'].map(color => (
                                                 <button
                                                     key={color}
                                                     className={`w-6 h-6 rounded bg-${color}-500`}

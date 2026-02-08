@@ -178,6 +178,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         green: '#00FF00',
         blue: '#0000FF',
         yellow: '#FFFF00',
+        orange: '#FFA500',
     };
     const [showMediaModal, setShowMediaModal] = useState(false);
     const [gridSize, setGridSize] = useState<5 | 6 | 7>(5);
@@ -251,7 +252,7 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
     };
 
     // Function to handle menu actions
-    const handleMenuAction = async (action: 'select' | 'red' | 'green' | 'blue' | 'yellow', row: number, col: number) => {
+    const handleMenuAction = async (action: 'select' | 'red' | 'green' | 'blue' | 'yellow' | 'orange', row: number, col: number) => {
         if (action === 'select') {
 
             if (grid[row][col] == "") {
@@ -288,7 +289,9 @@ const HostQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         } else {
             await sendSelectedCellColor(roomId, row.toString(), col.toString(), action)
             // Set the cell color based on the selected action
-
+            console.log("action", action);
+            console.log("color", colorMap)
+            console.log("colorMap[action]", colorMap[action]);
             setGridColors((prev) => {
                 const newGrid = prev.map((rowArray) => [...rowArray]);
                 newGrid[row][col] = colorMap[action];

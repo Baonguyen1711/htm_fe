@@ -72,6 +72,7 @@ const PlayerQuestionBoxRound4: React.FC<QuestionComponentProps> = ({
         green: '#00FF00',
         blue: '#0000FF',
         yellow: '#FFFF00',
+        orange: '#FFA500',
     };
 
     const [grid, setGrid] = useState<string[][]>([[]])
