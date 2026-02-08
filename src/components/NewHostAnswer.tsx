@@ -343,7 +343,7 @@ function HostAnswer() {
                                 roomId: roomId,
                                 mode: mode,
                                 round: round,
-                                stt: currentTurn.toString(),
+                                //stt: currentTurn.toString(),
                             });
                             toast.success(`Đã cập nhật điểm cho vòng thi ${round}`);
                         },
